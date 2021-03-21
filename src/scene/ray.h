@@ -18,7 +18,7 @@ class SceneObject;
 class ray {
 public:
 	ray( const vec3f& pp, const vec3f& dd )
-		: p( pp ), d( dd ) {}
+		: p( pp ), d( dd.normalize() ) {}
 	ray( const ray& other ) 
 		: p( other.p ), d( other.d ) {}
 	~ray() {}

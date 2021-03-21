@@ -3,6 +3,8 @@
 
 #include "scene.h"
 
+const double LIGHT_EPSILON = 0.01;
+
 class Light
 	: public SceneElement
 {
@@ -24,7 +26,7 @@ class DirectionalLight
 {
 public:
 	DirectionalLight( Scene *scene, const vec3f& orien, const vec3f& color )
-		: Light( scene, color ), orientation( orien ) {}
+		: Light( scene, color ), orientation( orien.normalize() ) { }
 	virtual vec3f shadowAttenuation(const vec3f& P) const;
 	virtual double distanceAttenuation( const vec3f& P ) const;
 	virtual vec3f getColor( const vec3f& P ) const;

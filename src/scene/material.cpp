@@ -18,5 +18,28 @@ vec3f Material::shade( Scene *scene, const ray& r, const isect& i ) const
     // You will need to call both distanceAttenuation() and shadowAttenuation()
     // somewhere in your code in order to compute shadows and light falloff.
 
-	return kd;
+	vec3f diffuse, specular;
+
+	for (auto iter = scene->beginLights(); iter != scene->endLights(); ++iter)
+	{
+		Light* light = *iter;
+		vec3f position = r.getPosition() + r.getDirection() * i.t;
+		vec3f direction = light->getDirection(position);
+		
+		double lambertian = max(direction.dot(i.N), 0.0);
+		vec3f attenuation = light->distanceAttenuation(position) * light->shadowAttenuation(position);
+
+		// Really annoying that * has been overloaded as dot product... WHY????
+		diffuse += lambertian * prod(prod(kd, light->getColor(position)), attenuation);
+
+		vec3f vDir = -scene->getCamera()->getLook().normalize();
+		vec3f h = (direction + vDir).normalize();
+
+		// Using Blinn-Phong
+		specular += pow(max(h.dot(i.N), 0.0), shininess) * 
+			prod(ks, prod(light->getColor(position), attenuation));
+	}
+
+	// Seems that there's no ambient light intensity for now
+	return ke + ka + specular + diffuse;		// the direct illumination
 }

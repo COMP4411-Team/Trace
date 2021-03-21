@@ -13,6 +13,11 @@ vec3f DirectionalLight::shadowAttenuation( const vec3f& P ) const
 {
     // YOUR CODE HERE:
     // You should implement shadow-handling code here.
+
+	ray r(P, -orientation);
+	isect isec;
+	if (scene->intersect(r, isec))
+		return vec3f(0, 0, 0);	// TODO add support to transparent objects
     return vec3f(1,1,1);
 }
 
@@ -34,7 +39,8 @@ double PointLight::distanceAttenuation( const vec3f& P ) const
 	// You'll need to modify this method to attenuate the intensity 
 	// of the light based on the distance between the source and the 
 	// point P.  For now, I assume no attenuation and just return 1.0
-	return 1.0;
+
+	return 1.0 / (pow((P - position).length(), 2.0) + LIGHT_EPSILON);
 }
 
 vec3f PointLight::getColor( const vec3f& P ) const
@@ -53,5 +59,10 @@ vec3f PointLight::shadowAttenuation(const vec3f& P) const
 {
     // YOUR CODE HERE:
     // You should implement shadow-handling code here.
+
+	ray r(P, getDirection(P));
+	isect isec;
+	if (scene->intersect(r, isec))
+		return vec3f(0, 0, 0);	// TODO add support to transparent objects
     return vec3f(1,1,1);
 }

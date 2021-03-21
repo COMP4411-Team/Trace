@@ -307,7 +307,9 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 		} else if( name == "box" ) {
 			obj = new Box( scene, mat );
 		} else if( name == "cylinder" ) {
-			obj = new Cylinder( scene, mat );
+			bool capped = true;
+			maybeExtractField(child, "capped", capped);
+			obj = new Cylinder( scene, mat, capped );
 		} else if( name == "cone" ) {
 			double height = 1.0;
 			double bottom_radius = 1.0;
@@ -529,10 +531,25 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 			throw ParseError( "No info for point_light" );
 		}
 
-		scene->add( new PointLight( scene, 
-			tupleToVec( getField( child, "position" ) ),
-			tupleToVec( getColorField( child ) ) ) );
-	} else if( 	name == "sphere" ||
+		auto* pointLight = new PointLight(scene, tupleToVec(getField(child, "position")), 
+											tupleToVec(getColorField(child)));
+		
+		double c0{LIGHT_EPSILON}, c1{0.0}, c2{1.0};
+		maybeExtractField(child, "constant_attenuation_coeff", c0);
+		maybeExtractField(child, "linear_attenuation_coeff", c1);
+		maybeExtractField(child, "quadratic_attenuation_coeff", c2);
+		pointLight->setAttenuationCoeff(c0, c1, c2);
+		
+		scene->add( pointLight );
+	}
+	else if (name == "ambient_light")
+	{
+		if (child == nullptr)
+			throw ParseError("No info for ambient_light");
+
+		scene->add(new AmbientLight(scene, tupleToVec(getField(child, "color"))));
+	}
+	else if( 	name == "sphere" ||
 				name == "box" ||
 				name == "cylinder" ||
 				name == "cone" ||

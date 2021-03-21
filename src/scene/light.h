@@ -46,9 +46,21 @@ public:
 	virtual double distanceAttenuation( const vec3f& P ) const;
 	virtual vec3f getColor( const vec3f& P ) const;
 	virtual vec3f getDirection( const vec3f& P ) const;
+	void setAttenuationCoeff(double constant, double linear, double quadratic);
 
 protected:
 	vec3f position;
+	double c0{LIGHT_EPSILON}, c1{0.0}, c2{1.0};	// coefficients for distance attenuation
+};
+
+class AmbientLight : public Light
+{
+public:
+	AmbientLight( Scene *scene, const vec3f& color ): Light(scene, color) { }
+	virtual vec3f shadowAttenuation(const vec3f& P) const { return vec3f(); }
+	virtual double distanceAttenuation( const vec3f& P ) const { return 1.0; }
+	virtual vec3f getColor( const vec3f& P ) const { return color; }
+	virtual vec3f getDirection( const vec3f& P ) const { return vec3f(); }
 };
 
 #endif // __LIGHT_H__

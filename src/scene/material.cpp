@@ -18,11 +18,18 @@ vec3f Material::shade( Scene *scene, const ray& r, const isect& i ) const
     // You will need to call both distanceAttenuation() and shadowAttenuation()
     // somewhere in your code in order to compute shadows and light falloff.
 
-	vec3f diffuse, specular;
+	vec3f diffuse, specular, ambient;
 
 	for (auto iter = scene->beginLights(); iter != scene->endLights(); ++iter)
 	{
 		Light* light = *iter;
+
+		if (typeid(*light) == typeid(AmbientLight))
+		{
+			ambient += light->getColor(vec3f());
+			continue;
+		}
+		
 		vec3f position = r.getPosition() + r.getDirection() * i.t;
 		vec3f direction = light->getDirection(position);
 		
@@ -40,6 +47,5 @@ vec3f Material::shade( Scene *scene, const ray& r, const isect& i ) const
 			prod(ks, prod(light->getColor(position), attenuation));
 	}
 
-	// Seems that there's no ambient light intensity for now
-	return ke + ka + specular + diffuse;		// the direct illumination
+	return ke + prod(ka, ambient) + specular + diffuse;		// the direct illumination
 }

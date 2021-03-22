@@ -32,8 +32,8 @@ public:
 	vec3f getPosition() const { return p; }
 	vec3f getDirection() const { return d; }
 
-	Ray reflect(const Isect& isect);
-	bool refract(const Isect& isect, Ray& out);
+	Ray reflect(const Isect& isect) const;
+	bool refract(const Isect& isect, Ray& out) const;
 
 protected:
 	vec3f p;

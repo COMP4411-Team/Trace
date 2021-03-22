@@ -18,7 +18,7 @@ public:
 
 	void getBuffer( unsigned char *&buf, int &w, int &h );
 	double aspectRatio();
-	void traceSetup( int w, int h );
+	void traceSetup( int w, int h, int maxDepth );
 	void traceLines( int start = 0, int stop = 10000000 );
 	void tracePixel( int i, int j );
 
@@ -33,6 +33,7 @@ private:
 	Scene *scene;
 
 	bool m_bSceneLoaded;
+	int maxDepth{0};
 };
 
 #endif // __RAYTRACER_H__

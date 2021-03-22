@@ -25,6 +25,9 @@ vec3f RayTracer::trace( Scene *scene, double x, double y )
 vec3f RayTracer::traceRay( Scene *scene, const Ray& r, 
 	const vec3f& thresh, int depth )
 {
+	if (depth > maxDepth)
+		return vec3f();
+	
 	Isect i;
 
 	if( scene->intersect( r, i ) ) {
@@ -40,7 +43,23 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 		// rays.
 
 		const Material& m = i.getMaterial();
-		return m.shade(scene, r, i);
+		vec3f directIllumination = m.shade(scene, r, i);
+
+		vec3f indirectIllumination;
+		
+		if (i.N.dot(r.getDirection()) < 0.0 || !m.kt.iszero())	// intersects at outer surface or the material is translucent
+		{
+			Ray reflection = r.reflect(i);
+			indirectIllumination += prod(traceRay(scene, reflection, thresh, depth + 1), m.kr);
+		}
+
+		Ray refraction{vec3f(), vec3f()};
+		if (!m.kt.iszero() && r.refract(i, refraction))
+		{
+			indirectIllumination += prod(traceRay(scene, refraction, thresh, depth + 1), m.kt);
+		}
+
+		return directIllumination + indirectIllumination;
 	
 	} else {
 		// No intersection.  This ray travels to infinity, so we color
@@ -115,7 +134,7 @@ bool RayTracer::loadScene( char* fn )
 	return true;
 }
 
-void RayTracer::traceSetup( int w, int h )
+void RayTracer::traceSetup( int w, int h, int maxDepth )
 {
 	if( buffer_width != w || buffer_height != h )
 	{
@@ -127,6 +146,7 @@ void RayTracer::traceSetup( int w, int h )
 		buffer = new unsigned char[ bufferSize ];
 	}
 	memset( buffer, 0, w*h*3 );
+	this->maxDepth = maxDepth;
 }
 
 void RayTracer::traceLines( int start, int stop )

@@ -8,18 +8,17 @@ Isect::getMaterial() const
     return material ? *material : obj->getMaterial();
 }
 
-// Assume that the light intersects at the outer surface
-// Check whether self-intersection happens before using
-Ray Ray::reflect(const Isect& isect)
+Ray Ray::reflect(const Isect& isect) const
 {
-	return Ray(at(isect.t) + isect.N * DISPLACEMENT_EPSILON, 
-				d - 2 * isect.N.dot(d) * isect.N);		// Ray constructor will normalize the direction
+	vec3f normal = isect.N.dot(d) < 0.0 ? isect.N : -isect.N;
+	return Ray(at(isect.t) + normal * DISPLACEMENT_EPSILON, 
+				d - 2 * normal.dot(d) * normal);		// Ray constructor will normalize the direction
 }
 
 // If TIR happens, return false
-bool Ray::refract(const Isect& isect, Ray& out)
+bool Ray::refract(const Isect& isect, Ray& out) const
 {
-	double eta = isect.material->index;		// eta = n1 / n2
+	double eta = isect.getMaterial().index;		// eta = n1 / n2
 	vec3f normal = -isect.N;
 	if (d.dot(isect.N) < 0.0)	// intersects from outside
 	{
@@ -33,7 +32,7 @@ bool Ray::refract(const Isect& isect, Ray& out)
 	if (cosTheta2Square < 0.0)
 		return false;		// TIR
 	
-	out = Ray(at(isect.t) + normal * DISPLACEMENT_EPSILON, 
+	out = Ray(at(isect.t) - normal * DISPLACEMENT_EPSILON, 
 				eta * d + (eta * cosTheta1 - sqrt(cosTheta2Square)) * normal); // dir will be normalized in Ray ctor
 	return true;
 }

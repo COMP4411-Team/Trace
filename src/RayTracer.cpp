@@ -46,8 +46,9 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 		vec3f directIllumination = m.shade(scene, r, i);
 
 		vec3f indirectIllumination;
-		
-		if (i.N.dot(r.getDirection()) < 0.0 || !m.kt.iszero())	// intersects at outer surface or the material is translucent
+
+		// Intersects at outer surface or the material is translucent
+		if (!m.kr.iszero())
 		{
 			Ray reflection = r.reflect(i);
 			indirectIllumination += prod(traceRay(scene, reflection, thresh, depth + 1), m.kr);

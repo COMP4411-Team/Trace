@@ -30,7 +30,7 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
 			continue;
 		}
 		
-		vec3f position = r.getPosition() + r.getDirection() * i.t;
+		vec3f position = r.at(i.t) + i.N * DISPLACEMENT_EPSILON;
 		vec3f direction = light->getDirection(position);
 		
 		double lambertian = max(direction.dot(i.N), 0.0);

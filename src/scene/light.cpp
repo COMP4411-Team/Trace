@@ -17,11 +17,7 @@ vec3f DirectionalLight::shadowAttenuation( const vec3f& P ) const
 	Ray r(P, -orientation);
 	Isect isect;
 	if (scene->intersect(r, isect))
-	{
-		if (isect.material != nullptr)
-			return isect.material->kt;
-		return vec3f();
-	}
+		return isect.getMaterial().kt;
     return vec3f(1,1,1);
 }
 
@@ -76,10 +72,6 @@ vec3f PointLight::shadowAttenuation(const vec3f& P) const
 	Ray r(P, getDirection(P));
 	Isect isect;
 	if (scene->intersect(r, isect))
-	{
-		if (isect.material != nullptr)
-			return isect.material->kt;
-		return vec3f();
-	}
+		return isect.getMaterial().kt;
     return vec3f(1,1,1);
 }

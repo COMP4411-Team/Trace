@@ -63,4 +63,27 @@ public:
 	virtual vec3f getDirection( const vec3f& P ) const { return vec3f(); }
 };
 
+class SpotLight : public Light
+{
+public:
+	SpotLight( Scene *scene, const vec3f& color, double cutoffDist, double penumbra, double coneAngle ):
+		Light(scene, color), cutoffDist(cutoffDist), cosPenumbra(cos(penumbra)), cosCone(cos(coneAngle)) { }
+	virtual vec3f shadowAttenuation(const vec3f& P) const;
+	virtual double distanceAttenuation( const vec3f& P ) const;
+	virtual vec3f getColor( const vec3f& P ) const { return color; }
+	virtual vec3f getDirection( const vec3f& P ) const;
+	void setPos(const vec3f& pos) { position = pos; direction = (target - position).normalize(); }
+	void setTarget(const vec3f& target) { this->target = target; direction = (target - position).normalize(); }
+
+protected:
+	double cutoffDist;
+	double cosPenumbra;
+	double cosCone;
+	vec3f position;
+	vec3f target;
+	vec3f direction;
+};
+
+double smoothstep(double edge0, double edge1, double x);
+
 #endif // __LIGHT_H__

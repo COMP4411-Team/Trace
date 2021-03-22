@@ -20,6 +20,29 @@ TraceUI* TraceUI::whoami(Fl_Menu_* o)	// from menu item back to UI itself
 	return ( (TraceUI*)(o->parent()->user_data()) );
 }
 
+TraceUI* TraceUI::whoami(Fl_Widget* o)
+{
+	return ( (TraceUI*)(o->user_data()) );
+}
+
+Fl_Value_Slider* TraceUI::createSlider(int x, int y, int w, int h, const char* l,
+                                       double minValue, double maxValue, double step, double value,
+                                       void (*callback)(Fl_Widget*, void*))
+{
+	auto* slider = new Fl_Value_Slider(x, y, w, h, l);
+	slider->user_data(this);
+	slider->type(FL_HOR_NICE_SLIDER);
+	slider->labelfont(FL_COURIER);
+	slider->labelsize(12);
+	slider->minimum(minValue);
+	slider->maximum(maxValue);
+	slider->step(step);
+	slider->value(value);
+	slider->align(FL_ALIGN_RIGHT);
+	slider->callback(callback);
+	return slider;
+}
+
 //--------------------------------- Callback Functions --------------------------------------------
 void TraceUI::cb_load_scene(Fl_Menu_* o, void* v) 
 {
@@ -92,6 +115,31 @@ void TraceUI::cb_depthSlides(Fl_Widget* o, void* v)
 	((TraceUI*)(o->user_data()))->m_nDepth=int( ((Fl_Slider *)o)->value() ) ;
 }
 
+void TraceUI::cb_lightScaleSlides(Fl_Widget* o, void* v)
+{
+	auto* ui = ((TraceUI*)(o->user_data()));
+	ui->lightScale = double( ((Fl_Slider *)o)->value() );
+	ui->raytracer->setLightScale(ui->lightScale);
+}
+
+void TraceUI::cb_threshSlides(Fl_Widget* o, void* v)
+{
+	double value = double( ((Fl_Slider *)o)->value() );
+	((TraceUI*)(o->user_data()))->threshold = vec3f(value, value, value);
+}
+
+void TraceUI::cb_ssaaLevelSlides(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->ssaaSample = int( ((Fl_Slider *)o)->value() );
+}
+
+void TraceUI::cb_ssaaJitterButton(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->ssaaJitter = bool( ((Fl_Light_Button*)o)->value() );
+}
+
 void TraceUI::cb_render(Fl_Widget* o, void* v)
 {
 	char buffer[256];
@@ -105,7 +153,7 @@ void TraceUI::cb_render(Fl_Widget* o, void* v)
 
 		pUI->m_traceGlWindow->show();
 
-		pUI->raytracer->traceSetup(width, height, pUI->getDepth());
+		pUI->raytracer->traceSetup(width, height, pUI->getDepth(), pUI->threshold);
 		
 		// Save the window label
 		const char *old_label = pUI->m_traceGlWindow->label();
@@ -214,7 +262,7 @@ TraceUI::TraceUI() {
 	// init.
 	m_nDepth = 0;
 	m_nSize = 150;
-	m_mainWindow = new Fl_Window(100, 40, 320, 100, "Ray <Not Loaded>");
+	m_mainWindow = new Fl_Window(100, 40, 320, 400, "Ray <Not Loaded>");
 		m_mainWindow->user_data((void*)(this));	// record self to be used by static callback functions
 		// install menu bar
 		m_menubar = new Fl_Menu_Bar(0, 0, 320, 25);
@@ -245,6 +293,20 @@ TraceUI::TraceUI() {
 		m_sizeSlider->value(m_nSize);
 		m_sizeSlider->align(FL_ALIGN_RIGHT);
 		m_sizeSlider->callback(cb_sizeSlides);
+
+		m_lightScaleSlider = createSlider(10, 80, 180, 20, "Light Scale",
+			1, 50, 1, lightScale, cb_lightScaleSlides);
+
+		m_threshSlider = createSlider(10, 105, 180, 20, "Threshold",
+			0, 1, 0.01, threshold[0], cb_threshSlides);
+
+		m_ssaaLevelSlider = createSlider(10, 130, 180, 20, "SSAA Sample Level",
+			0, 5, 1, ssaaSampleLevel, cb_ssaaLevelSlides);
+
+		m_ssaaJitterButton = new Fl_Light_Button(10, 155, 150, 25, "SSAA Sample Jitter");
+		m_ssaaJitterButton->user_data(this);
+		m_ssaaJitterButton->value(0);
+		m_ssaaJitterButton->callback(cb_ssaaJitterButton);
 
 		m_renderButton = new Fl_Button(240, 27, 70, 25, "&Render");
 		m_renderButton->user_data((void*)(this));

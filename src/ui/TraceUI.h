@@ -28,9 +28,13 @@ public:
 
 	Fl_Slider*			m_sizeSlider;
 	Fl_Slider*			m_depthSlider;
+	Fl_Slider* m_lightScaleSlider;
+	Fl_Slider* m_threshSlider;
+	Fl_Slider* m_ssaaLevelSlider;
 
 	Fl_Button*			m_renderButton;
 	Fl_Button*			m_stopButton;
+	Fl_Light_Button* m_ssaaJitterButton;
 
 	TraceGLWindow*		m_traceGlWindow;
 
@@ -43,15 +47,24 @@ public:
 	int			getDepth();
 
 private:
+	Fl_Value_Slider* createSlider(int x, int y, int w, int h, const char* l,
+	                              double minValue, double maxValue, double step, double value,
+	                              void (*callback)(Fl_Widget*, void*));
+	
 	RayTracer*	raytracer;
 
 	int			m_nSize;
 	int			m_nDepth;
+	double lightScale{10};
+	int ssaaSampleLevel{0};
+	vec3f threshold;
 
 // static class members
 	static Fl_Menu_Item menuitems[];
 
 	static TraceUI* whoami(Fl_Menu_* o);
+
+	static TraceUI* whoami(Fl_Widget* o);
 
 	static void cb_load_scene(Fl_Menu_* o, void* v);
 	static void cb_save_image(Fl_Menu_* o, void* v);
@@ -62,6 +75,10 @@ private:
 
 	static void cb_sizeSlides(Fl_Widget* o, void* v);
 	static void cb_depthSlides(Fl_Widget* o, void* v);
+	static void cb_lightScaleSlides(Fl_Widget* o, void* v);
+	static void cb_threshSlides(Fl_Widget* o, void* v);
+	static void cb_ssaaLevelSlides(Fl_Widget* o, void* v);
+	static void cb_ssaaJitterButton(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_stop(Fl_Widget* o, void* v);

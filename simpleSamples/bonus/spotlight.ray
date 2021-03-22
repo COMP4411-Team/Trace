@@ -1,0 +1,61 @@
+SBT-raytracer 1.0
+
+// spotlight.ray
+// Test for spotlight
+
+camera
+{
+	position = (15, 0, 5);
+	viewdir = (-1, 0, -.3);
+	updir = (0, 0, 1);
+}
+
+// This is a spotlight
+spot_light
+{
+	cutoff_distance = 500;
+	penumbra = 10;
+	cone_angle = 30;
+	position = (0, 3, 6);
+	target = (0, 0, 0);
+	color = (1, 0, 0);
+}
+
+// This is another spotlight
+spot_light
+{
+	cutoff_distance = 500;
+	penumbra = 10;
+	cone_angle = 30;
+	position = (0, -3, 6);
+	target = (0, 0, 0);
+	color = (0, 1, 0);
+}
+
+// This is yet another spotlight
+spot_light
+{
+	cutoff_distance = 500;
+	penumbra = 40;
+	cone_angle = 50;
+	position = (3, 0, 6);
+	target = (0, 0, 0);
+	color = (0.7, 0.7, 0.7);
+}
+
+// The box forms a plane
+translate( 0, 0, -2,
+	scale( 15, 15, 1, 
+		box {
+			material = { 
+				diffuse = (0.5, 0.5, 0.5); 
+			}
+		} ) )
+
+translate( 0, 0, 1,
+	cylinder {
+		material = {
+			diffuse = (0.9, 0.9, 0.9);
+			ambient = (0, 0.3, 0);
+		}
+	} )

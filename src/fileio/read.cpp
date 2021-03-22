@@ -23,6 +23,8 @@
 
 typedef map<string,Material*> mmap;
 
+const double PI = 3.14159265358979323846;
+
 static void processObject( Obj *obj, Scene *scene, mmap& materials );
 static Obj *getColorField( Obj *obj );
 static Obj *getField( Obj *obj, const string& name );
@@ -548,6 +550,24 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 			throw ParseError("No info for ambient_light");
 
 		scene->add(new AmbientLight(scene, tupleToVec(getField(child, "color"))));
+	}
+	else if (name == "spot_light")
+	{
+		if (child == nullptr)
+			throw ParseError("No info for spot_light");
+
+		double cutoffDist = 50.0, penumbra = 30.0, coneAngle = 60.0;
+		maybeExtractField(child, "cutoff_distance", cutoffDist);
+		maybeExtractField(child, "penumbra", penumbra);
+		maybeExtractField(child, "cone_angle", coneAngle);
+		penumbra *= PI / 180.0;
+		coneAngle *= PI / 180.0;
+
+		auto* spotLight = new SpotLight(scene, tupleToVec(getField(child, "color")), 
+			cutoffDist, penumbra, coneAngle);
+		spotLight->setPos(tupleToVec(getField(child, "position")));
+		spotLight->setTarget(tupleToVec(getField(child, "target")));
+		scene->add(spotLight);
 	}
 	else if( 	name == "sphere" ||
 				name == "box" ||

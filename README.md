@@ -1,10 +1,10 @@
 # Trace
 
-* [ ] 1W Implement an adaptive termination criterion for tracing rays.
+* [x] 1W Implement an adaptive termination criterion for tracing rays.
   
-* [ ] 1W Implement antialiasing by supersampling and averaging down. This whistle upgrades to a bell if you implement the first stage of distribution ray tracing by jittering the sub-pixel samples.
+* [x] 1W Implement antialiasing by supersampling and averaging down. This whistle upgrades to a bell if you implement the first stage of distribution ray tracing by jittering the sub-pixel samples.
 
-* [ ] 1B Implement spot lights.
+* [x] 1B Implement spot lights.
 
 * [ ] 1B Add a menu option that lets you specify a background image to replace the environment's ambient color during the rendering.
 

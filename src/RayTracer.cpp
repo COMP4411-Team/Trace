@@ -16,16 +16,21 @@
 vec3f RayTracer::trace( Scene *scene, double x, double y )
 {
     Ray r( vec3f(0,0,0), vec3f(0,0,0) );
-    scene->getCamera()->rayThrough( x,y,r );
-	return traceRay( scene, r, vec3f(1.0,1.0,1.0), 0 ).clamp();
+
+	scene->getCamera()->rayThrough( x, y, r );
+	return traceRay( scene, r, threshold, 0, {1.0, 1.0, 1.0} ).clamp();
 }
 
 // Do recursive ray tracing!  You'll want to insert a lot of code here
 // (or places called from here) to handle reflection, refraction, etc etc.
 vec3f RayTracer::traceRay( Scene *scene, const Ray& r, 
-	const vec3f& thresh, int depth )
+	const vec3f& thresh, int depth, const vec3f& curFactor )
 {
 	if (depth > maxDepth)
+		return vec3f();
+
+	// Adaptive termination
+	if (curFactor[0] < thresh[0] && curFactor[1] < thresh[1] && curFactor[2] < thresh[2])
 		return vec3f();
 	
 	Isect i;
@@ -51,13 +56,13 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 		if (!m.kr.iszero())
 		{
 			Ray reflection = r.reflect(i);
-			indirectIllumination += prod(traceRay(scene, reflection, thresh, depth + 1), m.kr);
+			indirectIllumination += prod(traceRay(scene, reflection, thresh, depth + 1, prod(curFactor, m.kr)), m.kr);
 		}
 
 		Ray refraction{vec3f(), vec3f()};
 		if (!m.kt.iszero() && r.refract(i, refraction))
 		{
-			indirectIllumination += prod(traceRay(scene, refraction, thresh, depth + 1), m.kt);
+			indirectIllumination += prod(traceRay(scene, refraction, thresh, depth + 1, prod(curFactor, m.kt)), m.kt);
 		}
 
 		return directIllumination + indirectIllumination;
@@ -135,7 +140,7 @@ bool RayTracer::loadScene( char* fn )
 	return true;
 }
 
-void RayTracer::traceSetup( int w, int h, int maxDepth )
+void RayTracer::traceSetup( int w, int h, int maxDepth, const vec3f& threshold )
 {
 	if( buffer_width != w || buffer_height != h )
 	{
@@ -148,6 +153,7 @@ void RayTracer::traceSetup( int w, int h, int maxDepth )
 	}
 	memset( buffer, 0, w*h*3 );
 	this->maxDepth = maxDepth;
+	this->threshold = threshold;
 }
 
 void RayTracer::traceLines( int start, int stop )
@@ -174,11 +180,75 @@ void RayTracer::tracePixel( int i, int j )
 	double x = double(i)/double(buffer_width);
 	double y = double(j)/double(buffer_height);
 
-	col = trace( scene,x,y );
+	// SSAA, in fact, MSAA
+	int sampleNum = pow(2, ssaaSample);
+	auto pattern = msaaSamplePattern[ssaaSample];
+	double unitWidth = 0.0625 / double(buffer_width);		// 1/16
+	double unitHeight = 0.0625 / double(buffer_height);
 
+	if (!ssaaJitter)
+	{
+		for (int i = 0; i < sampleNum; ++i)
+		{
+			auto offset = pattern[i];
+			col += trace( scene, x + offset.first * unitWidth, y + offset.second * unitHeight );
+		}
+	}
+	else
+	{
+		double widthFactor = 1.0 / (double(RAND_MAX) * buffer_width);
+		double heightFactor = 1.0 / (double(RAND_MAX) * buffer_height);
+		for (int i = 0; i < sampleNum; ++i)
+		{
+			double xOffset = rand() * widthFactor, yOffset = rand() * heightFactor;
+			col += trace(scene, x + xOffset, y + yOffset);
+		}
+	}
+	
+	col /= sampleNum;
+	
 	unsigned char *pixel = buffer + ( i + j * buffer_width ) * 3;
 
 	pixel[0] = (int)( 255.0 * col[0]);
 	pixel[1] = (int)( 255.0 * col[1]);
 	pixel[2] = (int)( 255.0 * col[2]);
 }
+
+void RayTracer::setLightScale(double value)
+{
+	scene->lightScale = value;
+}
+
+// D3D11_STANDARD_MULTISAMPLE_QUALITY_LEVELS enumeration
+std::vector<std::vector<std::pair<int, int>>> RayTracer::msaaSamplePattern =
+{
+	{
+		{ 0, 0 }
+	},
+	{
+		{ 4, 4 }, { - 4, - 4 }
+	},
+	{
+		{ - 2, - 6 }, { 6, - 2 }, { - 6, 2 }, { 2, 6 }
+	},
+	{
+		{ 1, - 3 }, { - 1, 3 }, { 5, 1 }, { - 3, - 5 },
+		{ - 5, 5 }, { - 7, - 1 }, { 3, 7 }, { 7, - 7 }
+	},
+	{
+		{ 1, 1 }, { - 1, - 3 }, { - 3, 2 }, { 4, - 1 },
+		{ - 5, - 2 }, { 2, 5 }, { 5, 3 }, { 3, - 5 },
+		{ - 2, 6 }, { 0, - 7 }, { - 4, - 6 }, { - 6, 4 },
+		{ - 8, 0 }, { 7, - 4 }, { 6, 7 }, { - 7, - 8 }
+	},
+	{
+		{ - 4, - 7 }, { - 7, - 5 }, { - 3, - 5 }, { - 5, - 4 },
+		{ - 1, - 4 }, { - 2, - 2 }, { - 6, - 1 }, { - 4, 0 },
+		{ - 7, 1 }, { - 1, 2 }, { - 6, 3 }, { - 3, 3 },
+		{ - 7, 6 }, { - 3, 6 }, { - 5, 7 }, { - 1, 7 },
+		{ 5, - 7 }, { 1, - 6 }, { 6, - 5 }, { 4, - 4 },
+		{ 2, - 3 }, { 7, - 2 }, { 1, - 1 }, { 4, - 1 },
+		{ 2, 1 }, { 6, 2 }, { 0, 4 }, { 4, 4 },
+		{ 2, 5 }, { 7, 5 }, { 5, 6 }, { 3, 7 }
+	}
+};

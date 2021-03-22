@@ -75,3 +75,39 @@ vec3f PointLight::shadowAttenuation(const vec3f& P) const
 		return isect.getMaterial().kt;
     return vec3f(1,1,1);
 }
+
+vec3f SpotLight::shadowAttenuation(const vec3f& P) const
+{
+	vec3f dir = -getDirection(P);
+	double cosAngle = dir.dot(direction);
+	if (cosAngle < cosCone)		// out of the spotlight
+		return vec3f();
+	
+	double attenuation = smoothstep(cosCone, cosPenumbra, cosAngle);
+	
+	Ray r(P, getDirection(P));
+	Isect isect;
+	if (scene->intersect(r, isect))
+		return attenuation * isect.getMaterial().kt;
+	
+    return attenuation * vec3f(1,1,1);
+}
+
+double SpotLight::distanceAttenuation(const vec3f& P) const
+{
+	double dist = (position - P).length();
+	
+	return pow(_max(1.0 - dist / cutoffDist, 0.0), 2);
+}
+
+vec3f SpotLight::getDirection(const vec3f& P) const
+{
+	return (position - P).normalize();
+}
+
+double smoothstep(double edge0, double edge1, double x)
+{
+	double t;
+    t = _min(_max((x - edge0) / (edge1 - edge0), 0.0), 1.0);
+    return t * t * (3.0 - 2.0 * t);
+}

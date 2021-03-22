@@ -42,7 +42,7 @@ double PointLight::distanceAttenuation( const vec3f& P ) const
 
 	double dist = (P - position).length();
 	
-	return min(1.0, 1.0 / (c0 + c1 * dist + c2 * dist * dist));
+	return min(1.0, scene->lightScale / (c0 + c1 * dist + c2 * dist * dist));
 }
 
 vec3f PointLight::getColor( const vec3f& P ) const

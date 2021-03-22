@@ -39,11 +39,10 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
 		// Really annoying that * has been overloaded as dot product... WHY????
 		diffuse += lambertian * prod(prod(kd, light->getColor(position)), attenuation);
 
-		vec3f vDir = -scene->getCamera()->getLook().normalize();
-		vec3f h = (direction + vDir).normalize();
+		vec3f h = (direction - r.getDirection()).normalize();
 
 		// Using Blinn-Phong
-		specular += pow(max(h.dot(i.N), 0.0), shininess) * 
+		specular += pow(max(h.dot(i.N), 0.0), shininess * 256.0) * 
 			prod(ks, prod(light->getColor(position), attenuation));
 	}
 

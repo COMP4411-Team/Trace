@@ -270,7 +270,7 @@ public:
         
 	Camera *getCamera() { return &camera; }
 
-	
+	double lightScale{10.0};
 
 private:
     list<Geometry*> objects;
@@ -284,5 +284,27 @@ private:
 	// are exempt from this requirement.
 	BoundingBox sceneBounds;
 };
+
+inline double _max(double a, double b)
+{
+	return a > b ? a : b;
+}
+
+inline double _min(double a, double b)
+{
+	return a < b ? a : b;
+}
+
+inline double _abs(double a)
+{
+	return a < 0.0 ? -a : a;
+}
+
+inline void _swap(double& a, double& b)
+{
+	double tmp = b;
+	b = a;
+	a = tmp;
+}
 
 #endif // __SCENE_H__

@@ -15,9 +15,13 @@ vec3f DirectionalLight::shadowAttenuation( const vec3f& P ) const
     // You should implement shadow-handling code here.
 
 	Ray r(P, -orientation);
-	Isect isec;
-	if (scene->intersect(r, isec))
-		return vec3f(0, 0, 0);	// TODO add support to transparent objects
+	Isect isect;
+	if (scene->intersect(r, isect))
+	{
+		if (isect.material != nullptr)
+			return isect.material->kt;
+		return vec3f();
+	}
     return vec3f(1,1,1);
 }
 
@@ -70,8 +74,12 @@ vec3f PointLight::shadowAttenuation(const vec3f& P) const
     // You should implement shadow-handling code here.
 
 	Ray r(P, getDirection(P));
-	Isect isec;
-	if (scene->intersect(r, isec))
-		return vec3f(0, 0, 0);	// TODO add support to transparent objects
+	Isect isect;
+	if (scene->intersect(r, isect))
+	{
+		if (isect.material != nullptr)
+			return isect.material->kt;
+		return vec3f();
+	}
     return vec3f(1,1,1);
 }

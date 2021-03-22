@@ -32,8 +32,8 @@ public:
 	vec3f getPosition() const { return p; }
 	vec3f getDirection() const { return d; }
 
-	Ray reflect(const Ray& in, const Isect& isec);
-	Ray refract(const Ray& in, const Isect& isec);
+	Ray reflect(const Isect& isect);
+	bool refract(const Isect& isect, Ray& out);
 
 protected:
 	vec3f p;
@@ -95,5 +95,6 @@ public:
 
 const double RAY_EPSILON = 0.00001;
 const double NORMAL_EPSILON = 0.00001;
+const double DISPLACEMENT_EPSILON = 0.00001;
 
 #endif // __RAY_H__

@@ -15,15 +15,15 @@ class SceneObject;
 // A ray has a position where the ray starts, and a direction (which should
 // always be normalized!)
 
-class ray {
+class Ray {
 public:
-	ray( const vec3f& pp, const vec3f& dd )
+	Ray( const vec3f& pp, const vec3f& dd )
 		: p( pp ), d( dd.normalize() ) {}
-	ray( const ray& other ) 
+	Ray( const Ray& other ) 
 		: p( other.p ), d( other.d ) {}
-	~ray() {}
+	~Ray() {}
 
-	ray& operator =( const ray& other ) 
+	Ray& operator =( const Ray& other ) 
 	{ p = other.p; d = other.d; return *this; }
 
 	vec3f at( double t ) const
@@ -32,6 +32,9 @@ public:
 	vec3f getPosition() const { return p; }
 	vec3f getDirection() const { return d; }
 
+	Ray reflect(const Ray& in, const Isect& isec);
+	Ray refract(const Ray& in, const Isect& isec);
+
 protected:
 	vec3f p;
 	vec3f d;
@@ -39,13 +42,13 @@ protected:
 
 // The description of an intersection point.
 
-class isect
+class Isect
 {
 public:
-    isect()
+    Isect()
         : obj( NULL ), t( 0.0 ), N(), material(0) {}
 
-    ~isect()
+    ~Isect()
     {
         delete material;
     }
@@ -55,7 +58,7 @@ public:
     void setN( const vec3f& n ) { N = n; }
     void setMaterial( Material *m ) { delete material; material = m; }
         
-    isect& operator =( const isect& other )
+    Isect& operator =( const Isect& other )
     {
         if( this != &other )
         {

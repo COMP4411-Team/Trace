@@ -5,7 +5,7 @@
 #include "RayTracer.h"
 #include "scene/light.h"
 #include "scene/material.h"
-#include "scene/ray.h"
+#include "scene/Ray.h"
 #include "fileio/read.h"
 #include "fileio/parse.h"
 
@@ -15,17 +15,17 @@
 // in an initial ray weight of (0.0,0.0,0.0) and an initial recursion depth of 0.
 vec3f RayTracer::trace( Scene *scene, double x, double y )
 {
-    ray r( vec3f(0,0,0), vec3f(0,0,0) );
+    Ray r( vec3f(0,0,0), vec3f(0,0,0) );
     scene->getCamera()->rayThrough( x,y,r );
 	return traceRay( scene, r, vec3f(1.0,1.0,1.0), 0 ).clamp();
 }
 
 // Do recursive ray tracing!  You'll want to insert a lot of code here
 // (or places called from here) to handle reflection, refraction, etc etc.
-vec3f RayTracer::traceRay( Scene *scene, const ray& r, 
+vec3f RayTracer::traceRay( Scene *scene, const Ray& r, 
 	const vec3f& thresh, int depth )
 {
-	isect i;
+	Isect i;
 
 	if( scene->intersect( r, i ) ) {
 		// YOUR CODE HERE

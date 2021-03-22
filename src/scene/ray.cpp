@@ -1,9 +1,9 @@
-#include "ray.h"
+#include "Ray.h"
 #include "material.h"
 #include "scene.h"
 
 const Material &
-isect::getMaterial() const
+Isect::getMaterial() const
 {
     return material ? *material : obj->getMaterial();
 }

@@ -2,7 +2,7 @@
 
 #include "Square.h"
 
-bool Square::intersectLocal( const ray& r, isect& i ) const
+bool Square::intersectLocal( const Ray& r, Isect& i ) const
 {
 	vec3f p = r.getPosition();
 	vec3f d = r.getDirection();

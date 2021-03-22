@@ -60,7 +60,7 @@ Trimesh::doubleCheck()
 // Uses the algorithm and notation from _Graphic Gems 5_, p. 232.
 //
 // Calculates and returns the normal of the triangle too.
-bool TrimeshFace::intersectLocal( const ray& r, isect& i ) const
+bool TrimeshFace::intersectLocal( const Ray& r, Isect& i ) const
 {
     const vec3f& a = parent->vertices[ids[0]];
     const vec3f& b = parent->vertices[ids[1]];

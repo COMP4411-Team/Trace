@@ -4,7 +4,7 @@
 #include <list>
 #include <vector>
 
-#include "../scene/ray.h"
+#include "../scene/Ray.h"
 #include "../scene/material.h"
 #include "../scene/scene.h"
 class TrimeshFace;
@@ -60,7 +60,7 @@ public:
         return ids[i];
     }
 
-    virtual bool intersectLocal( const ray& r, isect& i ) const;
+    virtual bool intersectLocal( const Ray& r, Isect& i ) const;
 
     virtual bool hasBoundingBoxCapability() const { return true; }
       

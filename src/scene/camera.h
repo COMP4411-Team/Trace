@@ -1,13 +1,13 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "ray.h"
+#include "Ray.h"
 
 class Camera
 {
 public:
     Camera();
-    void rayThrough( double x, double y, ray &r );
+    void rayThrough( double x, double y, Ray &r );
     void setEye( const vec3f &eye );
     void setLook( double, double, double, double );
     void setLook( const vec3f &viewDir, const vec3f &upDir );

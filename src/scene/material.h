@@ -10,8 +10,8 @@
 #include "../vecmath/vecmath.h"
 
 class Scene;
-class ray;
-class isect;
+class Ray;
+class Isect;
 
 class Material
 {
@@ -30,7 +30,7 @@ public:
               const vec3f& d, const vec3f& r, const vec3f& t, double sh, double in)
         : ke( e ), ka( a ), ks( s ), kd( d ), kr( r ), kt( t ), shininess( sh ), index( in ) {}
 
-	virtual vec3f shade( Scene *scene, const ray& r, const isect& i ) const;
+	virtual vec3f shade( Scene *scene, const Ray& r, const Isect& i ) const;
 
     vec3f ke;                    // emissive
     vec3f ka;                    // ambient

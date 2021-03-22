@@ -12,7 +12,7 @@
 
 using namespace std;
 
-#include "ray.h"
+#include "Ray.h"
 #include "material.h"
 #include "camera.h"
 #include "../vecmath/vecmath.h"
@@ -51,7 +51,7 @@ public:
 	// if the ray hits the box, put the "t" value of the intersection
 	// closest to the origin in tMin and the "t" value of the far intersection
 	// in tMax and return true, else return false.
-	bool intersect(const ray& r, double& tMin, double& tMax) const;
+	bool intersect(const Ray& r, double& tMin, double& tMax) const;
 };
 
 class TransformNode
@@ -138,11 +138,11 @@ class Geometry
 {
 public:
     // intersections performed in the global coordinate space.
-    virtual bool intersect(const ray&r, isect&i) const;
+    virtual bool intersect(const Ray&r, Isect&i) const;
     
     // intersections performed in the object's local coordinate space
     // do not call directly - this should only be called by intersect()
-	virtual bool intersectLocal( const ray& r, isect& i ) const;
+	virtual bool intersectLocal( const Ray& r, Isect& i ) const;
 
 
 	virtual bool hasBoundingBoxCapability() const;
@@ -262,7 +262,7 @@ public:
 	void add( Light* light )
 	{ lights.push_back( light ); }
 
-	bool intersect( const ray& r, isect& i ) const;
+	bool intersect( const Ray& r, Isect& i ) const;
 	void initScene();
 
 	list<Light*>::const_iterator beginLights() const { return lights.begin(); }

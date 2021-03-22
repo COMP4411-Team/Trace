@@ -2,7 +2,7 @@
 
 #include "Sphere.h"
 
-bool Sphere::intersectLocal( const ray& r, isect& i ) const
+bool Sphere::intersectLocal( const Ray& r, Isect& i ) const
 {
 	vec3f v = -r.getPosition();
 	double b = v.dot(r.getDirection());

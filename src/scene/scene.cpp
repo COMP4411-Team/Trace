@@ -30,7 +30,7 @@ bool BoundingBox::intersects(const vec3f& point) const
 // closest to the origin in tMin and the "t" value of the far intersection
 // in tMax and return true, else return false.
 // Using Kay/Kajiya algorithm.
-bool BoundingBox::intersect(const ray& r, double& tMin, double& tMax) const
+bool BoundingBox::intersect(const Ray& r, double& tMin, double& tMax) const
 {
 	vec3f R0 = r.getPosition();
 	vec3f Rd = r.getDirection();
@@ -74,7 +74,7 @@ bool BoundingBox::intersect(const ray& r, double& tMin, double& tMax) const
 }
 
 
-bool Geometry::intersect(const ray&r, isect&i) const
+bool Geometry::intersect(const Ray&r, Isect&i) const
 {
     // Transform the ray into the object's local coordinate space
     vec3f pos = transform->globalToLocalCoords(r.getPosition());
@@ -82,7 +82,7 @@ bool Geometry::intersect(const ray&r, isect&i) const
     double length = dir.length();
     dir /= length;
 
-    ray localRay( pos, dir );
+    Ray localRay( pos, dir );
 
     if (intersectLocal(localRay, i)) {
         // Transform the intersection point & normal returned back into global space.
@@ -96,7 +96,7 @@ bool Geometry::intersect(const ray&r, isect&i) const
     
 }
 
-bool Geometry::intersectLocal( const ray& r, isect& i ) const
+bool Geometry::intersectLocal( const Ray& r, Isect& i ) const
 {
 	return false;
 }
@@ -139,12 +139,12 @@ Scene::~Scene()
 
 // Get any intersection with an object.  Return information about the 
 // intersection through the reference parameter.
-bool Scene::intersect( const ray& r, isect& i ) const
+bool Scene::intersect( const Ray& r, Isect& i ) const
 {
 	typedef list<Geometry*>::const_iterator iter;
 	iter j;
 
-	isect cur;
+	Isect cur;
 	bool have_one = false;
 
 	// try the non-bounded objects

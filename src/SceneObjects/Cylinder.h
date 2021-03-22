@@ -12,7 +12,7 @@ public:
 	{
 	}
 
-	virtual bool intersectLocal( const ray& r, isect& i ) const;
+	virtual bool intersectLocal( const Ray& r, Isect& i ) const;
 	virtual bool hasBoundingBoxCapability() const { return true; }
 
     virtual BoundingBox ComputeLocalBoundingBox()
@@ -23,8 +23,8 @@ public:
         return localbounds;
     }
 
-    bool intersectBody( const ray& r, isect& i ) const;
-	bool intersectCaps( const ray& r, isect& i ) const;
+    bool intersectBody( const Ray& r, Isect& i ) const;
+	bool intersectCaps( const Ray& r, Isect& i ) const;
 
 protected:
 	bool capped;

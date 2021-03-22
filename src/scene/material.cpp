@@ -1,10 +1,10 @@
-#include "ray.h"
+#include "Ray.h"
 #include "material.h"
 #include "light.h"
 
 // Apply the phong model to this point on the surface of the object, returning
 // the color of that point.
-vec3f Material::shade( Scene *scene, const ray& r, const isect& i ) const
+vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
 {
 	// YOUR CODE HERE
 

@@ -226,7 +226,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="src\scene\ray.cpp">
+    <ClCompile Include="src\scene\Ray.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -286,7 +286,7 @@
     <ClInclude Include="src\scene\camera.h" />
     <ClInclude Include="src\scene\light.h" />
     <ClInclude Include="src\scene\material.h" />
-    <ClInclude Include="src\scene\ray.h" />
+    <ClInclude Include="src\scene\Ray.h" />
     <ClInclude Include="src\scene\scene.h" />
     <ClInclude Include="src\SceneObjects\Box.h" />
     <ClInclude Include="src\SceneObjects\Cone.h" />

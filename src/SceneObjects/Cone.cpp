@@ -3,12 +3,12 @@
 
 #include "Cone.h"
 
-bool Cone::intersectLocal( const ray& r, isect& i ) const
+bool Cone::intersectLocal( const Ray& r, Isect& i ) const
 {
 	i.obj = this;
 
 	if( intersectCaps( r, i ) ) {
-		isect ii;
+		Isect ii;
 		if( intersectBody( r, ii ) ) {
 			if( ii.t < i.t ) {
 				i = ii;
@@ -22,7 +22,7 @@ bool Cone::intersectLocal( const ray& r, isect& i ) const
 }
 
 
-bool Cone::intersectBody( const ray& r, isect& i ) const
+bool Cone::intersectBody( const Ray& r, Isect& i ) const
 {
 	vec3f d = r.getDirection();
 	vec3f p = r.getPosition();
@@ -80,7 +80,7 @@ bool Cone::intersectBody( const ray& r, isect& i ) const
 	return false;
 }
 
-bool Cone::intersectCaps( const ray& r, isect& i ) const
+bool Cone::intersectCaps( const Ray& r, Isect& i ) const
 {
 	if( !capped ) {
 		return false;

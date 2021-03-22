@@ -90,7 +90,7 @@
     <ClCompile Include="src\scene\material.cpp">
       <Filter>Source Files\scene</Filter>
     </ClCompile>
-    <ClCompile Include="src\scene\ray.cpp">
+    <ClCompile Include="src\scene\Ray.cpp">
       <Filter>Source Files\scene</Filter>
     </ClCompile>
     <ClCompile Include="src\scene\scene.cpp">
@@ -146,7 +146,7 @@
     <ClInclude Include="src\scene\material.h">
       <Filter>Header Files\scene.</Filter>
     </ClInclude>
-    <ClInclude Include="src\scene\ray.h">
+    <ClInclude Include="src\scene\Ray.h">
       <Filter>Header Files\scene.</Filter>
     </ClInclude>
     <ClInclude Include="src\scene\scene.h">

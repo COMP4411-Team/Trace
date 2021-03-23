@@ -23,7 +23,7 @@ private:
     mat3f m;                     // rotation matrix
     double normalizedHeight;    // dimensions of image place at unit dist from eye
     double aspectRatio;
-	double fov{45.0};
+	double fov;
     
     void update();              // using the above three values calculate look,u,v
     

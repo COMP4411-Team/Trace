@@ -7,6 +7,7 @@ Camera::Camera()
 {
     aspectRatio = 1;
     normalizedHeight = 1;
+	fov = 53.13;
     
     eye = vec3f(0,0,0);
     u = vec3f( 1,0,0 );

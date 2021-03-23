@@ -26,6 +26,8 @@ public:
     bool intersectBody( const Ray& r, Isect& i ) const;
 	bool intersectCaps( const Ray& r, Isect& i ) const;
 
+	void setEnableTexCoords(bool value) override { }		// cylinder does not support texture
+
 protected:
 	bool capped;
 };

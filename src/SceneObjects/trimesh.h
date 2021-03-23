@@ -20,6 +20,7 @@ class Trimesh : public MaterialSceneObject
     Faces faces;
     Normals normals;
     Materials materials;
+	std::vector<TexCoords> texCoords;
 public:
     Trimesh( Scene *scene, Material *mat, TransformNode *transform )
         : MaterialSceneObject(scene, mat)
@@ -33,6 +34,9 @@ public:
     void addVertex( const vec3f & );
     void addMaterial( Material *m );
     void addNormal( const vec3f & );
+	void addTexCoords(double u, double v);
+	void addTexCoords(const TexCoords& coords);
+	void setEnableTexCoords(bool value) override { enableTexCoords = value; }
 
     bool addFace( int a, int b, int c );
 

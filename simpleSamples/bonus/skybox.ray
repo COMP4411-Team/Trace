@@ -1,0 +1,45 @@
+SBT-raytracer 1.0
+
+// diffuse_map_box.ray
+// Used to demo simple diffuse texture map on a box
+
+camera {
+	position = (0,0,4);
+	viewdir = (0.0, 0.0, -1.0);
+	aspectratio = 1;
+	updir = (0,1,0);
+}
+
+directional_light {
+	direction = (0, -1, 0);
+	colour = (1.0, 1.0, 1.0);
+}
+
+directional_light {
+	direction = (0,1,0);
+	colour = (0.2,0.2,0.2);
+}
+
+// The skybox, size and position will be automatically adjusted according to
+// the camera, and any transformation applied to it will have no effect
+skybox { 
+	back = ".\simpleSamples\bonus\skybox\back.bmp";
+	front = ".\simpleSamples\bonus\skybox\front.bmp";
+	left = ".\simpleSamples\bonus\skybox\left.bmp";
+	right = ".\simpleSamples\bonus\skybox\right.bmp";
+	top = ".\simpleSamples\bonus\skybox\top.bmp";
+	bottom = ".\simpleSamples\bonus\skybox\bottom.bmp";
+}
+
+// The box forms a plane, which should reflect the skybox
+translate( 0, 0, 0,
+	rotate( 1.0, 1.0, 1.0, 1.0, 
+		scale( 1.0,
+			box {
+				material = { 
+					diffuse = (0.7, 0.7, 0.7); 
+					specular = (0.5, 0.5, 0.5);
+					reflective = (1, 1, 1);
+					shininess = 0.2;
+				}
+			} ) ) )

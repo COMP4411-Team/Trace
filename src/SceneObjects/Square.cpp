@@ -35,5 +35,11 @@ bool Square::intersectLocal( const Ray& r, Isect& i ) const
 		i.N = vec3f( 0.0, 0.0, 1.0 );
 	}
 
+	if (enableTexCoords)
+	{
+		i.hasTexCoords = true;
+		i.texCoords = {P[0] + 0.5, P[1] + 0.5};
+	}
+
 	return true;
 }

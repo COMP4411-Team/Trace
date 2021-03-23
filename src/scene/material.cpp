@@ -32,12 +32,13 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
 		
 		vec3f position = r.at(i.t) + i.N * DISPLACEMENT_EPSILON;
 		vec3f direction = light->getDirection(position);
+		vec3f diffuseColor = getDiffuseColor(i);
 		
 		double lambertian = max(direction.dot(i.N), 0.0);
 		vec3f attenuation = light->distanceAttenuation(position) * light->shadowAttenuation(position);
 
 		// Really annoying that * has been overloaded as dot product... WHY????
-		diffuse += lambertian * prod(prod(kd, light->getColor(position)), attenuation);
+		diffuse += lambertian * prod(prod(diffuseColor, light->getColor(position)), attenuation);
 
 		vec3f h = (direction - r.getDirection()).normalize();
 
@@ -47,4 +48,13 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
 	}
 
 	return ke + prod(ka, ambient) + specular + diffuse;		// the direct illumination
+	
+}
+
+vec3f Material::getDiffuseColor(const Isect& isect) const
+{
+	auto* object = isect.obj;
+	if (isect.hasTexCoords && object->enableDiffuseMap)
+		return object->diffuseMap.sample(isect.texCoords) / 255.0;
+	return kd;
 }

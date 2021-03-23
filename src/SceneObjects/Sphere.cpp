@@ -2,6 +2,9 @@
 
 #include "Sphere.h"
 
+const double PI = 3.14159265358979323846;
+const double PI_2 = 6.28318530717958647692;
+
 bool Sphere::intersectLocal( const Ray& r, Isect& i ) const
 {
 	vec3f v = -r.getPosition();
@@ -29,6 +32,16 @@ bool Sphere::intersectLocal( const Ray& r, Isect& i ) const
 	} else {
 		i.t = t2;
 		i.N = r.at( t2 ).normalize();
+	}
+
+	if (enableTexCoords)
+	{
+		i.hasTexCoords = true;
+		double u, v;
+		if (i.N[0] != 0.0)
+			u = (atan2(i.N[1], i.N[0]) + PI) / (PI_2);
+		v = asin(i.N[2]) / PI + 0.5;
+		i.texCoords = {u, v};
 	}
 
 	return true;

@@ -26,6 +26,16 @@ void Trimesh::addNormal( const vec3f &n )
     normals.push_back( n );
 }
 
+void Trimesh::addTexCoords(double u, double v)
+{
+	texCoords.emplace_back(u, v);
+}
+
+void Trimesh::addTexCoords(const TexCoords& coords)
+{
+	texCoords.push_back(coords);
+}
+
 // Returns false if the vertices a,b,c don't all exist
 bool Trimesh::addFace( int a, int b, int c )
 {
@@ -50,7 +60,8 @@ Trimesh::doubleCheck()
         return "Bad Trimesh: Wrong number of materials.";
     if( normals.size() && normals.size() != vertices.size() )
         return "Bad Trimesh: Wrong number of normals.";
-
+    if (enableTexCoords && texCoords.size() != vertices.size())
+        return "Bad Trimesh: Enable texture but has wrong number of texture coordinates";
     return 0;
 }
 
@@ -138,6 +149,16 @@ bool TrimeshFace::intersectLocal( const Ray& r, Isect& i ) const
             (*m) += bary[jj] * (*parent->materials[ ids[jj] ]);
         i.setMaterial( m );
     }
+
+	if (enableTexCoords)
+	{
+		i.hasTexCoords = true;
+		double u = bary[0] * parent->texCoords[ids[0]].u + bary[1] * parent->texCoords[ids[1]].u + 
+            bary[2] * parent->texCoords[ids[2]].u;
+		double v = bary[0] * parent->texCoords[ids[0]].v + bary[1] * parent->texCoords[ids[1]].v + 
+            bary[2] * parent->texCoords[ids[2]].v;
+		i.texCoords = {u, v};
+	}
     
     return true;
 }

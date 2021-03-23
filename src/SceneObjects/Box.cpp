@@ -3,6 +3,8 @@
 
 #include "Box.h"
 
+const double PI = 3.14159265358979323846;
+
 bool Box::intersectLocal( const Ray& r, Isect& i ) const
 {
 	// YOUR CODE HERE:
@@ -62,5 +64,50 @@ bool Box::intersectLocal( const Ray& r, Isect& i ) const
 	{
 		i.N = vec3f(0.0, 0.0, 1.0);
 	}
+
+	if (enableTexCoords)
+	{
+		i.hasTexCoords = true;
+		if (i.N[0] != 0.0)
+			i.texCoords = {isectPos[1] + 0.5, isectPos[2] + 0.5};
+		else if (i.N[1] != 0.0)
+			i.texCoords = {isectPos[0] + 0.5, isectPos[2] + 0.5};
+		else
+			i.texCoords = {isectPos[0] + 0.5, isectPos[1] + 0.5};
+	}
+	
 	return true;
+}
+
+void Box::setEnableTexCoords(bool value)
+{
+	enableTexCoords = value;
+}
+
+Skybox::Skybox(Scene* scene, Material* material): Box(scene, material) { enableTexCoords = true; }
+
+vec3f Skybox::getColor(const Ray& ray, const Isect& isect) const
+{
+	TexCoords uv = isect.texCoords;
+	if (isect.N[0] < 0.0)
+		return right.sample(1.0 - uv.v, uv.u);
+	if (isect.N[0] > 0.0)
+		return left.sample(uv.v, uv.u);
+	if (isect.N[1] > 0.0)
+		return top.sample(1.0 - uv.u, 1.0 - uv.v);
+	if (isect.N[1] < 0.0)
+		return bottom.sample(1.0 - uv.u, uv.v);
+	if (isect.N[2] > 0.0)
+		return front.sample(1.0 - uv.u, uv.v);
+	return back.sample(uv);
+}
+
+void Skybox::initialize(double width)
+{
+	transform = &(scene->transformRoot);
+	double scaling = width / tan(scene->getCamera()->getFov() / 360.0 * PI);
+	
+	transform = transform->createChild(mat4f::translate({scene->getCamera()->getEye()}));
+	transform = transform->createChild(mat4f::scale({scaling, scaling, scaling}));
+	initialized = true;
 }

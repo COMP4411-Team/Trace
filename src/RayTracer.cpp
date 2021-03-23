@@ -8,6 +8,7 @@
 #include "scene/Ray.h"
 #include "fileio/read.h"
 #include "fileio/parse.h"
+#include "SceneObjects/Box.h"
 
 // Trace a top-level ray through normalized window coordinates (x,y)
 // through the projection plane, and out into the scene.  All we do is
@@ -71,8 +72,16 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 		// No intersection.  This ray travels to infinity, so we color
 		// it according to the background color, which in this (simple) case
 		// is just black.
+		
+		if (!scene->useSkybox)
+			return vec3f( 0.0, 0.0, 0.0 );
+		
+		scene->skybox->intersect(r, i);
 
-		return vec3f( 0.0, 0.0, 0.0 );
+		if (isnan(r.getDirection()[0]))
+			return {0, 0, 0};
+		
+		return scene->skybox->getColor(r, i) / 255.0;
 	}
 }
 
@@ -136,6 +145,9 @@ bool RayTracer::loadScene( char* fn )
 	// Add any specialized scene loading code here
 	
 	m_bSceneLoaded = true;
+
+	if (scene->useSkybox)
+		scene->skybox->initialize(buffer_width);
 
 	return true;
 }

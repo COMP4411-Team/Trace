@@ -22,6 +22,8 @@ public:
 		localbounds.max = vec3f(0.5f, 0.5f, RAY_EPSILON);
         return localbounds;
     }
+
+	void setEnableTexCoords(bool value) override { enableTexCoords = value; }
 };
 
 #endif // __SQUARE_H__

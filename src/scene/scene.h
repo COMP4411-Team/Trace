@@ -10,6 +10,7 @@
 #include <list>
 #include <algorithm>
 
+class Skybox;
 using namespace std;
 
 #include "Ray.h"
@@ -19,6 +20,18 @@ using namespace std;
 
 class Light;
 class Scene;
+
+class Texture
+{
+public:
+	~Texture();
+
+	vec3f sample(double u, double v) const;
+	vec3f sample(const TexCoords& coords) const;
+	
+	int height, width;
+	unsigned char* data{nullptr};
+};
 
 class SceneElement
 {
@@ -56,7 +69,7 @@ public:
 
 class TransformNode
 {
-protected:
+public:
 
     // information about this node's transformation
     mat4f    xform;
@@ -144,6 +157,8 @@ public:
     // do not call directly - this should only be called by intersect()
 	virtual bool intersectLocal( const Ray& r, Isect& i ) const;
 
+	virtual bool hasTexCoords() const { return enableTexCoords; }
+	virtual void setEnableTexCoords(bool value) { enableTexCoords = value; }
 
 	virtual bool hasBoundingBoxCapability() const;
 	const BoundingBox& getBoundingBox() const { return bounds; }
@@ -197,9 +212,19 @@ public:
 	Geometry( Scene *scene ) 
 		: SceneElement( scene ) {}
 
+	bool enableBumpMap{false};
+	bool enableNormalMap{false};
+	bool enableDisplacementMap{false};
+	bool enableDiffuseMap{false};
+
+	Texture bumpMap;
+	Texture diffuseMap;
+	Texture normalMap;
+
 protected:
 	BoundingBox bounds;
-    TransformNode *transform;
+    TransformNode *transform{nullptr};
+	bool enableTexCoords{false};
 };
 
 // A SceneObject is a real actual thing that we want to model in the 
@@ -256,6 +281,8 @@ public:
 
 	void add( Geometry* obj )
 	{
+		if (obj == nullptr)
+			return;
 		obj->ComputeBoundingBox();
 		objects.push_back( obj );
 	}
@@ -271,6 +298,8 @@ public:
 	Camera *getCamera() { return &camera; }
 
 	double lightScale{10.0};
+	bool useSkybox{false};
+	Skybox* skybox{nullptr};
 
 private:
     list<Geometry*> objects;

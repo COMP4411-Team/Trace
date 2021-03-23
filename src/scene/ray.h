@@ -12,6 +12,14 @@
 
 class SceneObject;
 
+class TexCoords
+{
+public:
+	TexCoords(): u(0.0), v(0.0) { }
+	TexCoords(double u, double v): u(u), v(v) { }
+	double u, v;
+};
+
 // A ray has a position where the ray starts, and a direction (which should
 // always be normalized!)
 
@@ -77,6 +85,8 @@ public:
             {
                 material = 0;
             }
+        		hasTexCoords = other.hasTexCoords;
+        		texCoords = other.texCoords;
         }
         return *this;
     }
@@ -88,7 +98,9 @@ public:
     Material *material;         // if this intersection has its own material
                                 // (as opposed to one in its associated object)
                                 // as in the case where the material was interpolated
-
+	bool hasTexCoords{false};
+	TexCoords texCoords{0.0, 0.0};
+	
     const Material &getMaterial() const;
     // Other info here.
 };

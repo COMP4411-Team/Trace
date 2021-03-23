@@ -82,13 +82,15 @@ bool Geometry::intersect(const Ray&r, Isect&i) const
     double length = dir.length();
     dir /= length;
 
+	// if (isnan(transform->inverse[0][1])) return false;
+
     Ray localRay( pos, dir );
 
     if (intersectLocal(localRay, i)) {
         // Transform the intersection point & normal returned back into global space.
 		i.N = transform->localToGlobalCoordsNormal(i.N);
 		i.t /= length;
-
+    	
 		return true;
     } else {
         return false;
@@ -135,6 +137,7 @@ Scene::~Scene()
 	for( l = lights.begin(); l != lights.end(); ++l ) {
 		delete (*l);
 	}
+	delete skybox;
 }
 
 // Get any intersection with an object.  Return information about the 
@@ -198,4 +201,26 @@ void Scene::initScene()
 		else
 			nonboundedobjects.push_back(*j);
 	}
+}
+
+Texture::~Texture()
+{
+	delete [] data;
+}
+
+vec3f Texture::sample(double u, double v) const
+{
+	u = _min(_max(0.0, u), 1.0);
+	v = _min(_max(0.0, v), 1.0);
+
+	int x = u * (width - 1);
+	int y = v * (height - 1);
+	unsigned char* pixel = data + (y * width + x) * 3;
+	
+	return vec3f(pixel[0], pixel[1], pixel[2]);
+}
+
+vec3f Texture::sample(const TexCoords& coords) const
+{
+	return sample(coords.u, coords.v);
 }

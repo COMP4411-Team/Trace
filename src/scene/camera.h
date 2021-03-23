@@ -17,17 +17,19 @@ public:
     double getAspectRatio() { return aspectRatio; }
 	const vec3f& getEye() { return eye; }
 	const vec3f& getLook() { return look; }
+	double getFov() const { return fov; }
 
 private:
     mat3f m;                     // rotation matrix
     double normalizedHeight;    // dimensions of image place at unit dist from eye
     double aspectRatio;
+	double fov{45.0};
     
     void update();              // using the above three values calculate look,u,v
     
     vec3f eye;
     vec3f look;                  // direction to look
-    vec3f u,v;                   // u and v in the 
+    vec3f u,v;                   // u and v in the
 };
 
 #endif

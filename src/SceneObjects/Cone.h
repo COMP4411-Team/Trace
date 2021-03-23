@@ -36,6 +36,7 @@ public:
 	bool intersectBody( const Ray& r, Isect& i ) const;
 	bool intersectCaps( const Ray& r, Isect& i ) const;
 
+	void setEnableTexCoords(bool value) override { }		// cone does not support texture
 
 protected:
 	void computeABC()

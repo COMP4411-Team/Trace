@@ -10,6 +10,8 @@
 #include <vector>
 
 #include "read.h"
+
+#include "bitmap.h"
 #include "parse.h"
 
 #include "../scene/scene.h"
@@ -30,6 +32,7 @@ static Obj *getColorField( Obj *obj );
 static Obj *getField( Obj *obj, const string& name );
 static bool hasField( Obj *obj, const string& name );
 static vec3f tupleToVec( Obj *obj );
+static TexCoords tupleToTexCoords(Obj *obj);
 static void processGeometry( string name, Obj *child, Scene *scene,
 	const mmap& materials, TransformNode *transform );
 static void processTrimesh( string name, Obj *child, Scene *scene,
@@ -38,6 +41,9 @@ static void processCamera( Obj *child, Scene *scene );
 static Material *getMaterial( Obj *child, const mmap& bindings );
 static Material *processMaterial( Obj *child, mmap *bindings = NULL );
 static void verifyTuple( const mytuple& tup, size_t size );
+static bool loadTexture(const string& filename, Texture& texture);
+static bool processTexture(Obj* child, Geometry* geometry);
+static bool processSkybox(Obj* child, Scene* scene);
 
 Scene *readScene( const string& filename )
 {
@@ -164,6 +170,13 @@ static vec3f tupleToVec( Obj *obj )
 	return vec3f( t[0]->getScalar(), t[1]->getScalar(), t[2]->getScalar() );
 }
 
+TexCoords tupleToTexCoords(Obj* obj)
+{
+	const mytuple& t = obj->getTuple();
+	verifyTuple( t, 2 );
+	return TexCoords(t[0]->getScalar(), t[1]->getScalar());
+}
+
 static void processGeometry( Obj *obj, Scene *scene,
 	const mmap& materials, TransformNode *transform )
 {
@@ -222,8 +235,64 @@ static void verifyTuple( const mytuple& tup, size_t size )
 	}
 }
 
+bool loadTexture(const string& filename, Texture& texture)
+{
+	auto* tex = readBMP(const_cast<char*>(filename.c_str()), texture.width, texture.height);
+	if (tex == nullptr)
+		return false;
+	texture.data = tex;
+	return true;
+}
+
+bool processTexture(Obj* child, Geometry* geometry)
+{
+	if (hasField(child, "bump_map"))
+	{
+		string filename = getField(child, "bump_map")->getString();
+		if (!loadTexture(filename, geometry->bumpMap))
+			return false;
+		geometry->enableBumpMap = true;
+		geometry->setEnableTexCoords(true);
+	}
+	if (hasField(child, "diffuse_map"))
+	{
+		string filename = getField(child, "diffuse_map")->getString();
+		if (!loadTexture(filename, geometry->diffuseMap))
+			return false;
+		geometry->enableDiffuseMap = true;
+		geometry->setEnableTexCoords(true);
+	}
+	return true;
+}
+
+bool processSkybox(Obj* child, Scene* scene)
+{
+	if (!hasField(child, "front") || !hasField(child, "back") || !hasField(child, "top") ||
+		!hasField(child, "bottom") || !hasField(child, "left") || !hasField(child, "right"))
+		return false;
+
+	auto* skybox = new Skybox(scene, nullptr);
+	bool result = loadTexture(getField(child, "front")->getString(), skybox->front) &&
+		loadTexture(getField(child, "back")->getString(), skybox->back) &&
+		loadTexture(getField(child, "top")->getString(), skybox->top) &&
+		loadTexture(getField(child, "bottom")->getString(), skybox->bottom) &&
+		loadTexture(getField(child, "left")->getString(), skybox->left) &&
+		loadTexture(getField(child, "right")->getString(), skybox->right);
+	
+	if (result)
+	{
+		delete scene->skybox;
+		scene->skybox = skybox;
+		scene->useSkybox = true;
+	}
+	else
+		delete skybox;
+	
+	return result;
+}
+
 static void processGeometry( string name, Obj *child, Scene *scene,
-	const mmap& materials, TransformNode *transform )
+                             const mmap& materials, TransformNode *transform )
 {
 	if( name == "translate" ) {
 		const mytuple& tup = child->getTuple();
@@ -300,7 +369,8 @@ static void processGeometry( string name, Obj *child, Scene *scene,
        	Material *mat;
         
         //if( hasField( child, "material" ) )
-        mat = getMaterial(getField( child, "material" ), materials );
+    		if (name != "skybox")
+			mat = getMaterial(getField( child, "material" ), materials );
         //else
         //    mat = new Material();
 
@@ -327,6 +397,18 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 		} else if( name == "square" ) {
 			obj = new Square( scene, mat );
 		}
+    		else if (name == "skybox")
+    		{
+    			if (!processSkybox(child, scene))
+    				throw ParseError("Failed to load skybox.");
+    			return;
+    		}
+
+    		if (hasField(child, "has_tex_coords"))
+			obj->setEnableTexCoords(true);
+
+    		if (!processTexture(child, obj))
+			throw ParseError("Failed to load texture, please check texture format or path.");
 
         obj->setTransform(transform);
 		scene->add(obj);
@@ -388,6 +470,17 @@ static void processTrimesh( string name, Obj *child, Scene *scene,
         for( mytuple::const_iterator ni = norms.begin(); ni != norms.end(); ++ni )
             tmesh->addNormal( tupleToVec( *ni ) );
     }
+
+	if (hasField(child, "tex_coords"))
+	{
+		tmesh->setEnableTexCoords(true);
+		const mytuple& coords = getField(child, "tex_coords")->getTuple();
+		for(auto iter = coords.begin(); iter != coords.end(); ++iter)
+			tmesh->addTexCoords(tupleToTexCoords(*iter));
+	}
+
+	if (!processTexture(child, tmesh))
+		throw ParseError("Failed to load texture, please check texture format or path.");
 
     char *error;
     if( error = tmesh->doubleCheck() )
@@ -579,7 +672,8 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 				name == "scale" ||
 				name == "transform" ||
                 name == "trimesh" ||
-                name == "polymesh") { // polymesh is for backwards compatibility.
+                name == "polymesh" ||
+				name == "skybox") { // polymesh is for backwards compatibility.
 		processGeometry( name, child, scene, materials, &scene->transformRoot);
 		//scene->add( geo );
 	} else if( name == "material" ) {

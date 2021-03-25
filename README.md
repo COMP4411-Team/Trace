@@ -13,12 +13,14 @@
 * [ ] 1B Deal with overlapping objects intelligently.
 
 * [x] 1B1W Add texture mapping support to the program. Additional (variable) extra credit will be given for such additional mappings. Additional credit will be awarded for quality implementation of texture mapping on general trimeshes.
+  * [x] Diffuse mapping
+  * [x] Normal mapping
 
 * [ ] 1B1W Implement antialiasing by adaptive supersampling.
 
 * [ ] 1B1W Implement more versatile lighting controls.
 
-* [ ] 2B Implement bump mapping.
+* [x] 2B Implement bump mapping.
 
 * [ ] 2B Implement solid textures or some other form of procedural texture mapping.
 

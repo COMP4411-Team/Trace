@@ -1,7 +1,7 @@
 SBT-raytracer 1.0
 
-// diffuse_map_box.ray
-// Used to demo simple diffuse texture map on a box
+// diffuse_map.ray
+// Used to demo simple diffuse texture map on a box and a sphere
 
 camera {
 	position = (0,0,-4);

@@ -37,6 +37,9 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
 
 		if (i.obj->enableBumpMap)
 			normal = perturbSurfaceNormal(i);
+
+		if (i.obj->enableNormalMap)
+			normal = (i.tbn * i.obj->normalMap.sample(i.texCoords)).normalize();
 		
 		double lambertian = max(direction.dot(normal), 0.0);
 		vec3f attenuation = light->distanceAttenuation(position) * light->shadowAttenuation(position);

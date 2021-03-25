@@ -34,7 +34,7 @@
 
 * [ ] 3B Add some higher-level geometry to the ray tracer, such as surfaces of revolution, extrusions, metaballs or blend surfaces.
 
-* [ ] 3B Implement ray-intersection optimization.
+* [x] 3B Implement ray-intersection optimization.
 
 * [ ] 4B Implement a more realistic shading model (Fresnel term, microfacet distribution, anisotropic reflections, non photorealistic rendering).
 

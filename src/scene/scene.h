@@ -9,7 +9,9 @@
 
 #include <list>
 #include <algorithm>
+#include <vector>
 
+class Geometry;
 class Skybox;
 using namespace std;
 
@@ -66,6 +68,37 @@ public:
 	// in tMax and return true, else return false.
 	bool intersect(const Ray& r, double& tMin, double& tMax) const;
 };
+
+
+// Node for BVH
+class BVHNode
+{
+public:
+	~BVHNode() { delete left; delete right; }
+
+	bool intersect(const Ray& ray, Isect& isect) const;
+	
+	vector<Geometry*> objects;
+	BoundingBox aabb;
+	BVHNode* left{nullptr}, *right{nullptr};
+};
+
+
+// Bounding volume hierarchy
+class BVH
+{
+public:
+	~BVH() { delete root; }
+	void build(const list<Geometry*>& objects);		// objects must support bounding box
+	void buildHelper(BVHNode* cur, const vector<Geometry*>& objects);
+	BoundingBox calMaxBoundingBox(const vector<Geometry*>& objects);
+	
+	bool intersect(const Ray& ray, Isect& isect) const;
+	
+	BVHNode* root{nullptr};
+	int threshold{5};	// if the objects contained in a node is less than threshold, stop subdivision
+};
+
 
 class TransformNode
 {
@@ -290,6 +323,7 @@ public:
 	{ lights.push_back( light ); }
 
 	bool intersect( const Ray& r, Isect& i ) const;
+	bool bvhIntersect(const Ray& ray, Isect& isect) const;	// use BVH for acceleration
 	void initScene();
 
 	list<Light*>::const_iterator beginLights() const { return lights.begin(); }
@@ -312,7 +346,10 @@ private:
 	// must fall within this bounding box.  Objects that don't have hasBoundingBoxCapability()
 	// are exempt from this requirement.
 	BoundingBox sceneBounds;
+
+	BVH bvh;
 };
+
 
 inline double _max(double a, double b)
 {

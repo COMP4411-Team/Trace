@@ -129,7 +129,7 @@ Scene::~Scene()
 		delete (*g);
 	}
 
-	for( g = nonboundedobjects.begin(); g != boundedobjects.end(); ++g ) {
+	for( g = nonboundedobjects.begin(); g != nonboundedobjects.end(); ++g ) {
 		delete (*g);
 	}
 
@@ -173,6 +173,26 @@ bool Scene::intersect( const Ray& r, Isect& i ) const
 	return have_one;
 }
 
+bool Scene::bvhIntersect(const Ray& ray, Isect& isect) const
+{
+	bool flag = bvh.intersect(ray, isect);
+	Isect curIsect;
+
+	for (auto* object : nonboundedobjects)
+	{
+		if (object->intersect(ray, curIsect))
+		{
+			if (!flag || curIsect.t < isect.t)
+			{
+				flag = true;
+				isect = curIsect;
+			}
+		}
+	}
+	
+	return flag;
+}
+
 void Scene::initScene()
 {
 	bool first_boundedobject = true;
@@ -200,6 +220,8 @@ void Scene::initScene()
 		else
 			nonboundedobjects.push_back(*j);
 	}
+
+	bvh.build(boundedobjects);
 }
 
 Texture::~Texture()
@@ -222,4 +244,119 @@ vec3f Texture::sample(double u, double v) const
 vec3f Texture::sample(const TexCoords& coords) const
 {
 	return sample(coords.u, coords.v);
+}
+
+void BVH::build(const list<Geometry*>& objects)
+{
+	delete root;
+	root = new BVHNode;
+	vector<Geometry*> objs{std::begin(objects), std::end(objects)};
+	buildHelper(root, objs);
+}
+
+void BVH::buildHelper(BVHNode* cur, const vector<Geometry*>& objects)
+{
+	BoundingBox maxBoundingBox = calMaxBoundingBox(objects);
+	cur->aabb = maxBoundingBox;
+	cur->objects = objects;
+	if (objects.size() < threshold)
+		return;
+	
+	vector<Geometry*> left, right;
+	vector<pair<Geometry*, double>> coords;
+	
+	double xRange = maxBoundingBox.max[0] - maxBoundingBox.min[0];
+	double yRange = maxBoundingBox.max[1] - maxBoundingBox.min[1];
+	double zRange = maxBoundingBox.max[2] - maxBoundingBox.min[2];
+
+	// Find the longest axis
+	int axis = 0;
+	if (yRange > xRange)
+		axis = 1;
+	if (zRange > xRange && zRange > yRange)
+		axis = 2;
+	
+	for (auto* object : objects)
+	{
+		BoundingBox curBox = object->getBoundingBox();
+		coords.emplace_back(object, (curBox.max[axis] + curBox.min[axis]) / 2.0);
+	}
+
+	sort(coords.begin(), coords.end(), 
+		[](const pair<Geometry*, double>& a, const pair<Geometry*, double>& b) { return a.second < b.second; }
+	);
+
+	int mid = coords.size() / 2;
+	for (int i = 0; i < mid; ++i)
+		left.push_back(coords[i].first);
+	for (int i = mid; i < coords.size(); ++i)
+		right.push_back(coords[i].first);
+
+	cur->left = new BVHNode;
+	cur->right = new BVHNode;
+
+	buildHelper(cur->left, left);
+	buildHelper(cur->right, right);
+}
+
+BoundingBox BVH::calMaxBoundingBox(const vector<Geometry*>& objects)
+{
+	BoundingBox aabb;
+	if (objects.empty())
+		return aabb;
+	vec3f curMin = objects[0]->getBoundingBox().min, curMax = objects[0]->getBoundingBox().max;
+	for (auto* object : objects)
+	{
+		curMin = minimum(curMin, object->getBoundingBox().min);
+		curMax = maximum(curMax, object->getBoundingBox().max);
+	}
+	
+	aabb.max = curMax;
+	aabb.min = curMin;
+	return aabb;
+}
+
+bool BVH::intersect(const Ray& ray, Isect& isect) const
+{
+	return root->intersect(ray, isect);
+}
+
+bool BVHNode::intersect(const Ray& ray, Isect& isect) const
+{
+	double tMin, tMax;
+	if (!aabb.intersect(ray, tMin, tMax))
+		return false;
+
+	if (left == nullptr)		// leaf node
+	{
+		bool flag = false;
+		Isect curIsect;
+		for (auto* object : objects)
+		{
+			if (object->intersect(ray, curIsect))
+			{
+				if (!flag || curIsect.t < isect.t)
+				{
+					flag = true;
+					isect = curIsect;
+				}
+			}
+		}
+		return flag;
+	}
+	
+	Isect leftIsect, rightIsect;
+	bool leftSuccess = left->intersect(ray, leftIsect);
+	bool rightSuccess = right->intersect(ray, rightIsect);
+	if (leftSuccess)
+	{
+		if (rightSuccess && rightIsect.t < leftIsect.t)
+			isect = rightIsect;
+		else
+			isect = leftIsect;
+	}
+	else if (rightSuccess)
+		isect = rightIsect;
+	
+	return leftSuccess || rightSuccess;
 }

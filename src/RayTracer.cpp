@@ -36,7 +36,7 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 	
 	Isect i;
 
-	if( scene->intersect( r, i ) ) {
+	if( scene->bvhIntersect( r, i ) ) {
 		// YOUR CODE HERE
 
 		// An intersection occured!  We've got work to do.  For now,
@@ -139,7 +139,7 @@ bool RayTracer::loadScene( char* fn )
 	bufferSize = buffer_width * buffer_height * 3;
 	buffer = new unsigned char[ bufferSize ];
 	
-	// separate objects into bounded and unbounded
+	// separate objects into bounded and unbounded and calculate BVH
 	scene->initScene();
 	
 	// Add any specialized scene loading code here

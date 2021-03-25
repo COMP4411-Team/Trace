@@ -258,9 +258,12 @@ void BVH::buildHelper(BVHNode* cur, const vector<Geometry*>& objects)
 {
 	BoundingBox maxBoundingBox = calMaxBoundingBox(objects);
 	cur->aabb = maxBoundingBox;
-	cur->objects = objects;
+	
 	if (objects.size() < threshold)
+	{
+		cur->objects = objects;
 		return;
+	}
 	
 	vector<Geometry*> left, right;
 	vector<pair<Geometry*, double>> coords;

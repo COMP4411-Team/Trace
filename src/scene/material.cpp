@@ -31,10 +31,14 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
 		}
 		
 		vec3f position = r.at(i.t) + i.N * DISPLACEMENT_EPSILON;
+		vec3f normal = i.N;
 		vec3f direction = light->getDirection(position);
 		vec3f diffuseColor = getDiffuseColor(i);
+
+		if (i.obj->enableBumpMap)
+			normal = perturbSurfaceNormal(i);
 		
-		double lambertian = max(direction.dot(i.N), 0.0);
+		double lambertian = max(direction.dot(normal), 0.0);
 		vec3f attenuation = light->distanceAttenuation(position) * light->shadowAttenuation(position);
 
 		// Really annoying that * has been overloaded as dot product... WHY????
@@ -43,7 +47,7 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
 		vec3f h = (direction - r.getDirection()).normalize();
 
 		// Using Blinn-Phong
-		specular += pow(max(h.dot(i.N), 0.0), shininess * 256.0) * 
+		specular += pow(max(h.dot(normal), 0.0), shininess * 256.0) * 
 			prod(ks, prod(light->getColor(position), attenuation));
 	}
 
@@ -57,4 +61,15 @@ vec3f Material::getDiffuseColor(const Isect& isect) const
 	if (isect.hasTexCoords && object->enableDiffuseMap)
 		return object->diffuseMap.sample(isect.texCoords) / 255.0;
 	return kd;
+}
+
+vec3f Material::perturbSurfaceNormal(const Isect& isect) const
+{
+	double offset = 0.005, factor = 0.05;
+	double h = isect.obj->bumpMap.sample(isect.texCoords).length();
+	double h1 = isect.obj->bumpMap.sample(isect.texCoords.u + offset, isect.texCoords.v).length();
+	double h2 = isect.obj->bumpMap.sample(isect.texCoords.u, isect.texCoords.v + offset).length();
+
+	vec3f normal(factor * (h - h1), factor * (h - h2), 1.0);
+	return (isect.tbn * normal).normalize();
 }

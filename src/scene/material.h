@@ -32,6 +32,7 @@ public:
 
 	virtual vec3f shade( Scene *scene, const Ray& r, const Isect& i ) const;
 	virtual vec3f getDiffuseColor(const Isect& isect) const;
+	virtual vec3f perturbSurfaceNormal(const Isect& isect) const;
 
     vec3f ke;                    // emissive
     vec3f ka;                    // ambient

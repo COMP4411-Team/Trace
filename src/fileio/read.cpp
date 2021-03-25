@@ -262,6 +262,14 @@ bool processTexture(Obj* child, Geometry* geometry)
 		geometry->enableDiffuseMap = true;
 		geometry->setEnableTexCoords(true);
 	}
+	if (hasField(child, "normal_map"))
+	{
+		string filename = getField(child, "normal_map")->getString();
+		if (!loadTexture(filename, geometry->normalMap))
+			return false;
+		geometry->enableNormalMap = true;
+		geometry->setEnableTexCoords(true);
+	}
 	return true;
 }
 

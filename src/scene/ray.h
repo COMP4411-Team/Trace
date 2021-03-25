@@ -87,6 +87,7 @@ public:
             }
         		hasTexCoords = other.hasTexCoords;
         		texCoords = other.texCoords;
+        		tbn = other.tbn;
         }
         return *this;
     }

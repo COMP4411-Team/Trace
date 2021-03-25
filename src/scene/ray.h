@@ -100,6 +100,7 @@ public:
                                 // as in the case where the material was interpolated
 	bool hasTexCoords{false};
 	TexCoords texCoords{0.0, 0.0};
+	mat3f tbn;      // TBN matrix to transform from tangent space to world space
 	
     const Material &getMaterial() const;
     // Other info here.

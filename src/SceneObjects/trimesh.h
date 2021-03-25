@@ -43,12 +43,14 @@ public:
     char *doubleCheck();
     
     void generateNormals();
+	void generateTbnMatrices();
 };
 
 class TrimeshFace : public MaterialSceneObject
 {
     Trimesh *parent;
     int ids[3];
+	mat3f TbnMatrix;
 public:
     TrimeshFace( Scene *scene, Material *mat, Trimesh *parent, int a, int b, int c)
         : MaterialSceneObject( scene, mat )
@@ -78,7 +80,8 @@ public:
 		localbounds.min = minimum( parent->vertices[ids[2]], localbounds.min);
         return localbounds;
     }
-    
+
+	void generateTbnMatrix();
 };
 
 

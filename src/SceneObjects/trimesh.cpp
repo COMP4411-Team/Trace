@@ -158,9 +158,38 @@ bool TrimeshFace::intersectLocal( const Ray& r, Isect& i ) const
 		double v = bary[0] * parent->texCoords[ids[0]].v + bary[1] * parent->texCoords[ids[1]].v + 
             bary[2] * parent->texCoords[ids[2]].v;
 		i.texCoords = {u, v};
+		i.tbn = TbnMatrix;
 	}
     
     return true;
+}
+
+void TrimeshFace::generateTbnMatrix()
+{
+	vec3f& v1 = parent->vertices[ids[0]];
+	vec3f& v2 = parent->vertices[ids[1]];
+	vec3f& v3 = parent->vertices[ids[2]];
+
+	TexCoords& uv1 = parent->texCoords[ids[0]];
+	TexCoords& uv2 = parent->texCoords[ids[1]];
+	TexCoords& uv3 = parent->texCoords[ids[2]];
+
+	double dU1 = uv2.u - uv1.u, dV1 = uv2.v - uv1.v;
+	double dU2 = uv3.u - uv2.u, dV2 = uv3.v - uv2.v;
+	double f = 1.0 / (dU1 * dV2 - dU2 * dV1);
+
+	vec3f e1 = v2 - v1, e2 = v3 - v2;
+	TbnMatrix[2] = e1.cross(e2).normalize();
+
+	vec3f tangent;
+    tangent[0] = f * (dV2 * e1[0] - dV1 * e2[0]);
+	tangent[1] = f * (dV2 * e1[1] - dV1 * e2[1]);
+	tangent[2] = f * (dV2 * e1[2] - dV1 * e2[2]);
+	TbnMatrix[0] = tangent.normalize();
+
+	TbnMatrix[1] = TbnMatrix[2].cross(TbnMatrix[0]).normalize();
+
+	TbnMatrix = TbnMatrix.transpose();      // previously TBN are row vectors, now converted to column vectors
 }
 
 void
@@ -195,5 +224,14 @@ Trimesh::generateNormals()
     }
 
     delete [] numFaces;
+}
+
+void Trimesh::generateTbnMatrices()
+{
+	if (!enableTexCoords)
+        return;
+
+	for (auto& face : faces)
+		face->generateTbnMatrix();
 }
 

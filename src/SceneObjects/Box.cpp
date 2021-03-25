@@ -38,42 +38,58 @@ bool Box::intersectLocal( const Ray& r, Isect& i ) const
 	i.t = tMin < 0.0 ? tMax : tMin;
 	i.N = vec3f(-1.0, 0.0, 0.0);
 	vec3f isectPos = r.at(i.t);
+	vec3f tangent(0.0, 0.0, 1.0);
 	double delta = _abs(isectPos[0] + 0.5);
 	
 	if (_abs(isectPos[0] - 0.5) < delta)
 	{
 		delta = _abs(isectPos[0] - 0.5);
 		i.N = vec3f(1.0, 0.0, 0.0);
+		tangent = vec3f(0.0, 0.0, -1.0);
 	}
 	if (_abs(isectPos[1] + 0.5) < delta)
 	{
 		delta = _abs(isectPos[1] + 0.5);
 		i.N = vec3f(0.0, -1.0, 0.0);
+		tangent = vec3f(-1.0, 0.0, 0.0);
 	}
 	if (_abs(isectPos[1] - 0.5) < delta)
 	{
 		delta = _abs(isectPos[1] - 0.5);
 		i.N = vec3f(0.0, 1.0, 0.0);
+		tangent = vec3f(-1.0, 0.0, 0.0);
 	}
 	if (_abs(isectPos[2] + 0.5) < delta)
 	{
 		delta = _abs(isectPos[2] + 0.5);
 		i.N = vec3f(0.0, 0.0, -1.0);
+		tangent = vec3f(-1.0, 0.0, 0.0);
 	}
 	if (_abs(isectPos[2] - 0.5) < delta)
 	{
 		i.N = vec3f(0.0, 0.0, 1.0);
+		tangent = vec3f(1.0, 0.0, 0.0);
 	}
 
 	if (enableTexCoords)
 	{
 		i.hasTexCoords = true;
-		if (i.N[0] != 0.0)
-			i.texCoords = {isectPos[1] + 0.5, isectPos[2] + 0.5};
-		else if (i.N[1] != 0.0)
-			i.texCoords = {isectPos[0] + 0.5, isectPos[2] + 0.5};
+		if (i.N[0] < 0.0)
+			i.texCoords = {isectPos[2] + 0.5, isectPos[1] + 0.5};
+		else if (i.N[0] > 0.0)
+			i.texCoords = {0.5 - isectPos[2], isectPos[1] + 0.5};
+		else if (i.N[1] < 0.0)
+			i.texCoords = {0.5 - isectPos[0], 0.5 - isectPos[2]};
+		else if (i.N[1] > 0.0)
+			i.texCoords = {0.5 - isectPos[0], isectPos[2] + 0.5};
+		else if (i.N[2] < 0.0)
+			i.texCoords = {0.5 - isectPos[0], isectPos[1] + 0.5};
 		else
-			i.texCoords = {isectPos[0] + 0.5, isectPos[1] + 0.5};
+			i.texCoords = {0.5 + isectPos[0], isectPos[1] + 0.5};
+		i.tbn[0] = tangent;		// TODO: Precalculate all the TBN matrices and store in a static array
+		i.tbn[1] = i.N.cross(tangent);
+		i.tbn[2] = i.N;
+		i.tbn = i.tbn.transpose();
 	}
 	
 	return true;
@@ -90,16 +106,16 @@ vec3f Skybox::getColor(const Ray& ray, const Isect& isect) const
 {
 	TexCoords uv = isect.texCoords;
 	if (isect.N[0] < 0.0)
-		return right.sample(1.0 - uv.v, uv.u);
+		return right.sample(1.0 - uv.u, uv.v);
 	if (isect.N[0] > 0.0)
-		return left.sample(uv.v, uv.u);
+		return left.sample(1.0 - uv.u, uv.v);
 	if (isect.N[1] > 0.0)
-		return top.sample(1.0 - uv.u, 1.0 - uv.v);
+		return top.sample(uv.u, 1.0 - uv.v);
 	if (isect.N[1] < 0.0)
-		return bottom.sample(1.0 - uv.u, uv.v);
+		return bottom.sample(uv.u, 1.0 - uv.v);
 	if (isect.N[2] > 0.0)
 		return front.sample(1.0 - uv.u, uv.v);
-	return back.sample(uv);
+	return back.sample(1.0 - uv.u, uv.v);
 }
 
 void Skybox::initialize(double width)

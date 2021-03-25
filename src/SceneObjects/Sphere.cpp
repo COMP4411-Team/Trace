@@ -42,6 +42,11 @@ bool Sphere::intersectLocal( const Ray& r, Isect& i ) const
 			u = (atan2(i.N[1], i.N[0]) + PI) / (PI_2);
 		v = asin(i.N[2]) / PI + 0.5;
 		i.texCoords = {u, v};
+		
+		i.tbn[0] = vec3f(-i.N[1], i.N[0], 0.0).normalize();
+		i.tbn[1] = i.N.cross(i.tbn[0]);
+		i.tbn[2] = i.N;
+		i.tbn = i.tbn.transpose();
 	}
 
 	return true;

@@ -1,7 +1,8 @@
 SBT-raytracer 1.0
 
-// diffuse_map_box.ray
-// Used to demo simple diffuse texture map on a box
+// skybox.ray
+// Used to demo the skybox and the reflection of the background on a cube
+// Please set recursive depth >= 2 for the reflection
 
 camera {
 	position = (0,0,4);

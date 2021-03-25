@@ -30,15 +30,21 @@ bool Square::intersectLocal( const Ray& r, Isect& i ) const
 	i.obj = this;
 	i.t = t;
 	if( d[2] > 0.0 ) {
-		i.N = vec3f( 0.0, 0.0, -1.0 );
+		i.N = i.tbn[2] = vec3f( 0.0, 0.0, -1.0 );
+		i.tbn[0] = vec3f(1.0, 0.0, 0.0);
+		i.tbn[1] = vec3f(0.0, 1.0, 0.0);
+		
 	} else {
-		i.N = vec3f( 0.0, 0.0, 1.0 );
+		i.N = i.tbn[2] = vec3f( 0.0, 0.0, 1.0 );
+		i.tbn[0] = vec3f(-1.0, 0.0, 0.0);
+		i.tbn[1] = vec3f(0.0, 1.0, 0.0);
 	}
 
 	if (enableTexCoords)
 	{
 		i.hasTexCoords = true;
 		i.texCoords = {P[0] + 0.5, P[1] + 0.5};
+		i.tbn = i.tbn.transpose();
 	}
 
 	return true;

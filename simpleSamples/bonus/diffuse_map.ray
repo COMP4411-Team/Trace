@@ -20,9 +20,9 @@ directional_light {
 	colour = (0.2,0.2,0.2);
 }
 
-rotate( 1,1,1,1,
-	scale(1.6,
-		translate( 0.0, 0.0, 0.0,
+translate( 1.0, 0.0, 0.0,
+	scale(1.0,
+		rotate( 1,1,1,1,
 			box { 
 				material = { 
 					diffuse = (0.8,0.3,0.1);
@@ -30,4 +30,17 @@ rotate( 1,1,1,1,
 					shininess = 0.6;
 				};
 				diffuse_map = ".\simpleSamples\bonus\crate.bmp";
-		})))
+			})))
+
+
+translate( -1.0, 0.0, 0.0,
+	scale(0.6,
+		rotate( 1,1,1,1,
+			sphere { 
+				material = { 
+					diffuse = (0.8,0.3,0.1);
+					specular = (0.9,0.4,0.0);
+					shininess = 0.6;
+				};
+				diffuse_map = ".\simpleSamples\bonus\crate.bmp";
+			})))

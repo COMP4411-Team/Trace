@@ -207,7 +207,7 @@ public:
     // this should be overridden if hasBoundingBoxCapability() is true.
     virtual BoundingBox ComputeLocalBoundingBox() { return BoundingBox(); }
 
-    void setTransform(TransformNode *transform) { this->transform = transform; };
+    void setTransform(TransformNode *transform) { this->transform = transform; }
     
 	Geometry( Scene *scene ) 
 		: SceneElement( scene ) {}

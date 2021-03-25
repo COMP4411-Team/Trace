@@ -82,15 +82,14 @@ bool Geometry::intersect(const Ray&r, Isect&i) const
     double length = dir.length();
     dir /= length;
 
-	// if (isnan(transform->inverse[0][1])) return false;
-
     Ray localRay( pos, dir );
 
     if (intersectLocal(localRay, i)) {
         // Transform the intersection point & normal returned back into global space.
 		i.N = transform->localToGlobalCoordsNormal(i.N);
 		i.t /= length;
-    	
+    		if (i.hasTexCoords)
+    			i.tbn = transform->normi * i.tbn;
 		return true;
     } else {
         return false;

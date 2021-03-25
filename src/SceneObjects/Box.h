@@ -14,7 +14,7 @@ public:
 
 	virtual bool intersectLocal( const Ray& r, Isect& i ) const;
 	virtual bool hasBoundingBoxCapability() const { return true; }
-	virtual void setEnableTexCoords(bool value) override;
+	void setEnableTexCoords(bool value) override;
     virtual BoundingBox ComputeLocalBoundingBox()
     {
         BoundingBox localbounds;

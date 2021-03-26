@@ -552,6 +552,26 @@ static Material *processMaterial( Obj *child, mmap *bindings )
         mat->shininess = getField( child, "shininess" )->getScalar();
     }
 
+	// For PBR
+	mat->pbrReady = true;
+	if( hasField( child, "albedo" ) ) {
+        mat->albedo = tupleToVec( getField( child, "albedo" ) );
+    }
+	else mat->pbrReady = false;
+	
+	if( hasField( child, "roughness" ) ) {
+        mat->roughness = getField( child, "roughness" )->getScalar();
+    }
+	else mat->pbrReady = false;
+	
+	if( hasField( child, "metallic" ) ) {
+        mat->metallic = getField( child, "metallic" )->getScalar();
+    }
+	else mat->pbrReady = false;
+
+	if (mat->pbrReady)
+		mat->initBRDF();
+
     if( bindings != NULL ) {
         // Want to bind, better have "name" field:
         if( hasField( child, "name" ) ) {

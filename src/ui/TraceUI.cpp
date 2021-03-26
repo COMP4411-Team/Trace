@@ -140,6 +140,12 @@ void TraceUI::cb_ssaaJitterButton(Fl_Widget* o, void* v)
 	ui->raytracer->ssaaJitter = bool( ((Fl_Light_Button*)o)->value() );
 }
 
+void TraceUI::cb_pbrButton(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->enablePBR = bool( ((Fl_Light_Button*)o)->value() );
+}
+
 void TraceUI::cb_render(Fl_Widget* o, void* v)
 {
 	char buffer[256];
@@ -307,6 +313,11 @@ TraceUI::TraceUI() {
 		m_ssaaJitterButton->user_data(this);
 		m_ssaaJitterButton->value(0);
 		m_ssaaJitterButton->callback(cb_ssaaJitterButton);
+
+		m_pbrButton = new Fl_Light_Button(10, 185, 150, 25, "Enable PBR");
+		m_pbrButton->user_data(this);
+		m_pbrButton->value(0);
+		m_pbrButton->callback(cb_pbrButton);
 
 		m_renderButton = new Fl_Button(240, 27, 70, 25, "&Render");
 		m_renderButton->user_data((void*)(this));

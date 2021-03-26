@@ -34,6 +34,13 @@ public:
 	virtual vec3f getDiffuseColor(const Isect& isect) const;
 	virtual vec3f perturbSurfaceNormal(const Isect& isect) const;
 
+	void initBRDF();
+	vec3f pbs(Scene *scene, const Ray& r, const Isect& i) const;    // physically based shading
+	double calNDF(double cosTheta) const;   // Trowbridge-Reitz GGX normal distribution function
+	double calGGX(double cosTheta) const;   // Schlick-GGX
+	vec3f calFresnel(double cosTheta, const vec3f& F0) const;
+	vec3f sampleBRDF(const vec3f& l, const vec3f& v, const vec3f& n, const vec3f& albedo) const;
+
     vec3f ke;                    // emissive
     vec3f ka;                    // ambient
     vec3f ks;                    // specular
@@ -49,6 +56,14 @@ public:
                                 // as opposed to the "default" material which is
                                 // a pleasant blue.
     static const Material zero;
+
+	// PBR material parameters, based on UE4 BRDF
+	vec3f albedo;
+	double roughness;
+	double metallic;
+	double alpha2;              // roughness ^ 4
+	double k;                   // (roughness + 1) ^ 2 / 8
+	bool pbrReady{false};       // true if all the parameters needed are given
 
     Material &
     operator+=( const Material &m )

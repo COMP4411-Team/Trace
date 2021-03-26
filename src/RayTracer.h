@@ -31,6 +31,7 @@ public:
 
 	int ssaaSample{0};	// the exponent of 2
 	bool ssaaJitter{false};
+	bool enablePBR{false};
 
 private:
 	unsigned char *buffer;

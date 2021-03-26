@@ -35,6 +35,7 @@ public:
 	Fl_Button*			m_renderButton;
 	Fl_Button*			m_stopButton;
 	Fl_Light_Button* m_ssaaJitterButton;
+	Fl_Light_Button* m_pbrButton;
 
 	TraceGLWindow*		m_traceGlWindow;
 
@@ -79,6 +80,7 @@ private:
 	static void cb_threshSlides(Fl_Widget* o, void* v);
 	static void cb_ssaaLevelSlides(Fl_Widget* o, void* v);
 	static void cb_ssaaJitterButton(Fl_Widget* o, void* v);
+	static void cb_pbrButton(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_stop(Fl_Widget* o, void* v);

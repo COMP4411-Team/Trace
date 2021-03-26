@@ -49,7 +49,11 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 		// rays.
 
 		const Material& m = i.getMaterial();
-		vec3f directIllumination = m.shade(scene, r, i);
+		vec3f directIllumination;
+		if (enablePBR && m.pbrReady)
+			directIllumination = m.pbs(scene, r, i);
+		else 
+			directIllumination = m.shade(scene, r, i);
 
 		vec3f indirectIllumination;
 

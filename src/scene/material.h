@@ -40,6 +40,8 @@ public:
 	double calGGX(double cosTheta) const;   // Schlick-GGX
 	vec3f calFresnel(double cosTheta, const vec3f& F0) const;
 	vec3f sampleBRDF(const vec3f& l, const vec3f& v, const vec3f& n, const vec3f& albedo) const;
+	Ray sampleBTDF(const Ray& ray, const Isect& isect) const;
+	vec3f sampleDir(const vec3f& n, double& pdf) const;
 
     vec3f ke;                    // emissive
     vec3f ka;                    // ambient
@@ -96,5 +98,6 @@ operator*( double d, Material m )
     return m;
 }
 // extern Material THE_DEFAULT_MATERIAL;
+
 
 #endif // __MATERIAL_H__

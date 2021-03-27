@@ -67,6 +67,7 @@
 #include "RayTracer.h"
 
 #include "fileio/bitmap.h"
+#include <random>
 
 // ***********************************************************
 // from getopt.cpp 
@@ -88,6 +89,11 @@ int g_height;
 int g_width = 150;
 bool bReport = false;
 char *progname, *rayName, *imgName;
+
+// Global random number generator
+std::random_device rand_dev;
+std::mt19937_64 rng(rand_dev());
+std::uniform_real_distribution<double> unif(0.0, 1.0);
 
 void usage()
 {

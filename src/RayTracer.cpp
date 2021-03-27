@@ -19,7 +19,14 @@ vec3f RayTracer::trace( Scene *scene, double x, double y )
     Ray r( vec3f(0,0,0), vec3f(0,0,0) );
 
 	scene->getCamera()->rayThrough( x, y, r );
-	return traceRay( scene, r, threshold, 0, {1.0, 1.0, 1.0} ).clamp();
+	if (!enablePathTracing)
+		return traceRay( scene, r, threshold, 0, {1.0, 1.0, 1.0} ).clamp();
+
+	//vec3f color;
+	//for (int i = 0; i < SPP; ++i)
+	//	color += tracePath(scene, r, 0).clamp();
+	//return color / SPP;
+	return tracePath(scene, r, 0).clamp();
 }
 
 // Do recursive ray tracing!  You'll want to insert a lot of code here
@@ -81,17 +88,84 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 			return vec3f( 0.0, 0.0, 0.0 );
 		
 		scene->skybox->intersect(r, i);
-
-		if (isnan(r.getDirection()[0]))
-			return {0, 0, 0};
-		
 		return scene->skybox->getColor(r, i) / 255.0;
+	}
+}
+
+vec3f RayTracer::tracePath(Scene* scene, const Ray& ray, int depth)
+{
+	vec3f radiance;
+	Isect isect;
+	if (scene->bvhIntersect(ray, isect))
+	{
+		const Material& material = isect.getMaterial();
+		vec3f pos = ray.at(isect.t) + isect.N * DISPLACEMENT_EPSILON;
+		if (isect.obj->hasEmission)
+		{
+			if (depth == 0)
+			{
+				vec3f emission;
+				double dummy;
+				isect.obj->sample(emission, dummy);
+				return emission;
+			}
+			return vec3f();
+		}
+		if (material.kt.iszero())	// opaque object, calculate direct lighting and BRDF
+		{
+			vec3f emission;
+			double pdf;
+			Ray directLight = scene->uniformSampleOneLight(emission, pdf);
+			
+			vec3f wi = (directLight.getPosition() - pos).normalize();
+			Ray toLight(pos, wi);
+			double distance = (directLight.getPosition() - pos).length();
+
+			Isect shadowRay;
+
+			// Direct illumination part
+			if (!scene->bvhIntersect(toLight, shadowRay) || shadowRay.t > distance + RAY_EPSILON)
+			{
+				emission *= (1.0 / distance * distance);		// distance attenuation
+				// Lambertian and change of integration target from solid angle to light area
+				emission *= _abs(isect.N.dot(wi) * directLight.getDirection().dot(-wi));
+				emission /= pdf;
+				radiance += emission;
+			}
+
+			double rr = getUniformReal();	// Russian roulette
+			if (rr > rrThresh)
+				return radiance;
+
+			double brdfPdf;
+			vec3f nextDir = material.sampleDir(isect.N, brdfPdf).normalize();	// sample the direction for next ray
+			vec3f brdf = material.sampleBRDF(nextDir, -ray.getDirection(), isect.N, material.albedo);
+			Ray newRay(pos, nextDir);
+
+			double coeff = isect.N.dot(nextDir);		// cosine term in render equation
+			coeff *= 1.0 / (brdfPdf * rrThresh);		// the whole pdf
+			radiance += prod(brdf, tracePath(scene, newRay, depth + 1)) * coeff;
+			return radiance;
+		}
+
+		// Transparent object, calculate BSDF
+		Ray nextRay = material.sampleBTDF(ray, isect);
+		return prod(material.kt, tracePath(scene, nextRay, depth + 1));
+	}
+	else
+	{
+		if (!scene->useSkybox)
+			return vec3f( 0.0, 0.0, 0.0 );
+		
+		scene->skybox->intersect(ray, isect);
+		return scene->skybox->getColor(ray, isect) / 255.0;
 	}
 }
 
 RayTracer::RayTracer()
 {
 	buffer = NULL;
+	backBuffer = nullptr;
 	buffer_width = buffer_height = 256;
 	scene = NULL;
 
@@ -110,6 +184,11 @@ void RayTracer::getBuffer( unsigned char *&buf, int &w, int &h )
 	buf = buffer;
 	w = buffer_width;
 	h = buffer_height;
+}
+
+void RayTracer::swapBuffer()
+{
+	swap(buffer, backBuffer);
 }
 
 double RayTracer::aspectRatio()
@@ -166,8 +245,12 @@ void RayTracer::traceSetup( int w, int h, int maxDepth, const vec3f& threshold )
 		bufferSize = buffer_width * buffer_height * 3;
 		delete [] buffer;
 		buffer = new unsigned char[ bufferSize ];
+
+		delete [] backBuffer;
+		backBuffer = new unsigned char[bufferSize];
 	}
 	memset( buffer, 0, w*h*3 );
+	memset(backBuffer, 0, bufferSize);
 	this->maxDepth = maxDepth;
 	this->threshold = threshold;
 }
@@ -183,10 +266,10 @@ void RayTracer::traceLines( int start, int stop )
 
 	for( int j = start; j < stop; ++j )
 		for( int i = 0; i < buffer_width; ++i )
-			tracePixel(i,j);
+			tracePixel(i, j, 1);
 }
 
-void RayTracer::tracePixel( int i, int j )
+void RayTracer::tracePixel( int i, int j, int iter )
 {
 	vec3f col;
 
@@ -224,16 +307,27 @@ void RayTracer::tracePixel( int i, int j )
 	col /= sampleNum;
 	
 	unsigned char *pixel = buffer + ( i + j * buffer_width ) * 3;
-
-	pixel[0] = (int)( 255.0 * col[0]);
-	pixel[1] = (int)( 255.0 * col[1]);
-	pixel[2] = (int)( 255.0 * col[2]);
+	if (!enablePathTracing)
+	{
+		pixel[0] = (int)( 255.0 * col[0]);
+		pixel[1] = (int)( 255.0 * col[1]);
+		pixel[2] = (int)( 255.0 * col[2]);
+	}
+	else
+	{
+		double weight = (double)(iter - 1) / iter;
+		auto* backPixel = backBuffer + ( i + j * buffer_width ) * 3;
+		backPixel[0] = (int)( 255.0 * col[0] / iter + pixel[0] * weight );
+		backPixel[1] = (int)( 255.0 * col[1] / iter + pixel[1] * weight );
+		backPixel[2] = (int)( 255.0 * col[2] / iter + pixel[2] * weight );
+	}
 }
 
 void RayTracer::setLightScale(double value)
 {
 	scene->lightScale = value;
 }
+
 
 // D3D11_STANDARD_MULTISAMPLE_QUALITY_LEVELS enumeration
 std::vector<std::vector<std::pair<int, int>>> RayTracer::msaaSamplePattern =

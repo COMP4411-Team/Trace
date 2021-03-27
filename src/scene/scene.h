@@ -10,6 +10,7 @@
 #include <list>
 #include <algorithm>
 #include <vector>
+#include <random>
 
 class Geometry;
 class Skybox;
@@ -19,6 +20,9 @@ using namespace std;
 #include "material.h"
 #include "camera.h"
 #include "../vecmath/vecmath.h"
+
+extern std::mt19937_64 rng;
+extern uniform_real_distribution<double> unif;
 
 class Light;
 class Scene;
@@ -193,6 +197,10 @@ public:
 	virtual bool hasTexCoords() const { return enableTexCoords; }
 	virtual void setEnableTexCoords(bool value) { enableTexCoords = value; }
 
+	// For area light sampling
+	virtual Ray sample(vec3f& emit, double& pdf) const { return Ray{vec3f(), vec3f()}; }
+	virtual double getArea() const { return 0.0; }
+
 	virtual bool hasBoundingBoxCapability() const;
 	const BoundingBox& getBoundingBox() const { return bounds; }
 	virtual void ComputeBoundingBox()
@@ -249,7 +257,8 @@ public:
 	bool enableNormalMap{false};
 	bool enableDisplacementMap{false};
 	bool enableDiffuseMap{false};
-
+	bool hasEmission{false};
+	
 	Texture bumpMap;
 	Texture diffuseMap;
 	Texture normalMap;
@@ -328,6 +337,8 @@ public:
 
 	list<Light*>::const_iterator beginLights() const { return lights.begin(); }
 	list<Light*>::const_iterator endLights() const { return lights.end(); }
+
+	Ray uniformSampleOneLight(vec3f& emit, double& pdf);
         
 	Camera *getCamera() { return &camera; }
 
@@ -340,6 +351,7 @@ private:
 	list<Geometry*> nonboundedobjects;
 	list<Geometry*> boundedobjects;
     list<Light*> lights;
+	list<Geometry*> emittingObjects;
     Camera camera;
 	
 	// Each object in the scene, provided that it has hasBoundingBoxCapability(),
@@ -371,6 +383,11 @@ inline void _swap(double& a, double& b)
 	double tmp = b;
 	b = a;
 	a = tmp;
+}
+
+inline double getUniformReal()
+{
+	return unif(rng);
 }
 
 #endif // __SCENE_H__

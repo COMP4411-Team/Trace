@@ -52,3 +52,19 @@ bool Sphere::intersectLocal( const Ray& r, Isect& i ) const
 	return true;
 }
 
+void SphereLight::calInfo()
+{
+	radius = (transform->xform * vec3f(1.0, 0.0, 0.0)).length();
+	position = transform->xform * vec3f();
+	area = 4.0 * PI * radius * radius;
+}
+
+Ray SphereLight::sample(vec3f& emit, double& pdf) const
+{
+	double theta = 2.0 * PI * getUniformReal(), phi = PI * getUniformReal();
+    vec3f dir(cos(phi), sin(phi) * cos(theta), sin(phi) * sin(theta));
+	Ray ray(position + radius * dir, dir);
+    emit = emission;
+    pdf = 1.0 / area;
+	return ray;
+}

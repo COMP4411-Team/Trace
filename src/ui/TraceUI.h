@@ -34,8 +34,10 @@ public:
 
 	Fl_Button*			m_renderButton;
 	Fl_Button*			m_stopButton;
+	Fl_Button* m_renderPtButton;
 	Fl_Light_Button* m_ssaaJitterButton;
 	Fl_Light_Button* m_pbrButton;
+	Fl_Light_Button* m_pathTracingButton;
 
 	TraceGLWindow*		m_traceGlWindow;
 
@@ -58,6 +60,8 @@ private:
 	int			m_nDepth;
 	double lightScale{10};
 	int ssaaSampleLevel{0};
+	bool enablePathTracing{false};
+	int maxIter{10000};
 	vec3f threshold;
 
 // static class members
@@ -81,8 +85,10 @@ private:
 	static void cb_ssaaLevelSlides(Fl_Widget* o, void* v);
 	static void cb_ssaaJitterButton(Fl_Widget* o, void* v);
 	static void cb_pbrButton(Fl_Widget* o, void* v);
+	static void cb_pathTracingButton(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
+	static void cb_renderPt(Fl_Widget* o, void* v);
 	static void cb_stop(Fl_Widget* o, void* v);
 };
 

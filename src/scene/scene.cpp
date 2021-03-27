@@ -1,9 +1,12 @@
 #include <cmath>
+#include <random>
 
 #include "scene.h"
 #include "light.h"
 #include "../ui/TraceUI.h"
 extern TraceUI* traceUI;
+
+
 
 void BoundingBox::operator=(const BoundingBox& target)
 {
@@ -219,9 +222,28 @@ void Scene::initScene()
 		}
 		else
 			nonboundedobjects.push_back(*j);
+
+		if ((*j)->hasEmission)
+			emittingObjects.push_back(*j);
 	}
 
 	bvh.build(boundedobjects);
+}
+
+Ray Scene::uniformSampleOneLight(vec3f& emit, double& pdf)
+{
+	double emitAreaSum = 0.0;
+	for (auto& light : emittingObjects)
+		emitAreaSum += light->getArea();
+	double prob = getUniformReal() * emitAreaSum;
+	emitAreaSum = 0.0;
+	for (auto& light : emittingObjects)
+	{
+		emitAreaSum += light->getArea();
+		if (emitAreaSum >= prob)
+			return light->sample(emit, pdf);
+	}
+	return Ray{vec3f(), vec3f()};
 }
 
 Texture::~Texture()

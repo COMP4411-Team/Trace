@@ -146,6 +146,13 @@ void TraceUI::cb_pbrButton(Fl_Widget* o, void* v)
 	ui->raytracer->enablePBR = bool( ((Fl_Light_Button*)o)->value() );
 }
 
+void TraceUI::cb_pathTracingButton(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->enablePathTracing = bool( ((Fl_Light_Button*)o)->value() );
+	ui->raytracer->enablePathTracing = bool( ((Fl_Light_Button*)o)->value() );
+}
+
 void TraceUI::cb_render(Fl_Widget* o, void* v)
 {
 	char buffer[256];
@@ -196,7 +203,7 @@ void TraceUI::cb_render(Fl_Widget* o, void* v)
 					}
 				}
 
-				pUI->raytracer->tracePixel( x, y );
+				pUI->raytracer->tracePixel( x, y, 1 );
 		
 			}
 			if (done) break;
@@ -221,6 +228,77 @@ void TraceUI::cb_render(Fl_Widget* o, void* v)
 		// Restore the window label
 		pUI->m_traceGlWindow->label(old_label);		
 	}
+}
+
+void TraceUI::cb_renderPt(Fl_Widget* o, void* v)
+{
+	char buffer[256];
+	auto* pUI = ((TraceUI*)(o->user_data()));
+	if (!pUI->raytracer->sceneLoaded())
+		return;
+	int width = pUI->getSize();
+	int height = (int)(width / pUI->raytracer->aspectRatio() + 0.5);
+	pUI->m_traceGlWindow->resizeWindow(width, height);
+	pUI->m_traceGlWindow->show();
+	pUI->raytracer->traceSetup(width, height, pUI->getDepth(), pUI->threshold);
+
+	// Save the window label
+	const char* old_label = pUI->m_traceGlWindow->label();
+
+	// start to render here	
+	done = false;
+	clock_t prev, now;
+	prev = clock();
+
+	pUI->m_traceGlWindow->refresh();
+	Fl::check();
+	Fl::flush();
+
+	for (int i = 1; i <= pUI->maxIter; ++i)
+	{
+		for (int y = 0; y < height; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+				if (done) break;
+				now = clock();
+				if (((double)(now - prev) / CLOCKS_PER_SEC) > 0.5)
+				{
+					prev = now;
+					if (Fl::ready())
+					{
+						// refresh
+						pUI->m_traceGlWindow->refresh();
+						// check event
+						Fl::check();
+
+						if (Fl::damage())
+							Fl::flush();
+					}
+				}
+				pUI->raytracer->tracePixel(x, y, i);
+			}
+			if (done) break;
+
+			if (Fl::ready())
+			{
+				// refresh
+				pUI->m_traceGlWindow->refresh();
+				if (Fl::damage())
+					Fl::flush();
+			}
+		}
+		// update the window label
+		sprintf(buffer, "Iter %d %s", i, old_label);
+		pUI->m_traceGlWindow->label(buffer);
+
+		pUI->raytracer->swapBuffer();
+	}
+
+	done = true;
+	pUI->m_traceGlWindow->refresh();
+	// Restore the window label
+	pUI->m_traceGlWindow->label(old_label);
 }
 
 void TraceUI::cb_stop(Fl_Widget* o, void* v)
@@ -318,6 +396,15 @@ TraceUI::TraceUI() {
 		m_pbrButton->user_data(this);
 		m_pbrButton->value(0);
 		m_pbrButton->callback(cb_pbrButton);
+
+		m_pathTracingButton = new Fl_Light_Button(10, 215, 150, 25, "Enable Path Tracing");
+		m_pathTracingButton->user_data(this);
+		m_pathTracingButton->value(0);
+		m_pathTracingButton->callback(cb_pathTracingButton);
+
+		m_renderButton = new Fl_Button(220, 215, 90, 25, "Render PT");
+		m_renderButton->user_data((void*)(this));
+		m_renderButton->callback(cb_renderPt);
 
 		m_renderButton = new Fl_Button(240, 27, 70, 25, "&Render");
 		m_renderButton->user_data((void*)(this));

@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include "light.h"
+#include <random>
 
 double DirectionalLight::distanceAttenuation( const vec3f& P ) const
 {
@@ -111,3 +112,4 @@ double smoothstep(double edge0, double edge1, double x)
     t = _min(_max((x - edge0) / (edge1 - edge0), 0.0), 1.0);
     return t * t * (3.0 - 2.0 * t);
 }
+

@@ -1,9 +1,62 @@
 #include "Ray.h"
 #include "material.h"
 #include "light.h"
+#include <random>
 
 const double PI = 3.14159265358979323846;
+const double PI_OVER_2 = 1.57079632679489661923;
+const double PI_OVER_4 = 0.78539816339744830961;
 const double INV_PI = 0.31830988618379067153;
+
+inline double getRandomReal()
+{
+	return unif(rng);
+}
+
+// The result is stored in the x and y component
+// Ref: PBRT-v3
+inline vec3f concentricSampleDisk()
+{
+	double x = 2.0 * getRandomReal() - 1.0, y = 2.0 * getRandomReal() - 1.0;
+	if (x == 0.0 && y == 0.0)
+		return vec3f();
+	double theta, r;
+	if (_abs(x) > _abs(y))
+	{
+		r = x;
+		theta = PI_OVER_4 * (y / x);
+	}
+	else
+	{
+		r = y;
+		theta = PI_OVER_2 - PI_OVER_4 * (x / y);
+	}
+	return vec3f(r * cos(theta), r * sin(theta), 0.0);
+}
+
+// Ref: PBRT-v3
+inline vec3f cosineSampleHemisphere()
+{
+    vec3f d = concentricSampleDisk();
+    double z = sqrt(_max(0.0, 1 - d[0] * d[0] - d[1] * d[1]));
+    return vec3f(d[0], d[1], z);
+}
+
+inline double cosineHemispherePdf(double cosTheta)
+{
+	return cosTheta * INV_PI;
+}
+
+inline vec3f localToWorld(const vec3f& v, const vec3f& n)
+{
+	vec3f t, b;
+	if (_abs(n[0]) > _abs(n[1]))
+		t = vec3f(n[2], 0.0, -n[0]).normalize();
+	else
+		t = vec3f(0.0, n[2], -n[1]).normalize();
+	b = t.cross(n);
+	return v[0] * b + v[1] * t + v[2] * n;
+}
 
 // Apply the phong model to this point on the surface of the object, returning
 // the color of that point.
@@ -142,6 +195,7 @@ vec3f Material::calFresnel(double cosTheta, const vec3f& F0) const
 	return F0 + (vec3f(1.0, 1.0, 1.0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
+// Sample the BRDF
 vec3f Material::sampleBRDF(const vec3f& l, const vec3f& v, const vec3f& n, const vec3f& albedo) const
 {
 	vec3f h = ((l + v) / 2.0).normalize();
@@ -153,4 +207,41 @@ vec3f Material::sampleBRDF(const vec3f& l, const vec3f& v, const vec3f& n, const
 
 	return albedo * INV_PI + calFresnel(vDotH, F0) * calNDF(nDotH) * calGGX(nDotL) * calGGX(nDotV) / 
 		(4.0 * nDotL * nDotV + NORMAL_EPSILON);
+}
+
+// Sample the nest direction for path tracing for transparent materials
+// v is from the previous vertex to the intersection point
+Ray Material::sampleBTDF(const Ray& ray, const Isect& isect) const
+{
+	double n1 = 1.0, n2 = index;
+	vec3f v = ray.getDirection();
+	if (v.dot(isect.N) > 0.0)
+		_swap(n1, n2);
+
+	double F0 = (n1 - n2) / (n1 + n2);
+	F0 *= F0;
+	double theta = _abs(v.dot(isect.N));
+	double fresnel = F0 + (1.0 - F0) * pow(theta, 5.0);
+
+	double eta = n1 / n2;
+	double cosTheta2 = 1.0 - eta * eta * (1.0 - theta * theta);
+	if (cosTheta2 < 0.0 || getRandomReal() < fresnel)
+	{
+		return ray.reflect(isect);
+	}
+	else
+	{
+		Ray wi{vec3f(), vec3f()};
+		ray.refract(isect, wi);
+		return wi;
+	}
+}
+
+// Sample the next direction for path tracing for opaque materials
+vec3f Material::sampleDir(const vec3f& n, double& pdf) const
+{
+	// TODO: add importance sampling
+	vec3f localDir = cosineSampleHemisphere();
+	pdf = cosineHemispherePdf(localDir[2]);
+	return localToWorld(localDir, n);
 }

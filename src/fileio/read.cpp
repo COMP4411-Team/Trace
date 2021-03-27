@@ -377,7 +377,7 @@ static void processGeometry( string name, Obj *child, Scene *scene,
        	Material *mat;
         
         //if( hasField( child, "material" ) )
-    		if (name != "skybox")
+    		if (name != "skybox" && name != "sphere_light")
 			mat = getMaterial(getField( child, "material" ), materials );
         //else
         //    mat = new Material();
@@ -411,6 +411,14 @@ static void processGeometry( string name, Obj *child, Scene *scene,
     				throw ParseError("Failed to load skybox.");
     			return;
     		}
+		else if (name == "sphere_light")
+		{
+			auto* light = new SphereLight(scene, nullptr, tupleToVec(getField(child, "emission")));
+			light->setTransform(transform);
+			light->calInfo();
+			scene->add(light);
+			return;
+		}
 
     		if (hasField(child, "has_tex_coords"))
 			obj->setEnableTexCoords(true);

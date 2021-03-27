@@ -16,13 +16,15 @@ public:
 
     vec3f trace( Scene *scene, double x, double y );
 	vec3f traceRay( Scene *scene, const Ray& r, const vec3f& thresh, int depth, const vec3f& curFactor );
+	vec3f tracePath(Scene* scene, const Ray& ray, int depth);		// path tracing
 
 
 	void getBuffer( unsigned char *&buf, int &w, int &h );
+	void swapBuffer();
 	double aspectRatio();
 	void traceSetup( int w, int h, int maxDepth, const vec3f& threshold );
 	void traceLines( int start = 0, int stop = 10000000 );
-	void tracePixel( int i, int j );
+	void tracePixel( int i, int j, int iter );
 	void setLightScale(double value);
 
 	bool loadScene( char* fn );
@@ -32,9 +34,15 @@ public:
 	int ssaaSample{0};	// the exponent of 2
 	bool ssaaJitter{false};
 	bool enablePBR{false};
+	bool enablePathTracing{false};
+
+	// Parameters for path tracing
+	int SPP{64};	// sample per pixel
+	double rrThresh{0.6};	// russian roulette threshold
 
 private:
 	unsigned char *buffer;
+	unsigned char* backBuffer;		// used for progressive path tracing
 	int buffer_width, buffer_height;
 	int bufferSize;
 	Scene *scene;

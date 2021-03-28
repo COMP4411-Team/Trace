@@ -1,5 +1,4 @@
 #include <cmath>
-#include <random>
 
 #include "scene.h"
 #include "light.h"

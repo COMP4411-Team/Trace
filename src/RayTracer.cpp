@@ -3,6 +3,9 @@
 #include <Fl/fl_ask.h>
 
 #include "RayTracer.h"
+
+#include <cassert>
+
 #include "scene/light.h"
 #include "scene/material.h"
 #include "scene/Ray.h"
@@ -57,10 +60,7 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 
 		const Material& m = i.getMaterial();
 		vec3f directIllumination;
-		if (enablePBR && m.pbrReady)
-			directIllumination = m.pbs(scene, r, i);
-		else 
-			directIllumination = m.shade(scene, r, i);
+		directIllumination = m.shade(scene, r, i);
 
 		vec3f indirectIllumination;
 
@@ -94,72 +94,75 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 
 vec3f RayTracer::tracePath(Scene* scene, const Ray& ray, int depth)
 {
-	vec3f radiance;
+	vec3f radiance, beta(1.0, 1.0, 1.0);
 	Isect isect;
-	if (scene->bvhIntersect(ray, isect))
+	Ray curRay(ray);
+
+	for (int bounce = 0; bounce < ptMaxDepth; ++bounce)
 	{
-		const Material& material = isect.getMaterial();
-		vec3f pos = ray.at(isect.t) + isect.N * DISPLACEMENT_EPSILON;
+		if (!scene->bvhIntersect(curRay, isect))
+		{
+			if (scene->useSkybox)
+			{
+				scene->skybox->intersect(curRay, isect);
+				radiance += prod(beta, scene->skybox->getColor(curRay, isect) / 255.0);
+			}
+			break;
+		}
+		
 		if (isect.obj->hasEmission)
 		{
-			if (depth == 0)
-			{
-				vec3f emission;
-				double dummy;
-				isect.obj->sample(emission, dummy);
-				return emission;
-			}
-			return vec3f();
+			if (!bounce)
+				radiance += isect.obj->getEmission();
+			break;
 		}
-		if (material.kt.iszero())	// opaque object, calculate direct lighting and BRDF
+
+		const Material& material = isect.getMaterial();
+		vec3f pos = curRay.at(isect.t) + isect.N * DISPLACEMENT_EPSILON;
+		if (!material.isTransmissive)
 		{
 			vec3f emission;
-			double pdf;
-			Ray directLight = scene->uniformSampleOneLight(emission, pdf);
-			
-			vec3f wi = (directLight.getPosition() - pos).normalize();
-			Ray toLight(pos, wi);
+			double lightPdf;
+			Ray directLight = scene->uniformSampleOneLight(emission, lightPdf);
+
+			vec3f lightDir = (directLight.getPosition() - pos).normalize();
+			Ray lightRay(pos, lightDir);
 			double distance = (directLight.getPosition() - pos).length();
 
 			Isect shadowRay;
 
 			// Direct illumination part
-			if (!scene->bvhIntersect(toLight, shadowRay) || shadowRay.t > distance + RAY_EPSILON)
+			if (!scene->bvhIntersect(lightRay, shadowRay) || shadowRay.t > distance - RAY_EPSILON)
 			{
-				emission *= (1.0 / distance * distance);		// distance attenuation
+				emission *= 1.0 / (distance * distance); // distance attenuation
+
 				// Lambertian and change of integration target from solid angle to light area
-				emission *= _abs(isect.N.dot(wi) * directLight.getDirection().dot(-wi));
-				emission /= pdf;
-				radiance += emission;
+				double coeff = isect.N.dot(lightDir) * directLight.getDirection().dot(-lightDir);
+				if (coeff > 0.0)
+				{
+					emission *= coeff;
+					emission /= lightPdf;
+					radiance += prod(beta, emission);
+				}
 			}
-
-			double rr = getUniformReal();	// Russian roulette
-			if (rr > rrThresh)
-				return radiance;
-
-			double brdfPdf;
-			vec3f nextDir = material.sampleDir(isect.N, brdfPdf).normalize();	// sample the direction for next ray
-			vec3f brdf = material.sampleBRDF(nextDir, -ray.getDirection(), isect.N, material.albedo);
-			Ray newRay(pos, nextDir);
-
-			double coeff = isect.N.dot(nextDir);		// cosine term in render equation
-			coeff *= 1.0 / (brdfPdf * rrThresh);		// the whole pdf
-			radiance += prod(brdf, tracePath(scene, newRay, depth + 1)) * coeff;
-			return radiance;
 		}
 
-		// Transparent object, calculate BSDF
-		Ray nextRay = material.sampleBTDF(ray, isect);
-		return prod(material.kt, tracePath(scene, nextRay, depth + 1));
+		double rr = getUniformReal(); // Russian roulette
+		if (rr > rrThresh)
+			break;
+
+		double brdfPdf;
+		vec3f wo = -curRay.getDirection();
+		vec3f wi = material.sample(wo, isect.N, brdfPdf).normalize(); // sample the direction for next ray
+		vec3f brdf = material.brdf(wi, wo, isect.N);
+		Ray newRay(pos, wi);
+
+		double coeff = _abs(isect.N.dot(wi)); // cosine term in render equation
+		coeff *= 1.0 / (brdfPdf * rrThresh); // the whole pdf
+		beta = prod(brdf, beta) * coeff;
+		curRay = newRay;
 	}
-	else
-	{
-		if (!scene->useSkybox)
-			return vec3f( 0.0, 0.0, 0.0 );
-		
-		scene->skybox->intersect(ray, isect);
-		return scene->skybox->getColor(ray, isect) / 255.0;
-	}
+	return radiance;
 }
 
 RayTracer::RayTracer()

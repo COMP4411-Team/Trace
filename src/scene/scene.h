@@ -200,6 +200,7 @@ public:
 	// For area light sampling
 	virtual Ray sample(vec3f& emit, double& pdf) const { return Ray{vec3f(), vec3f()}; }
 	virtual double getArea() const { return 0.0; }
+	virtual vec3f getEmission() const { return emission; }
 
 	virtual bool hasBoundingBoxCapability() const;
 	const BoundingBox& getBoundingBox() const { return bounds; }
@@ -262,6 +263,7 @@ public:
 	Texture bumpMap;
 	Texture diffuseMap;
 	Texture normalMap;
+	vec3f emission;
 
 protected:
 	BoundingBox bounds;
@@ -387,7 +389,8 @@ inline void _swap(double& a, double& b)
 
 inline double getUniformReal()
 {
-	return unif(rng);
+	// return unif(rng);
+	return ((double)rand() / RAND_MAX);
 }
 
 #endif // __SCENE_H__

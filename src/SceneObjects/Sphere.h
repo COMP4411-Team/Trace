@@ -30,13 +30,12 @@ class SphereLight : public Sphere
 {
 public:
 	SphereLight(Scene* scene, Material* mat, const vec3f& emission):
-		Sphere(scene, mat), emission(emission) { hasEmission = true; }
+		Sphere(scene, mat) { hasEmission = true; this->emission = emission; }
 	void calInfo();		// calculate position, radius and area, should be called after setTransform()
 	Ray sample(vec3f& emit, double& pdf) const override;
 	double getArea() const override { return area; }
 
 protected:
-	vec3f emission;
 	vec3f position;
 	double radius;
 	double area;	

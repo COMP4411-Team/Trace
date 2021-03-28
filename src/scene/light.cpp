@@ -1,7 +1,6 @@
 #include <cmath>
 
 #include "light.h"
-#include <random>
 
 double DirectionalLight::distanceAttenuation( const vec3f& P ) const
 {

@@ -54,8 +54,8 @@ bool Sphere::intersectLocal( const Ray& r, Isect& i ) const
 
 void SphereLight::calInfo()
 {
-	radius = (transform->xform * vec3f(1.0, 0.0, 0.0)).length();
 	position = transform->xform * vec3f();
+	radius = (transform->xform * vec3f(1.0, 0.0, 0.0) - position).length();
 	area = 4.0 * PI * radius * radius;
 }
 

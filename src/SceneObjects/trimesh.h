@@ -37,6 +37,7 @@ public:
 	void addTexCoords(double u, double v);
 	void addTexCoords(const TexCoords& coords);
 	void setEnableTexCoords(bool value) override { enableTexCoords = value; }
+	void setEmission(const vec3f& emit);
 
     bool addFace( int a, int b, int c );
 
@@ -51,6 +52,8 @@ class TrimeshFace : public MaterialSceneObject
     Trimesh *parent;
     int ids[3];
 	mat3f TbnMatrix;
+	vec3f faceNormal;
+	double area;
 public:
     TrimeshFace( Scene *scene, Material *mat, Trimesh *parent, int a, int b, int c)
         : MaterialSceneObject( scene, mat )
@@ -59,6 +62,14 @@ public:
         ids[0] = a;
         ids[1] = b;
         ids[2] = c;
+
+    		vec3f& v1 = parent->vertices[a];
+		vec3f& v2 = parent->vertices[b];
+		vec3f& v3 = parent->vertices[c];
+
+    		faceNormal = (v2 - v1).cross(v3 - v1);
+    		area = faceNormal.length() * 0.5;
+    		faceNormal = faceNormal.normalize();
     }
 
     int operator[]( int i ) const
@@ -82,6 +93,8 @@ public:
     }
 
 	void generateTbnMatrix();
+	Ray sample(vec3f& emit, double& pdf) const override;
+	double getArea() const override { return area; }
 };
 
 

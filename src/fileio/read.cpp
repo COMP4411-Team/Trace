@@ -41,9 +41,11 @@ static void processCamera( Obj *child, Scene *scene );
 static Material *getMaterial( Obj *child, const mmap& bindings );
 static Material *processMaterial( Obj *child, mmap *bindings = NULL );
 static void verifyTuple( const mytuple& tup, size_t size );
+
 static bool loadTexture(const string& filename, Texture& texture);
 static bool processTexture(Obj* child, Geometry* geometry);
 static bool processSkybox(Obj* child, Scene* scene);
+static Microfacet* processMicrofacet(Obj* child, mmap* bindings);
 
 Scene *readScene( const string& filename )
 {
@@ -299,6 +301,39 @@ bool processSkybox(Obj* child, Scene* scene)
 	return result;
 }
 
+Microfacet* processMicrofacet(Obj* child, mmap* bindings)
+{
+	if (!hasField(child, "albedo") || !hasField(child, "roughness") || !hasField(child, "metallic"))
+		return nullptr;
+
+	vec3f albedo = tupleToVec( getField( child, "albedo" ) );
+	double roughness = getField( child, "roughness" )->getScalar();
+	double metallic = getField( child, "metallic" )->getScalar();
+
+	auto* material = new Microfacet(albedo, roughness, metallic);
+	
+	if( bindings != NULL ) {
+        // Want to bind, better have "name" field:
+        if( hasField( child, "name" ) ) {
+            Obj *field = getField( child, "name" );
+            string tfield = field->getTypeName();
+            string name;
+            if( tfield == "id" ) {
+                name = field->getID();
+            } else {
+                name = field->getString();
+            }
+
+            (*bindings)[ name ] = material;
+        } else {
+        		delete material;
+            throw ParseError( 
+                string( "Attempt to bind material with no name" ) );
+        }
+    }
+	return material;
+}
+
 static void processGeometry( string name, Obj *child, Scene *scene,
                              const mmap& materials, TransformNode *transform )
 {
@@ -374,11 +409,13 @@ static void processGeometry( string name, Obj *child, Scene *scene,
         processTrimesh( name, child, scene, materials, transform);
     } else {
 		SceneObject *obj = NULL;
-       	Material *mat;
+       	Material *mat = nullptr;
         
         //if( hasField( child, "material" ) )
-    		if (name != "skybox" && name != "sphere_light")
-			mat = getMaterial(getField( child, "material" ), materials );
+		if (name != "skybox" && name != "sphere_light")
+		{
+			mat = getMaterial(getField(child, "material"), materials);
+		}
         //else
         //    mat = new Material();
 
@@ -480,6 +517,7 @@ static void processTrimesh( string name, Obj *child, Scene *scene,
         for( mytuple::const_iterator mi = mats.begin(); mi != mats.end(); ++mi )
             tmesh->addMaterial( getMaterial( *mi, materials ) );
     }
+	
     if( hasField( child, "normals" ) )
     {
         const mytuple &norms = getField( child, "normals" )->getTuple();
@@ -493,6 +531,11 @@ static void processTrimesh( string name, Obj *child, Scene *scene,
 		const mytuple& coords = getField(child, "tex_coords")->getTuple();
 		for(auto iter = coords.begin(); iter != coords.end(); ++iter)
 			tmesh->addTexCoords(tupleToTexCoords(*iter));
+	}
+
+	if (hasField(child, "emission"))
+	{
+		tmesh->setEmission(tupleToVec(getField(child, "emission")));
 	}
 
 	if (!processTexture(child, tmesh))
@@ -530,6 +573,13 @@ static Material *processMaterial( Obj *child, mmap *bindings )
 // mmap    - bindings of names to materials (if non-null)
 // defmat  - material to start with (if non-null)
 {
+	if (hasField(child, "type"))
+	{
+		string type = getField(child, "type")->getString();
+		if (type == "microfacet")
+			return processMicrofacet(child, bindings);
+	}
+	
     Material *mat;
     mat = new Material();
 	
@@ -559,26 +609,6 @@ static Material *processMaterial( Obj *child, mmap *bindings )
     if( hasField( child, "shininess" ) ) {
         mat->shininess = getField( child, "shininess" )->getScalar();
     }
-
-	// For PBR
-	mat->pbrReady = true;
-	if( hasField( child, "albedo" ) ) {
-        mat->albedo = tupleToVec( getField( child, "albedo" ) );
-    }
-	else mat->pbrReady = false;
-	
-	if( hasField( child, "roughness" ) ) {
-        mat->roughness = getField( child, "roughness" )->getScalar();
-    }
-	else mat->pbrReady = false;
-	
-	if( hasField( child, "metallic" ) ) {
-        mat->metallic = getField( child, "metallic" )->getScalar();
-    }
-	else mat->pbrReady = false;
-
-	if (mat->pbrReady)
-		mat->initBRDF();
 
     if( bindings != NULL ) {
         // Want to bind, better have "name" field:
@@ -714,7 +744,8 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 		//scene->add( geo );
 	} else if( name == "material" ) {
 		processMaterial( child, &materials );
-	} else if( name == "camera" ) {
+	}
+	else if( name == "camera" ) {
 		processCamera( child, scene );
 	} else {
 		throw ParseError( string( "Unrecognized object: " ) + name );

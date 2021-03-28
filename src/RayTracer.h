@@ -38,7 +38,7 @@ public:
 
 	// Parameters for path tracing
 	int SPP{64};	// sample per pixel
-	double rrThresh{0.6};	// russian roulette threshold
+	double rrThresh{0.7};	// russian roulette threshold
 
 private:
 	unsigned char *buffer;
@@ -49,6 +49,7 @@ private:
 
 	bool m_bSceneLoaded;
 	int maxDepth{0};
+	int ptMaxDepth{16};
 	vec3f threshold;
 
 	static std::vector<std::vector<std::pair<int, int>>> msaaSamplePattern;

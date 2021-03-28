@@ -36,6 +36,15 @@ void Trimesh::addTexCoords(const TexCoords& coords)
 	texCoords.push_back(coords);
 }
 
+void Trimesh::setEmission(const vec3f& emit)
+{
+	for (auto* face : faces)
+	{
+		face->hasEmission = true;
+		face->emission = emit;
+	}
+}
+
 // Returns false if the vertices a,b,c don't all exist
 bool Trimesh::addFace( int a, int b, int c )
 {
@@ -190,6 +199,21 @@ void TrimeshFace::generateTbnMatrix()
 	TbnMatrix[1] = TbnMatrix[2].cross(TbnMatrix[0]).normalize();
 
 	TbnMatrix = TbnMatrix.transpose();      // previously TBN are row vectors, now converted to column vectors
+}
+
+Ray TrimeshFace::sample(vec3f& emit, double& pdf) const
+{
+	double x = sqrt(getUniformReal()), y = getUniformReal();
+	vec3f& v1 = parent->vertices[ids[0]];
+	vec3f& v2 = parent->vertices[ids[1]];
+	vec3f& v3 = parent->vertices[ids[2]];
+
+	vec3f pos = v1 * (1.0 - x) + v2 * (x * (1.0 - y)) + v3 * x * y;
+	pos = transform->xform * pos;
+	vec3f normal = transform->normi * faceNormal;
+	emit = emission;
+	pdf = 1 / area;
+    return Ray(pos, normal.normalize());
 }
 
 void

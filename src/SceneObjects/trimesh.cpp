@@ -208,11 +208,11 @@ Ray TrimeshFace::sample(vec3f& emit, double& pdf) const
 	vec3f& v2 = parent->vertices[ids[1]];
 	vec3f& v3 = parent->vertices[ids[2]];
 
-	vec3f pos = v1 * (1.0 - x) + v2 * (x * (1.0 - y)) + v3 * x * y;
+	vec3f pos = v1 * (1.0 - x) + v2 * (x * (1.0 - y)) + v3 * (x * y);
 	pos = transform->xform * pos;
 	vec3f normal = transform->normi * faceNormal;
 	emit = emission;
-	pdf = 1 / area;
+	pdf = 1.0 / area;
     return Ray(pos, normal.normalize());
 }
 

@@ -14,7 +14,7 @@ camera {
 trimesh
 {
 	name = "light";
-	emission = (47.8348, 38.5664, 31.0808);
+	emission = (478.348, 385.664, 310.808);
 	material = 
 	{
 		diffuse = (0.65, 0.65, 0.65);

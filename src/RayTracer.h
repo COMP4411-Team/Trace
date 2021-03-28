@@ -25,6 +25,7 @@ public:
 	void traceSetup( int w, int h, int maxDepth, const vec3f& threshold );
 	void traceLines( int start = 0, int stop = 10000000 );
 	void tracePixel( int i, int j, int iter );
+	void pathTrace(int iter);
 	void setLightScale(double value);
 
 	bool loadScene( char* fn );
@@ -49,7 +50,7 @@ private:
 
 	bool m_bSceneLoaded;
 	int maxDepth{0};
-	int ptMaxDepth{16};
+	int ptMaxDepth{32};
 	vec3f threshold;
 
 	static std::vector<std::vector<std::pair<int, int>>> msaaSamplePattern;

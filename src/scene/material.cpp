@@ -16,12 +16,12 @@ inline double getRandomReal()
 
 inline vec3f Material::localToWorld(const vec3f& v, const vec3f& n)
 {
-	vec3f t, b;
+	vec3f t;
 	if (_abs(n[0]) > _abs(n[1]))
 		t = vec3f(n[2], 0.0, -n[0]).normalize();
 	else
 		t = vec3f(0.0, n[2], -n[1]).normalize();
-	b = t.cross(n);
+	vec3f b(t.cross(n));
 	return v[0] * b + v[1] * t + v[2] * n;
 }
 

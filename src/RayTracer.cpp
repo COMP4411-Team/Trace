@@ -134,6 +134,7 @@ vec3f RayTracer::tracePath(Scene* scene, const Ray& ray, int depth)
 			// Direct illumination part
 			if (!scene->bvhIntersect(lightRay, shadowRay) || shadowRay.t > distance - RAY_EPSILON)
 			{
+				vec3f brdf = material.brdf(lightDir, -curRay.getDirection(), isect.N);
 				emission *= 1.0 / (distance * distance); // distance attenuation
 
 				// Lambertian and change of integration target from solid angle to light area
@@ -142,6 +143,7 @@ vec3f RayTracer::tracePath(Scene* scene, const Ray& ray, int depth)
 				{
 					emission *= coeff;
 					emission /= lightPdf;
+					emission = prod(brdf, emission);
 					radiance += prod(beta, emission);
 				}
 			}
@@ -323,6 +325,18 @@ void RayTracer::tracePixel( int i, int j, int iter )
 		backPixel[0] = (int)( 255.0 * col[0] / iter + pixel[0] * weight );
 		backPixel[1] = (int)( 255.0 * col[1] / iter + pixel[1] * weight );
 		backPixel[2] = (int)( 255.0 * col[2] / iter + pixel[2] * weight );
+	}
+}
+
+void RayTracer::pathTrace(int iter)
+{
+	for (int i = 0; i < buffer_height; ++i)
+	{
+		#pragma omp parallel for num_threads(4)
+		for (int j = 0; j < buffer_width; ++j)
+		{
+			tracePixel(i, j, iter);
+		}
 	}
 }
 

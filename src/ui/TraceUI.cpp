@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <omp.h>
 
 #include <FL/fl_ask.h>
 
@@ -256,39 +257,43 @@ void TraceUI::cb_renderPt(Fl_Widget* o, void* v)
 
 	for (int i = 1; i <= pUI->maxIter; ++i)
 	{
-		for (int y = 0; y < height; y++)
-		{
-			for (int x = 0; x < width; x++)
-			{
-				if (done) break;
-				now = clock();
-				if (((double)(now - prev) / CLOCKS_PER_SEC) > 0.5)
-				{
-					prev = now;
-					if (Fl::ready())
-					{
-						// refresh
-						pUI->m_traceGlWindow->refresh();
-						// check event
-						Fl::check();
+		pUI->raytracer->pathTrace(i);
+		//for (int y = 0; y < height; y++)
+		//{
+		//	for (int x = 0; x < width; x++)
+		//	{
+		//		if (done) break;
+		//		now = clock();
+		//		if (((double)(now - prev) / CLOCKS_PER_SEC) > 0.5)
+		//		{
+		//			prev = now;
+		//			if (Fl::ready())
+		//			{
+		//				// refresh
+		//				pUI->m_traceGlWindow->refresh();
+		//				// check event
+		//				Fl::check();
 
-						if (Fl::damage())
-							Fl::flush();
-					}
-				}
-				pUI->raytracer->tracePixel(x, y, i);
-			}
-			if (done) break;
+		//				if (Fl::damage())
+		//					Fl::flush();
+		//			}
+		//		}
+		//		pUI->raytracer->tracePixel(x, y, i);
+		//	}
+		//	if (done) break;
 
-			if (Fl::ready())
-			{
-				// refresh
-				pUI->m_traceGlWindow->refresh();
-				if (Fl::damage())
-					Fl::flush();
-			}
-		}
-		// update the window label
+		//	if (Fl::ready())
+		//	{
+		//		// refresh
+		//		pUI->m_traceGlWindow->refresh();
+		//		if (Fl::damage())
+		//			Fl::flush();
+		//	}
+		//}
+		//// update the window label
+		Fl::check();
+		if (done) break;
+		pUI->m_traceGlWindow->refresh();
 		sprintf(buffer, "Iter %d %s", i, old_label);
 		pUI->m_traceGlWindow->label(buffer);
 

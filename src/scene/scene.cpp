@@ -232,11 +232,11 @@ void Scene::initScene()
 Ray Scene::uniformSampleOneLight(vec3f& emit, double& pdf)
 {
 	double emitAreaSum = 0.0;
-	for (auto& light : emittingObjects)
+	for (auto* light : emittingObjects)
 		emitAreaSum += light->getArea();
 	double prob = getUniformReal() * emitAreaSum;
 	emitAreaSum = 0.0;
-	for (auto& light : emittingObjects)
+	for (auto* light : emittingObjects)
 	{
 		emitAreaSum += light->getArea();
 		if (emitAreaSum >= prob)

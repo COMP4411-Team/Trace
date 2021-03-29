@@ -59,16 +59,15 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 		// rays.
 
 		const Material& m = i.getMaterial();
-		vec3f directIllumination;
-		directIllumination = m.shade(scene, r, i);
 
-		vec3f indirectIllumination;
+		vec3f reflective = m.fresnelReflective(-r.getDirection(), i.N);
+		vec3f directIllumination = m.shade(scene, r, i);
+		vec3f indirectIllumination, factor(1.0);
 
-		// Intersects at outer surface or the material is translucent
-		if (!m.kr.iszero())
+		if (!reflective.iszero())
 		{
 			Ray reflection = r.reflect(i);
-			indirectIllumination += prod(traceRay(scene, reflection, thresh, depth + 1, prod(curFactor, m.kr)), m.kr);
+			indirectIllumination += prod(traceRay(scene, reflection, thresh, depth + 1, prod(curFactor, m.kr)), reflective);
 		}
 
 		Ray refraction{vec3f(), vec3f()};
@@ -77,7 +76,17 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 			indirectIllumination += prod(traceRay(scene, refraction, thresh, depth + 1, prod(curFactor, m.kt)), m.kt);
 		}
 
-		return directIllumination + indirectIllumination;
+		// Travel inside a transparent object, apply Beer's law
+		if (i.N.dot(r.getDirection()) > 0.0 && !m.absorb.iszero())
+		{
+			double distTraveled = i.t;
+			factor = -m.absorb * distTraveled;
+			factor[0] = exp(factor[0]);
+			factor[1] = exp(factor[1]);
+			factor[2] = exp(factor[2]);
+		}
+
+		return prod(directIllumination + indirectIllumination, factor);
 	
 	} else {
 		// No intersection.  This ray travels to infinity, so we color

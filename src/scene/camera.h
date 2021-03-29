@@ -32,9 +32,9 @@ private:
 	
 	// Depth of field
 	bool enableDof{false};
-	double aperture{1.0};
+	double aperture{0.0};
 	double focalLength{5.0};
-	double lenRadius{0.5};
+	double lenRadius{0.0};
 	
     void update();              // using the above three values calculate look,u,v
     

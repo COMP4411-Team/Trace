@@ -37,6 +37,9 @@
 * [x] 3B Implement ray-intersection optimization.
 
 * [ ] 4B Implement a more realistic shading model (Fresnel term, microfacet distribution, anisotropic reflections, non photorealistic rendering).
+  * [x] Fresnel
+  * [x] Beer's law
+  * [x] GGX microfacet BRDF  
 
 * [ ] 4B Implement CSG.
 

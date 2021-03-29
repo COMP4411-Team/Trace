@@ -33,6 +33,24 @@ vec3f Material::uniformSampleHemisphere()
 	return vec3f(r * cos(phi), r * sin(phi), z);
 }
 
+vec3f Material::reflect(const vec3f& d, const vec3f& n)
+{
+	return d + 2.0 * -d.dot(n) * n;
+}
+
+bool Material::refract(const vec3f& d, const vec3f& n, vec3f& t, double eta)
+{
+	// Theta is the angle with the normal of the light in
+	// Phi is the angle with the normal of the light out
+	vec3f normal = d.dot(n) < 0.0 ? n : -n;
+	double cosTheta = -d.dot(normal);
+	double cosPhi2 = 1.0 - eta * eta * (1 - cosTheta * cosTheta);
+	if (cosPhi2 < 0.0)
+		return false;
+	t = (eta * cosTheta - sqrt(cosPhi2)) * normal + eta * d;
+	return true;
+}
+
 // Apply the phong model to this point on the surface of the object, returning
 // the color of that point.
 vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
@@ -106,6 +124,31 @@ vec3f Material::perturbSurfaceNormal(const Isect& isect) const
 
 	vec3f normal(factor * (h - h1), factor * (h - h2), 1.0);
 	return (isect.tbn * normal).normalize();
+}
+
+// wo is from the intersection to the previous vertex
+vec3f Material::fresnelReflective(const vec3f& wo, const vec3f& n) const
+{
+	double n1 = 1.0, n2 = index;
+	if (wo.dot(n) < 0.0)
+		_swap(n1, n2);
+
+	double F0 = (n1 - n2) / (n1 + n2);
+	F0 *= F0;
+	double cosTheta = _abs(wo.dot(n));
+
+	if (n1 > n2)		// from the refractive index to the air
+	{
+		double eta = n1 / n2;
+		double sinTheta2 = eta * eta * (1.0 - cosTheta * cosTheta);
+		if (sinTheta2 > 1.0)		// total internal reflection
+			return kr;
+		// cosTheta should always be the cosine of the larger angle relative to the normal
+		cosTheta = sqrt(1 - sinTheta2);
+	}
+	
+	double fresnel = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+	return kr + (vec3f(1.0) - kr) * fresnel;
 }
 
 vec3f Material::bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
@@ -276,22 +319,28 @@ vec3f FresnelSpecular::bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) co
 
 	double F0 = (n1 - n2) / (n1 + n2);
 	F0 *= F0;
-	double theta = _abs(wo.dot(n));
-	double fresnel = F0 + (1.0 - F0) * pow(theta, 5.0);
+	double cosTheta = _abs(wo.dot(n));
 
-	double eta = n1 / n2;
-	double cosTheta2 = 1.0 - eta * eta * (1.0 - theta * theta);
-	if (cosTheta2 < 0.0 || getRandomReal() < fresnel)
+	if (n1 > n2)	
 	{
-		double cosTheta = _abs(wi.dot(n));
-		return fresnel * kr / cosTheta;
+		double eta = n1 / n2;
+		double sinTheta2 = eta * eta * (1.0 - cosTheta * cosTheta);
+		if (sinTheta2 > 1.0)	
+			return kr / _abs(wi.dot(n));
+		cosTheta = sqrt(1 - sinTheta2);
+	}
+	
+	double fresnel = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+	
+	if (getRandomReal() < fresnel)
+	{
+		return fresnel * kr / _abs(wi.dot(n));
 	}
 	else
 	{
 		vec3f bsdf = kt * (1 - fresnel);
 		bsdf *= (n1 * n1) / (n2 * n2);
-		double cosTheta = _abs(wi.dot(n));
-		return bsdf / cosTheta;
+		return bsdf / _abs(wi.dot(n));
 	}
 }
 
@@ -303,60 +352,39 @@ vec3f FresnelSpecular::sample(const vec3f& wo, const vec3f& n, double& pdf) cons
 
 	double F0 = (n1 - n2) / (n1 + n2);
 	F0 *= F0;
-	double theta = _abs(wo.dot(n));
-	double fresnel = F0 + (1.0 - F0) * pow(theta, 5.0);
+	double cosTheta = _abs(wo.dot(n));
 
-	double eta = n1 / n2;
-	double cosTheta2 = 1.0 - eta * eta * (1.0 - theta * theta);
-	if (cosTheta2 < 0.0 || getRandomReal() < fresnel)
+	if (n1 > n2)	
+	{
+		double eta = n1 / n2;
+		double sinTheta2 = eta * eta * (1.0 - cosTheta * cosTheta);
+		if (sinTheta2 > 1.0)	
+		{
+			pdf = 1.0;
+			vec3f normal = n.dot(wo) > 0.0 ? n : -n;
+			return localToWorld(reflect(-wo, n), n);
+		}
+		cosTheta = sqrt(1 - sinTheta2);
+	}
+	
+	double fresnel = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+
+	if (getRandomReal() < fresnel)
 	{
 		pdf = fresnel;
-		vec3f normal = n.dot(wo) > 0.0 ? n : -n;
-		return localToWorld(2 * normal.dot(wo) * normal - wo, n);
+		return localToWorld(reflect(-wo, n), n);
 	}
 	else
 	{
 		pdf = 1 - fresnel;
-		vec3f normal = wo.dot(n) > 0.0 ? n : -n;
-		return localToWorld((eta * theta - sqrt(cosTheta2)) * normal - eta * wo, n);
+		vec3f wi;
+		refract(-wo, n, wi, n1 / n2);
+		return localToWorld(wi, n);
 	}
 }
 
 vec3f FresnelSpecular::sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const
 {
-	double n1 = 1.0, n2 = index;
-	if (wo.dot(n) < 0.0)
-		_swap(n1, n2);
-
-	double F0 = (n1 - n2) / (n1 + n2);
-	F0 *= F0;
-	double theta = _abs(wo.dot(n));
-	double fresnel = F0 + (1.0 - F0) * pow(theta, 5.0);
-
-	double eta = n1 / n2;
-	double cosTheta2 = 1.0 - eta * eta * (1.0 - theta * theta);
-	if (getRandomReal() < fresnel)
-	{
-		pdf = fresnel;
-		vec3f normal = n.dot(wo) > 0.0 ? n : -n;
-		wi = (2 * normal.dot(wo) * normal - wo);
-		
-		double cosTheta = _abs(wi[2]);
-		wi = localToWorld(wi, n);
-		return fresnel * kr / cosTheta;
-	}
-	else
-	{
-		if (cosTheta2 < 0.0)
-			return vec3f();
-		pdf = 1 - fresnel;
-		vec3f normal = wo.dot(n) > 0.0 ? n : -n;
-		wi = ((eta * theta - sqrt(cosTheta2)) * normal - eta * wo);
-
-		vec3f bsdf = kt * (1 - fresnel);
-		bsdf *= (n1 * n1) / (n2 * n2);
-		double cosTheta = _abs(wi[2]);
-		wi = localToWorld(wi, n);
-		return bsdf / cosTheta;
-	}
+	wi = sample(wo, n, pdf);
+	return bsdf(wi, wo, n);
 }

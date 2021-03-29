@@ -1,0 +1,65 @@
+SBT-raytracer 1.0
+
+// beers_law.ray
+// Used to demo Beer's law
+
+// The glass cube on the left enables light absorbing, and
+// Beer's law has been applied to calculate that
+
+camera {
+	position = (0,0,-4);
+	viewdir = (0,0,1);
+	aspectratio = 1;
+	updir = (0,1,0);
+}
+
+directional_light {
+	direction = (0, -1, 0);
+	colour = (1.0, 1.0, 1.0);
+}
+
+directional_light {
+	direction = (0,1,0);
+	colour = (1.0,1.0,1.0);
+}
+
+// This one disables light absorbance
+translate( -1.0, 0.0, 0.0,
+	scale(1.2,
+		rotate( 0.3,1,1,1,
+			box { 
+				material = { 
+					diffuse = (0.8,0.3,0.1);
+					specular = (0.5, 0.5, 0.5);
+					reflective = (0.2, 0.2, 0.2);
+					transmissive = (0.8, 0.8, 0.8);
+					index = 1.5;
+					shininess = 0.3;
+				};
+			})))
+
+
+// For comparison, this one enables it
+translate( 1.0, 0.0, 0.0,
+	scale(1.2,
+		rotate( 0.3,1,1,1,
+			box { 
+				material = { 
+					diffuse = (0.8,0.3,0.1);
+					specular = (0.5, 0.5, 0.5);
+					reflective = (0.2, 0.2, 0.2);
+					transmissive = (0.8, 0.8, 0.8);
+					index = 1.5;
+					absorb = (0.1, 8, 16);
+					shininess = 0.3;
+				};
+			})))
+
+skybox { 
+	back = ".\simpleSamples\bonus\skybox\back.bmp";
+	front = ".\simpleSamples\bonus\skybox\front.bmp";
+	left = ".\simpleSamples\bonus\skybox\left.bmp";
+	right = ".\simpleSamples\bonus\skybox\right.bmp";
+	top = ".\simpleSamples\bonus\skybox\top.bmp";
+	bottom = ".\simpleSamples\bonus\skybox\bottom.bmp";
+}

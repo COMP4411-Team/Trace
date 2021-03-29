@@ -634,6 +634,10 @@ static Material *processMaterial( Obj *child, mmap *bindings )
     if( hasField( child, "shininess" ) ) {
         mat->shininess = getField( child, "shininess" )->getScalar();
     }
+	if (hasField(child, "absorb"))
+	{
+		mat->absorb = tupleToVec(getField(child, "absorb"));
+	}
 
     processBindings(child, bindings, mat);
 

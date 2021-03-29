@@ -28,7 +28,7 @@
 
 * [ ] 2B Add support for height-fields.
 
-* [ ] 2B Depth of field.
+* [x] 2B Depth of field.
 
 * [ ] 1B1W for each Soft shadows, motion blur, or glossy reflection.
 

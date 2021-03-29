@@ -28,6 +28,11 @@ public:
 	void pathTrace(int iter);
 	void setLightScale(double value);
 
+	// Depth of field
+	void enableDof(bool value);
+	void setAperture(double aperture);
+	void setFocalLength(double focal);
+
 	bool loadScene( char* fn );
 
 	bool sceneLoaded();

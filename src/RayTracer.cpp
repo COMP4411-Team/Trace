@@ -350,6 +350,27 @@ void RayTracer::setLightScale(double value)
 	scene->lightScale = value;
 }
 
+void RayTracer::enableDof(bool value)
+{
+	if (!m_bSceneLoaded)
+		return;
+	scene->getCamera()->setEnableDof(value);
+}
+
+void RayTracer::setAperture(double aperture)
+{
+	if (!m_bSceneLoaded)
+		return;
+	scene->getCamera()->setAperture(aperture);
+}
+
+void RayTracer::setFocalLength(double focal)
+{
+	if (!m_bSceneLoaded)
+		return;
+	scene->getCamera()->setFocalLength(focal);
+}
+
 
 // D3D11_STANDARD_MULTISAMPLE_QUALITY_LEVELS enumeration
 std::vector<std::vector<std::pair<int, int>>> RayTracer::msaaSamplePattern =

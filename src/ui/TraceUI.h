@@ -36,8 +36,11 @@ public:
 	Fl_Button*			m_stopButton;
 	Fl_Button* m_renderPtButton;
 	Fl_Light_Button* m_ssaaJitterButton;
-	Fl_Light_Button* m_pbrButton;
 	Fl_Light_Button* m_pathTracingButton;
+
+	Fl_Light_Button* m_enableDofButton;
+	Fl_Slider* m_apertureSlider;
+	Fl_Slider* m_focalLengthSlider;
 
 	TraceGLWindow*		m_traceGlWindow;
 
@@ -84,8 +87,12 @@ private:
 	static void cb_threshSlides(Fl_Widget* o, void* v);
 	static void cb_ssaaLevelSlides(Fl_Widget* o, void* v);
 	static void cb_ssaaJitterButton(Fl_Widget* o, void* v);
-	static void cb_pbrButton(Fl_Widget* o, void* v);
 	static void cb_pathTracingButton(Fl_Widget* o, void* v);
+
+	// Depth of field
+	static void cb_enableDof(Fl_Widget* o, void* v);
+	static void cb_aperture(Fl_Widget* o, void* v);
+	static void cb_focalLength(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_renderPt(Fl_Widget* o, void* v);

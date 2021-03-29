@@ -141,17 +141,29 @@ void TraceUI::cb_ssaaJitterButton(Fl_Widget* o, void* v)
 	ui->raytracer->ssaaJitter = bool( ((Fl_Light_Button*)o)->value() );
 }
 
-void TraceUI::cb_pbrButton(Fl_Widget* o, void* v)
-{
-	auto* ui = whoami(o);
-	ui->raytracer->enablePBR = bool( ((Fl_Light_Button*)o)->value() );
-}
-
 void TraceUI::cb_pathTracingButton(Fl_Widget* o, void* v)
 {
 	auto* ui = whoami(o);
 	ui->enablePathTracing = bool( ((Fl_Light_Button*)o)->value() );
 	ui->raytracer->enablePathTracing = bool( ((Fl_Light_Button*)o)->value() );
+}
+
+void TraceUI::cb_enableDof(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->enableDof(bool( ((Fl_Light_Button*)o)->value() ));
+}
+
+void TraceUI::cb_aperture(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->setAperture(double( ((Fl_Slider*)o)->value() ));
+}
+
+void TraceUI::cb_focalLength(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->setFocalLength(double( ((Fl_Slider*)o)->value() ));
 }
 
 void TraceUI::cb_render(Fl_Widget* o, void* v)
@@ -351,10 +363,10 @@ TraceUI::TraceUI() {
 	// init.
 	m_nDepth = 0;
 	m_nSize = 150;
-	m_mainWindow = new Fl_Window(100, 40, 320, 400, "Ray <Not Loaded>");
+	m_mainWindow = new Fl_Window(100, 40, 330, 410, "Ray <Not Loaded>");
 		m_mainWindow->user_data((void*)(this));	// record self to be used by static callback functions
 		// install menu bar
-		m_menubar = new Fl_Menu_Bar(0, 0, 320, 25);
+		m_menubar = new Fl_Menu_Bar(0, 0, 330, 25);
 		m_menubar->menu(menuitems);
 
 		// install slider depth
@@ -397,17 +409,24 @@ TraceUI::TraceUI() {
 		m_ssaaJitterButton->value(0);
 		m_ssaaJitterButton->callback(cb_ssaaJitterButton);
 
-		m_pbrButton = new Fl_Light_Button(10, 185, 150, 25, "Enable PBR");
-		m_pbrButton->user_data(this);
-		m_pbrButton->value(0);
-		m_pbrButton->callback(cb_pbrButton);
+		// DOF
+		m_enableDofButton = new Fl_Light_Button(170, 155, 150, 25, "Depth of Field");
+		m_enableDofButton->user_data(this);
+		m_enableDofButton->value(0);
+		m_enableDofButton->callback(cb_enableDof);
 
-		m_pathTracingButton = new Fl_Light_Button(10, 215, 150, 25, "Enable Path Tracing");
+		m_apertureSlider = createSlider(10, 185, 180, 20, "Aperture",
+			0, 2, 0.01, 0, cb_aperture);
+
+		m_focalLengthSlider = createSlider(10, 210, 180, 20, "Focal Length",
+			0, 20, 0.01, 5, cb_focalLength);
+
+		m_pathTracingButton = new Fl_Light_Button(10, 350, 150, 25, "Enable Path Tracing");
 		m_pathTracingButton->user_data(this);
 		m_pathTracingButton->value(0);
 		m_pathTracingButton->callback(cb_pathTracingButton);
 
-		m_renderButton = new Fl_Button(220, 215, 90, 25, "Render PT");
+		m_renderButton = new Fl_Button(220, 350, 90, 25, "Render PT");
 		m_renderButton->user_data((void*)(this));
 		m_renderButton->callback(cb_renderPt);
 

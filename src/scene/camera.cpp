@@ -10,8 +10,8 @@ Camera::Camera()
 	fov = 53.13;
     
     eye = vec3f(0,0,0);
-    u = vec3f( 1,0,0 );
-    v = vec3f( 0,1,0 );
+    uDir = u = vec3f( 1,0,0 );
+    vDir = v = vec3f( 0,1,0 );
     look = vec3f( 0,0,-1 );
 }
 
@@ -20,10 +20,19 @@ Camera::rayThrough( double x, double y, Ray &r )
 // Ray through normalized window point x,y.  In normalized coordinates
 // the camera's x and y vary both vary from 0 to 1.
 {
-    x -= 0.5;
-    y -= 0.5;
-    vec3f dir = look + x * u + y * v;
-    r = Ray( eye, dir.normalize() );
+	if (!enableDof)
+	{
+		x -= 0.5;
+		y -= 0.5;
+		vec3f dir = look + x * u + y * v;
+		r = Ray(eye, dir.normalize());
+	}
+	else
+	{
+		vec3f offset = uniformSampleDisk() * lenRadius;
+		offset = offset[0] * uDir + offset[1] * vDir;
+		r = Ray(eye + offset, lowerLeftCorner + x * horizontal + y * vertical - eye - offset);
+	}
 }
 
 void
@@ -85,12 +94,48 @@ Camera::setAspectRatio( double ar )
     update();
 }
 
+void Camera::setAperture(double aperture)
+{
+	this->aperture = aperture;
+	update();
+}
+
+void Camera::setFocalLength(double focal)
+{
+	focalLength = focal;
+	update();
+}
+
+void Camera::setEnableDof(bool value)
+{
+	enableDof = value;
+	update();
+}
+
+vec3f Camera::uniformSampleDisk()
+{
+	while (true)
+	{
+		double x = ((double)rand() / RAND_MAX) - 0.5, y = ((double)rand() / RAND_MAX) - 0.5;
+		vec3f offset(x, y, 0.0);
+		if (offset.length_squared() < 1.0)
+            return offset;
+	}
+}
+
 void
 Camera::update()
 {
     u = m * vec3f( 1,0,0 ) * normalizedHeight*aspectRatio;
     v = m * vec3f( 0,1,0 ) * normalizedHeight;
     look = m * vec3f( 0,0,-1 );
+	uDir = u.normalize();
+	vDir = v.normalize();
+
+	lenRadius = aperture / 2.0;
+	horizontal = focalLength * u;
+	vertical = focalLength * v;
+	lowerLeftCorner = eye - horizontal / 2.0 - vertical / 2.0 + focalLength * look;
 }
 
 

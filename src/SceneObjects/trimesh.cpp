@@ -53,7 +53,8 @@ bool Trimesh::addFace( int a, int b, int c )
     if( a >= vcnt || b >= vcnt || c >= vcnt )
         return false;
 
-    TrimeshFace *newFace = new TrimeshFace( scene, new Material(*this->material), this, a, b, c );
+    // TrimeshFace *newFace = new TrimeshFace( scene, new Material(*this->material), this, a, b, c );
+	TrimeshFace *newFace = new TrimeshFace( scene, material, this, a, b, c );
     newFace->setTransform(this->transform);
     faces.push_back( newFace );
     scene->add(newFace);

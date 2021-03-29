@@ -100,6 +100,8 @@ vec3f RayTracer::tracePath(Scene* scene, const Ray& ray, int depth)
 
 	for (int bounce = 0; bounce < ptMaxDepth; ++bounce)
 	{
+		if (beta.iszero())
+			break;
 		if (!scene->bvhIntersect(curRay, isect))
 		{
 			if (scene->useSkybox)
@@ -134,7 +136,7 @@ vec3f RayTracer::tracePath(Scene* scene, const Ray& ray, int depth)
 			// Direct illumination part
 			if (!scene->bvhIntersect(lightRay, shadowRay) || shadowRay.t > distance - RAY_EPSILON)
 			{
-				vec3f brdf = material.brdf(lightDir, -curRay.getDirection(), isect.N);
+				vec3f bsdf = material.bsdf(lightDir, -curRay.getDirection(), isect.N);
 				emission *= 1.0 / (distance * distance); // distance attenuation
 
 				// Lambertian and change of integration target from solid angle to light area
@@ -143,7 +145,7 @@ vec3f RayTracer::tracePath(Scene* scene, const Ray& ray, int depth)
 				{
 					emission *= coeff;
 					emission /= lightPdf;
-					emission = prod(brdf, emission);
+					emission = prod(bsdf, emission);
 					radiance += prod(beta, emission);
 				}
 			}
@@ -155,13 +157,16 @@ vec3f RayTracer::tracePath(Scene* scene, const Ray& ray, int depth)
 
 		double brdfPdf;
 		vec3f wo = -curRay.getDirection();
-		vec3f wi = material.sample(wo, isect.N, brdfPdf).normalize(); // sample the direction for next ray
-		vec3f brdf = material.brdf(wi, wo, isect.N);
+		vec3f wi;
+		vec3f bsdf = material.sampleF(wo, wi, isect.N, brdfPdf);	// sample new direction and get the BSDF
+		if (bsdf.iszero())
+			break;
+		wi = wi.normalize();
 		Ray newRay(pos, wi);
 
 		double coeff = _abs(isect.N.dot(wi)); // cosine term in render equation
 		coeff *= 1.0 / (brdfPdf * rrThresh); // the whole pdf
-		beta = prod(brdf, beta) * coeff;
+		beta = prod(bsdf, beta) * coeff;
 		curRay = newRay;
 	}
 	return radiance;

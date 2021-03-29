@@ -40,12 +40,14 @@ static void processTrimesh( string name, Obj *child, Scene *scene,
 static void processCamera( Obj *child, Scene *scene );
 static Material *getMaterial( Obj *child, const mmap& bindings );
 static Material *processMaterial( Obj *child, mmap *bindings = NULL );
+static void processBindings(Obj* child, mmap* bindings, Material* mat);
 static void verifyTuple( const mytuple& tup, size_t size );
 
 static bool loadTexture(const string& filename, Texture& texture);
 static bool processTexture(Obj* child, Geometry* geometry);
 static bool processSkybox(Obj* child, Scene* scene);
 static Microfacet* processMicrofacet(Obj* child, mmap* bindings);
+static FresnelSpecular* processFresnelSpecular(Obj* child, mmap* bindings);
 
 Scene *readScene( const string& filename )
 {
@@ -311,26 +313,25 @@ Microfacet* processMicrofacet(Obj* child, mmap* bindings)
 	double metallic = getField( child, "metallic" )->getScalar();
 
 	auto* material = new Microfacet(albedo, roughness, metallic);
-	
-	if( bindings != NULL ) {
-        // Want to bind, better have "name" field:
-        if( hasField( child, "name" ) ) {
-            Obj *field = getField( child, "name" );
-            string tfield = field->getTypeName();
-            string name;
-            if( tfield == "id" ) {
-                name = field->getID();
-            } else {
-                name = field->getString();
-            }
 
-            (*bindings)[ name ] = material;
-        } else {
-        		delete material;
-            throw ParseError( 
-                string( "Attempt to bind material with no name" ) );
-        }
-    }
+	processBindings(child, bindings, material);
+	
+	return material;
+}
+
+FresnelSpecular* processFresnelSpecular(Obj* child, mmap* bindings)
+{
+	if (!hasField(child, "reflective") || !hasField(child, "transmissive") || !hasField(child, "index"))
+		return nullptr;
+
+	vec3f r = tupleToVec(getField(child, "reflective"));
+	vec3f t = tupleToVec(getField(child, "transmissive"));
+	double eta = getField(child, "index")->getScalar();
+
+	auto* material = new FresnelSpecular(r, t, eta);
+
+	processBindings(child, bindings, material);
+
 	return material;
 }
 
@@ -566,6 +567,28 @@ static Material *getMaterial( Obj *child, const mmap& bindings )
 	return processMaterial( child );
 }
 
+static void processBindings(Obj* child, mmap* bindings, Material* mat)
+{
+	if( bindings != NULL ) {
+		// Want to bind, better have "name" field:
+		if( hasField( child, "name" ) ) {
+			Obj *field = getField( child, "name" );
+			string tfield = field->getTypeName();
+			string name;
+			if( tfield == "id" ) {
+				name = field->getID();
+			} else {
+				name = field->getString();
+			}
+
+			(*bindings)[ name ] = mat;
+		} else {
+			throw ParseError( 
+				string( "Attempt to bind material with no name" ) );
+		}
+	}
+}
+
 static Material *processMaterial( Obj *child, mmap *bindings )
 // Generate a material from a parse sub-tree
 //
@@ -578,6 +601,8 @@ static Material *processMaterial( Obj *child, mmap *bindings )
 		string type = getField(child, "type")->getString();
 		if (type == "microfacet")
 			return processMicrofacet(child, bindings);
+		if (type == "fresnel")
+			return processFresnelSpecular(child, bindings);
 	}
 	
     Material *mat;
@@ -610,24 +635,7 @@ static Material *processMaterial( Obj *child, mmap *bindings )
         mat->shininess = getField( child, "shininess" )->getScalar();
     }
 
-    if( bindings != NULL ) {
-        // Want to bind, better have "name" field:
-        if( hasField( child, "name" ) ) {
-            Obj *field = getField( child, "name" );
-            string tfield = field->getTypeName();
-            string name;
-            if( tfield == "id" ) {
-                name = field->getID();
-            } else {
-                name = field->getString();
-            }
-
-            (*bindings)[ name ] = mat;
-        } else {
-            throw ParseError( 
-                string( "Attempt to bind material with no name" ) );
-        }
-    }
+    processBindings(child, bindings, mat);
 
     return mat;
 }

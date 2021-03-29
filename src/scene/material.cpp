@@ -108,7 +108,7 @@ vec3f Material::perturbSurfaceNormal(const Isect& isect) const
 	return (isect.tbn * normal).normalize();
 }
 
-vec3f Material::brdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
+vec3f Material::bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
 {
 	if (!isTransmissive && wi.dot(n) > 0.0)
 		return kd * INV_PI;
@@ -126,32 +126,10 @@ vec3f Material::sample(const vec3f& wo, const vec3f& n, double& pdf) const
 	return wi;
 }
 
-// Sample the nest direction for path tracing for transparent materials
-// v is from the previous vertex to the intersection point
-Ray Material::sampleBTDF(const Ray& ray, const Isect& isect) const
+vec3f Material::sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const
 {
-	double n1 = 1.0, n2 = index;
-	vec3f v = ray.getDirection();
-	if (v.dot(isect.N) > 0.0)
-		_swap(n1, n2);
-
-	double F0 = (n1 - n2) / (n1 + n2);
-	F0 *= F0;
-	double theta = _abs(v.dot(isect.N));
-	double fresnel = F0 + (1.0 - F0) * pow(theta, 5.0);
-
-	double eta = n1 / n2;
-	double cosTheta2 = 1.0 - eta * eta * (1.0 - theta * theta);
-	if (cosTheta2 < 0.0 || getRandomReal() < fresnel)
-	{
-		return ray.reflect(isect);
-	}
-	else
-	{
-		Ray wi{vec3f(), vec3f()};
-		ray.refract(isect, wi);
-		return wi;
-	}
+	wi = sample(wo, n, pdf);
+	return bsdf(wi, wo, n);
 }
 
 
@@ -187,7 +165,7 @@ vec3f Microfacet::shade(Scene* scene, const Ray& ray, const Isect& isect) const
 		double lambertian = max(direction.dot(normal), 0.0);
 		vec3f attenuation = light->distanceAttenuation(position) * light->shadowAttenuation(position);
 
-		color += prod(brdf(direction, -ray.getDirection(), normal), attenuation) * lambertian;
+		color += prod(bsdf(direction, -ray.getDirection(), normal), attenuation) * lambertian;
 	}
 
 	return color;
@@ -211,7 +189,7 @@ vec3f Microfacet::calFresnel(double cosTheta, const vec3f& F0) const
 }
 
 // Sample the BRDF
-vec3f Microfacet::brdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
+vec3f Microfacet::bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
 {
 	vec3f h = ((wi + wo) / 2.0).normalize();
 	vec3f F0 = vec3f(0.04, 0.04, 0.04) * (1.0 - metallic) + albedo * metallic;
@@ -231,6 +209,12 @@ vec3f Microfacet::sample(const vec3f& wo, const vec3f& n, double& pdf) const
 	vec3f localDir = cosineSampleHemisphere();
 	pdf = cosineHemispherePdf(localDir[2]);
 	return localToWorld(localDir, n);
+}
+
+vec3f Microfacet::sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const
+{
+	wi = sample(wo, n, pdf);
+	return bsdf(wi, wo, n);
 }
 
 Microfacet::Microfacet(const vec3f& albedo, double roughness, double metallic):
@@ -273,4 +257,106 @@ inline vec3f Microfacet::cosineSampleHemisphere()
 inline double Microfacet::cosineHemispherePdf(double cosTheta)
 {
 	return cosTheta * INV_PI;
+}
+
+FresnelSpecular::FresnelSpecular(const vec3f& r, const vec3f& t, double eta)
+{
+	kr = r;
+	kt = t;
+	index = eta;
+	isTransmissive = true;
+}
+
+// Ref: PBRT-v3
+vec3f FresnelSpecular::bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
+{
+	double n1 = 1.0, n2 = index;
+	if (wo.dot(n) < 0.0)
+		_swap(n1, n2);
+
+	double F0 = (n1 - n2) / (n1 + n2);
+	F0 *= F0;
+	double theta = _abs(wo.dot(n));
+	double fresnel = F0 + (1.0 - F0) * pow(theta, 5.0);
+
+	double eta = n1 / n2;
+	double cosTheta2 = 1.0 - eta * eta * (1.0 - theta * theta);
+	if (cosTheta2 < 0.0 || getRandomReal() < fresnel)
+	{
+		double cosTheta = _abs(wi.dot(n));
+		return fresnel * kr / cosTheta;
+	}
+	else
+	{
+		vec3f bsdf = kt * (1 - fresnel);
+		bsdf *= (n1 * n1) / (n2 * n2);
+		double cosTheta = _abs(wi.dot(n));
+		return bsdf / cosTheta;
+	}
+}
+
+vec3f FresnelSpecular::sample(const vec3f& wo, const vec3f& n, double& pdf) const
+{
+	double n1 = 1.0, n2 = index;
+	if (wo.dot(n) < 0.0)
+		_swap(n1, n2);
+
+	double F0 = (n1 - n2) / (n1 + n2);
+	F0 *= F0;
+	double theta = _abs(wo.dot(n));
+	double fresnel = F0 + (1.0 - F0) * pow(theta, 5.0);
+
+	double eta = n1 / n2;
+	double cosTheta2 = 1.0 - eta * eta * (1.0 - theta * theta);
+	if (cosTheta2 < 0.0 || getRandomReal() < fresnel)
+	{
+		pdf = fresnel;
+		vec3f normal = n.dot(wo) > 0.0 ? n : -n;
+		return localToWorld(2 * normal.dot(wo) * normal - wo, n);
+	}
+	else
+	{
+		pdf = 1 - fresnel;
+		vec3f normal = wo.dot(n) > 0.0 ? n : -n;
+		return localToWorld((eta * theta - sqrt(cosTheta2)) * normal - eta * wo, n);
+	}
+}
+
+vec3f FresnelSpecular::sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const
+{
+	double n1 = 1.0, n2 = index;
+	if (wo.dot(n) < 0.0)
+		_swap(n1, n2);
+
+	double F0 = (n1 - n2) / (n1 + n2);
+	F0 *= F0;
+	double theta = _abs(wo.dot(n));
+	double fresnel = F0 + (1.0 - F0) * pow(theta, 5.0);
+
+	double eta = n1 / n2;
+	double cosTheta2 = 1.0 - eta * eta * (1.0 - theta * theta);
+	if (getRandomReal() < fresnel)
+	{
+		pdf = fresnel;
+		vec3f normal = n.dot(wo) > 0.0 ? n : -n;
+		wi = (2 * normal.dot(wo) * normal - wo);
+		
+		double cosTheta = _abs(wi[2]);
+		wi = localToWorld(wi, n);
+		return fresnel * kr / cosTheta;
+	}
+	else
+	{
+		if (cosTheta2 < 0.0)
+			return vec3f();
+		pdf = 1 - fresnel;
+		vec3f normal = wo.dot(n) > 0.0 ? n : -n;
+		wi = ((eta * theta - sqrt(cosTheta2)) * normal - eta * wo);
+
+		vec3f bsdf = kt * (1 - fresnel);
+		bsdf *= (n1 * n1) / (n2 * n2);
+		double cosTheta = _abs(wi[2]);
+		wi = localToWorld(wi, n);
+		return bsdf / cosTheta;
+	}
 }

@@ -36,9 +36,9 @@ public:
 	virtual vec3f perturbSurfaceNormal(const Isect& isect) const;
 
 	// Basic Lambertian model
-	virtual vec3f brdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const;
+	virtual vec3f bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const;
 	virtual vec3f sample(const vec3f& wo, const vec3f& n, double& pdf) const;
-	virtual Ray sampleBTDF(const Ray& ray, const Isect& isect) const;
+	virtual vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const;   // sample wi and bsdf simultaneous
 
 	static vec3f localToWorld(const vec3f& v, const vec3f& n);
 	static vec3f uniformSampleHemisphere();
@@ -92,6 +92,14 @@ operator*( double d, Material m )
 }
 // extern Material THE_DEFAULT_MATERIAL;
 
+class FresnelSpecular : public Material
+{
+public:
+	FresnelSpecular(const vec3f& r, const vec3f& t, double eta);
+	vec3f bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const override;
+	vec3f sample(const vec3f& wo, const vec3f& n, double& pdf) const override;
+	vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const override;	
+};
 
 // Microfacet GGX model
 class Microfacet : public Material
@@ -100,8 +108,9 @@ public:
 	Microfacet(const vec3f& albedo, double roughness, double metallic);
 
 	vec3f shade(Scene* scene, const Ray& ray, const Isect& isect) const override; // physically based shading
-	vec3f brdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const override;
+	vec3f bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const override;
 	vec3f sample(const vec3f& wo, const vec3f& n, double& pdf) const override;
+	vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const override;
 
 protected:
 	double calNDF(double cosTheta) const; // Trowbridge-Reitz GGX normal distribution function

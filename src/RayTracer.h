@@ -39,6 +39,8 @@ public:
 
 	bool sceneLoaded();
 
+	void setFasterShadow(bool i) { scene->enableFasterShadow = i; }
+
 	int ssaaSample{0};	// the exponent of 2
 	bool ssaaJitter{false};
 

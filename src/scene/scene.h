@@ -347,6 +347,7 @@ public:
 	double lightScale{10.0};
 	bool useSkybox{false};
 	Skybox* skybox{nullptr};
+	bool enableFasterShadow{ false }; //Acceleration of shadow attenuation
 
 private:
     list<Geometry*> objects;

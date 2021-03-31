@@ -31,7 +31,7 @@ public:
         : ke( e ), ka( a ), ks( s ), kd( d ), kr( r ), kt( t ), shininess( sh ), index( in ),
 		  isTransmissive(!t.iszero()) {}
 
-	virtual vec3f shade( Scene *scene, const Ray& r, const Isect& i ) const;
+	virtual vec3f shade( Scene *scene, const Ray& r, const Isect& i) const;
 	virtual vec3f getDiffuseColor(const Isect& isect) const;
 	virtual vec3f perturbSurfaceNormal(const Isect& isect) const;
 	vec3f fresnelReflective(const vec3f& wo, const vec3f& n) const;  // used for Whitted ray tracing

@@ -195,6 +195,7 @@ bool Scene::bvhIntersect(const Ray& ray, Isect& isect) const
 	return flag;
 }
 
+
 void Scene::initScene()
 {
 	bool first_boundedobject = true;

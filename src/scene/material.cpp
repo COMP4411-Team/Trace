@@ -53,7 +53,7 @@ bool Material::refract(const vec3f& d, const vec3f& n, vec3f& t, double eta)
 
 // Apply the phong model to this point on the surface of the object, returning
 // the color of that point.
-vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
+vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i) const
 {
 	// YOUR CODE HERE
 
@@ -91,8 +91,11 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
 			normal = (i.tbn * i.obj->normalMap.sample(i.texCoords)).normalize();
 		
 		double lambertian = max(direction.dot(normal), 0.0);
-		vec3f attenuation = light->distanceAttenuation(position) * light->shadowAttenuation(position, r.getTime());
-
+		vec3f shadowA;
+		if (!scene->enableFasterShadow || direction.dot(normal) > 0) {
+			shadowA= light->shadowAttenuation(position, r.getTime());
+		}
+		vec3f attenuation = light->distanceAttenuation(position) * shadowA;
 		// Really annoying that * has been overloaded as dot product... WHY????
 		diffuse += lambertian * prod(prod(diffuseColor, light->getColor(position)), attenuation);
 

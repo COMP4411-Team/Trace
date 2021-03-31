@@ -38,6 +38,8 @@ public:
 	Fl_Light_Button* m_ssaaJitterButton;
 	Fl_Light_Button* m_pathTracingButton;
 
+	Fl_Light_Button* m_fasterShadow;
+
 	Fl_Light_Button* m_motionBlurButtion;
 	Fl_Slider* m_motionBlurSPPSlider;
 
@@ -67,6 +69,7 @@ private:
 	double lightScale{10};
 	int ssaaSampleLevel{0};
 	bool enablePathTracing{false};
+	bool enableFasterShadow{ false };
 	int maxIter{10000};
 	vec3f threshold;
 
@@ -91,6 +94,7 @@ private:
 	static void cb_ssaaLevelSlides(Fl_Widget* o, void* v);
 	static void cb_ssaaJitterButton(Fl_Widget* o, void* v);
 	static void cb_pathTracingButton(Fl_Widget* o, void* v);
+	static void cb_fasterShadow(Fl_Widget* o, void* v);
 
 	// Depth of field
 	static void cb_enableDof(Fl_Widget* o, void* v);

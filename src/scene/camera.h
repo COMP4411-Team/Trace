@@ -3,8 +3,13 @@
 
 #include "Ray.h"
 
+class Obj;
+
 class Camera
 {
+	friend class RayTracer;
+	friend static void processCamera( Obj *child, Scene *scene );
+
 public:
     Camera();
     void rayThrough( double x, double y, Ray &r );
@@ -23,12 +28,16 @@ public:
 	double getFov() const { return fov; }
 
 private:
+	void update();              // using the above three values calculate look,u,v
+	
     static vec3f uniformSampleDisk();
 	
     mat3f m;                     // rotation matrix
     double normalizedHeight;    // dimensions of image place at unit dist from eye
     double aspectRatio;
 	double fov;
+	double time0, time1;			// time to open the shutter
+	bool enableMotionBlur;
 	
 	// Depth of field
 	bool enableDof{false};
@@ -36,8 +45,6 @@ private:
 	double focalLength{5.0};
 	double lenRadius{0.0};
 	
-    void update();              // using the above three values calculate look,u,v
-    
     vec3f eye;
     vec3f look;                  // direction to look
     vec3f u,v;                   // u and v in the

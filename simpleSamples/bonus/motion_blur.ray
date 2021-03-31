@@ -1,0 +1,93 @@
+SBT-raytracer 1.0
+
+// motion_blur.ray
+// Demo the motion blur
+
+// You need to set the related paremeters for the camera here
+// AND also enable motion blur and set the sample per pixel (SPP)
+// in the gui
+
+// You also need a moving_sphere object, see comment below
+
+camera {
+  position = (0,2,-4);
+  viewdir = (0,-2,4);
+  aspectratio = 1;
+  updir = (0,1,0);
+  enable_motion_blur = true;  // turn on motion blur
+  time0 = 0.0;                // shutter open time
+  time1 = 1.0;                // shutter close time
+}
+
+directional_light {
+  direction = (0, -1, 0.3);
+  colour = (1.0, 1.0, 1.0);
+}
+
+directional_light {
+  direction = (-1,0,0.3);
+  colour = (1.0,1.0,1.0);
+}
+
+directional_light {
+  direction = (1,0,0.3);
+  colour = (1.0,1.0,1.0);
+}
+
+// Special class of moving objects
+// Do not specify transformation on it
+moving_sphere {
+  radius = 0.3;
+  start = (0.0, 0.6, 0.0);        // starting position in world coordinates
+  end = (0.0, 0.0, 0.0);
+  time0 = 0.0;                    // time when at the starting position
+  time1 = 0.7;
+  material = { 
+    diffuse = (0.8,0.1,0.1);
+    specular = (0.5, 0.5, 0.5);
+    reflective = (0.0, 0.0, 0.0);
+    shininess = 0.3;
+  };
+}
+
+moving_sphere {
+  radius = 0.3;
+  start = (1.0, 0.4, 0.0);        // starting position in world coordinates
+  end = (1.0, 0.7, 0.0);
+  time0 = 0.0;                    // time when at the starting position
+  time1 = 0.5;
+  material = { 
+    diffuse = (0.1,0.8,0.1);
+    specular = (0.5, 0.5, 0.5);
+    reflective = (0.0, 0.0, 0.0);
+    shininess = 0.3;
+  };
+}
+
+moving_sphere {
+  radius = 0.3;
+  start = (-1.0, 0.3.0, 0.0);        // starting position in world coordinates
+  end = (-1.0, 0.1, 0.0);
+  time0 = 0.0;                    // time when at the starting position
+  time1 = 0.4;
+  material = { 
+    diffuse = (0.1,0.1,0.8);
+    specular = (0.5, 0.5, 0.5);
+    reflective = (0.0, 0.0, 0.0);
+    shininess = 0.3;
+  };
+}
+
+// The surface
+translate( 0.0, -0.3, 0.0,
+  scale(6, 0.1, 6,
+    rotate( 1,0,0,0,
+      box { 
+        material = { 
+          diffuse = (0.6,0.6,0.6);
+          specular = (0.5, 0.5, 0.5);
+          reflective = (0.0, 0.0, 0.0);
+          index = 1.5;
+          shininess = 0.3;
+        };
+      })))

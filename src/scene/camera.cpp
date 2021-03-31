@@ -20,18 +20,21 @@ Camera::rayThrough( double x, double y, Ray &r )
 // Ray through normalized window point x,y.  In normalized coordinates
 // the camera's x and y vary both vary from 0 to 1.
 {
+	double time = 0.0;
+	if (enableMotionBlur)
+		time = ((double) rand() / RAND_MAX) * (time1 - time0) + time0;
 	if (!enableDof)
 	{
 		x -= 0.5;
 		y -= 0.5;
 		vec3f dir = look + x * u + y * v;
-		r = Ray(eye, dir.normalize());
+		r = Ray(eye, dir.normalize(), time);
 	}
 	else
 	{
 		vec3f offset = uniformSampleDisk() * lenRadius;
 		offset = offset[0] * uDir + offset[1] * vDir;
-		r = Ray(eye + offset, lowerLeftCorner + x * horizontal + y * vertical - eye - offset);
+		r = Ray(eye + offset, lowerLeftCorner + x * horizontal + y * vertical - eye - offset, time);
 	}
 }
 

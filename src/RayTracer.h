@@ -25,6 +25,8 @@ public:
 	void traceSetup( int w, int h, int maxDepth, const vec3f& threshold );
 	void traceLines( int start = 0, int stop = 10000000 );
 	void tracePixel( int i, int j, int iter );
+	
+	vec3f tracePixelMotionBlur(int i, int j, int iter);
 	void pathTrace(int iter);
 	void setLightScale(double value);
 
@@ -39,11 +41,13 @@ public:
 
 	int ssaaSample{0};	// the exponent of 2
 	bool ssaaJitter{false};
-	bool enablePBR{false};
-	bool enablePathTracing{false};
+
+	bool enableMotionBlur{false};
+	int motionBlurSPP{100};
 
 	// Parameters for path tracing
-	int SPP{64};	// sample per pixel
+	bool enablePathTracing{false};
+	int SPP{64};		// sample per pixel
 	double rrThresh{0.7};	// russian roulette threshold
 
 private:

@@ -52,6 +52,24 @@ bool Sphere::intersectLocal( const Ray& r, Isect& i ) const
 	return true;
 }
 
+void Sphere::setTexCoords(Isect& isect) const
+{
+	if (enableTexCoords)
+	{
+		isect.hasTexCoords = true;
+		double u, v;
+		if (isect.N[0] != 0.0)
+			u = (atan2(isect.N[1], isect.N[0]) + PI) / (PI_2);
+		v = asin(isect.N[2]) / PI + 0.5;
+		isect.texCoords = {u, v};
+		
+		isect.tbn[0] = vec3f(-isect.N[1], isect.N[0], 0.0).normalize();
+		isect.tbn[1] = isect.N.cross(isect.tbn[0]);
+		isect.tbn[2] = isect.N;
+		isect.tbn = isect.tbn.transpose();
+	}
+}
+
 void SphereLight::calInfo()
 {
 	position = transform->xform * vec3f();
@@ -67,4 +85,31 @@ Ray SphereLight::sample(vec3f& emit, double& pdf) const
     emit = emission;
     pdf = 1.0 / area;
 	return ray;
+}
+
+
+bool movingSphere::intersect(const Ray& r, Isect& i) const
+{
+	vec3f center = getCurPosition(r.getTime());
+	vec3f normal = r.normalToPoint(center);
+	if (normal.length() > radius)
+		return false;
+	
+	vec3f isectPos = center + normal - sqrt(radius * radius - normal.length_squared()) * r.getDirection();
+	i.t = r.solveT(isectPos);
+	if (i.t < 0.0)
+		return false;
+	i.N = (isectPos - center).normalize();
+	i.obj = this;
+	setTexCoords(i);
+	return true;
+}
+
+vec3f movingSphere::getCurPosition(double time) const
+{
+	if (time1 == time0 || time < time0)
+		return pos;
+	if (time > time1)
+		return target;
+	return (target - pos) / (time1 - time0) * (time - time0) + pos;
 }

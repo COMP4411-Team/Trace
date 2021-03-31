@@ -30,7 +30,11 @@
 
 * [x] 2B Depth of field.
 
-* [ ] 1B1W for each Soft shadows, motion blur, or glossy reflection.
+* [ ] 1B1W Soft shadows.
+  
+* [x] 1B1W Motion blur.
+  
+* [ ] 1B1W Glossy reflection.
 
 * [ ] 3B Add some higher-level geometry to the ray tracer, such as surfaces of revolution, extrusions, metaballs or blend surfaces.
 
@@ -38,7 +42,7 @@
 
 * [ ] 4B Implement a more realistic shading model (Fresnel term, microfacet distribution, anisotropic reflections, non photorealistic rendering).
   * [x] Fresnel
-  * [x] Beer's law
+  * [x] Beer's law (extra)
   * [x] GGX microfacet BRDF  
 
 * [ ] 4B Implement CSG.
@@ -46,3 +50,5 @@
 * [ ] 4B Add a particle systems simulation and renderer.
 
 * [ ] 4B Implement caustics.
+  
+* [x] Extra Path tracing. 

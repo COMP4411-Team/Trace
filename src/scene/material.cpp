@@ -91,7 +91,7 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
 			normal = (i.tbn * i.obj->normalMap.sample(i.texCoords)).normalize();
 		
 		double lambertian = max(direction.dot(normal), 0.0);
-		vec3f attenuation = light->distanceAttenuation(position) * light->shadowAttenuation(position);
+		vec3f attenuation = light->distanceAttenuation(position) * light->shadowAttenuation(position, r.getTime());
 
 		// Really annoying that * has been overloaded as dot product... WHY????
 		diffuse += lambertian * prod(prod(diffuseColor, light->getColor(position)), attenuation);
@@ -206,7 +206,7 @@ vec3f Microfacet::shade(Scene* scene, const Ray& ray, const Isect& isect) const
 			normal = (isect.tbn * isect.obj->normalMap.sample(isect.texCoords)).normalize();
 		
 		double lambertian = max(direction.dot(normal), 0.0);
-		vec3f attenuation = light->distanceAttenuation(position) * light->shadowAttenuation(position);
+		vec3f attenuation = light->distanceAttenuation(position) * light->shadowAttenuation(position, ray.getTime());
 
 		color += prod(bsdf(direction, -ray.getDirection(), normal), attenuation) * lambertian;
 	}

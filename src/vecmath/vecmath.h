@@ -35,7 +35,7 @@ public:
 	// Constructors
 
 	vec3f() { n[0] = 0.0; n[1] = 0.0; n[2] = 0.0; }
-	vec3f(double v) { n[0] = n[1] = n[2] = v; }
+	explicit vec3f(double v) { n[0] = n[1] = n[2] = v; }
 	vec3f( const double x, const double y, const double z )
 		{ n[0] = x; n[1] = y; n[2] = z; }
 //	vec3f( const double d )

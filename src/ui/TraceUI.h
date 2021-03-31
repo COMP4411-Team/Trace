@@ -38,6 +38,9 @@ public:
 	Fl_Light_Button* m_ssaaJitterButton;
 	Fl_Light_Button* m_pathTracingButton;
 
+	Fl_Light_Button* m_motionBlurButtion;
+	Fl_Slider* m_motionBlurSPPSlider;
+
 	Fl_Light_Button* m_enableDofButton;
 	Fl_Slider* m_apertureSlider;
 	Fl_Slider* m_focalLengthSlider;
@@ -93,6 +96,9 @@ private:
 	static void cb_enableDof(Fl_Widget* o, void* v);
 	static void cb_aperture(Fl_Widget* o, void* v);
 	static void cb_focalLength(Fl_Widget* o, void* v);
+
+	static void cb_enableMotionBlur(Fl_Widget* o, void* v);
+	static void cb_motionBlurSPP(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_renderPt(Fl_Widget* o, void* v);

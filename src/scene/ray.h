@@ -26,26 +26,33 @@ public:
 class Ray {
 public:
 	Ray( const vec3f& pp, const vec3f& dd )
-		: p( pp ), d( dd.normalize() ) {}
+        : p( pp ), d( dd.normalize() ), time(0.0) {}
+	Ray( const vec3f& pp, const vec3f& dd, double time )
+		: p( pp ), d( dd.normalize() ), time(time) {}
 	Ray( const Ray& other ) 
-		: p( other.p ), d( other.d ) {}
+		: p( other.p ), d( other.d ), time(other.time) {}
 	~Ray() {}
 
 	Ray& operator =( const Ray& other ) 
-	{ p = other.p; d = other.d; return *this; }
+	{ p = other.p; d = other.d; time = other.time; return *this; }
 
 	vec3f at( double t ) const
 	{ return p + (t*d); }
 
 	vec3f getPosition() const { return p; }
 	vec3f getDirection() const { return d; }
+	double getTime() const { return time; }
 
 	Ray reflect(const Isect& isect) const;
 	bool refract(const Isect& isect, Ray& out) const;
+	vec3f normalToPoint(const vec3f& point) const;    // return the vector that starts from the point
+													  // ends on the ray, and is normal to the ray
+	double solveT(const vec3f& point) const;    // assume point is on the ray
 
 protected:
 	vec3f p;
 	vec3f d;
+	double time;
 };
 
 // The description of an intersection point.

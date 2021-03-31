@@ -457,6 +457,16 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 			scene->add(light);
 			return;
 		}
+		else if (name == "moving_sphere")
+		{
+			double radius = 1.0, time0 = 0.0, time1 = 1.0;
+			maybeExtractField(child, "radius", radius);
+			maybeExtractField(child, "time0", time0);
+			maybeExtractField(child, "time1", time1);
+			vec3f start = tupleToVec(getField(child, "start"));
+			vec3f end = tupleToVec(getField(child, "end"));
+			obj = new movingSphere(scene, mat, start, end, radius, time0, time1);
+		}
 
     		if (hasField(child, "has_tex_coords"))
 			obj->setEnableTexCoords(true);
@@ -669,6 +679,16 @@ processCamera( Obj *child, Scene *scene )
         scene->getCamera()->setLook( tupleToVec( getField( child, "viewdir" ) ).normalize(),
                                      tupleToVec( getField( child, "updir" ) ).normalize() );
     }
+	if (hasField(child, "enable_motion_blur") && getField(child, "enable_motion_blur")->getBoolean())
+	{
+		double time0 = 0.0, time1 = 1.0;
+		maybeExtractField(child, "time0", time0);
+		maybeExtractField(child, "time1", time1);
+		auto* camera = scene->getCamera();
+		camera->enableMotionBlur = true;
+		camera->time0 = time0;
+		camera->time1 = time1;
+	}
 }
 
 static void processObject( Obj *obj, Scene *scene, mmap& materials )
@@ -751,6 +771,8 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 				name == "transform" ||
                 name == "trimesh" ||
                 name == "polymesh" ||
+				name == "moving_sphere" ||
+				name == "sphere_light" ||
 				name == "skybox") { // polymesh is for backwards compatibility.
 		processGeometry( name, child, scene, materials, &scene->transformRoot);
 		//scene->add( geo );

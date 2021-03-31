@@ -298,32 +298,37 @@ void RayTracer::tracePixel( int i, int j, int iter )
 	double x = double(i)/double(buffer_width);
 	double y = double(j)/double(buffer_height);
 
-	// SSAA, in fact, MSAA
-	int sampleNum = pow(2, ssaaSample);
-	auto pattern = msaaSamplePattern[ssaaSample];
-	double unitWidth = 0.0625 / double(buffer_width);		// 1/16
-	double unitHeight = 0.0625 / double(buffer_height);
-
-	if (!ssaaJitter)
+	if (!enableMotionBlur)
 	{
-		for (int i = 0; i < sampleNum; ++i)
+		// SSAA, in fact, MSAA
+		int sampleNum = pow(2, ssaaSample);
+		auto pattern = msaaSamplePattern[ssaaSample];
+		double unitWidth = 0.0625 / double(buffer_width);		// 1/16
+		double unitHeight = 0.0625 / double(buffer_height);
+
+		if (!ssaaJitter)
 		{
-			auto offset = pattern[i];
-			col += trace( scene, x + offset.first * unitWidth, y + offset.second * unitHeight );
+			for (int i = 0; i < sampleNum; ++i)
+			{
+				auto offset = pattern[i];
+				col += trace( scene, x + offset.first * unitWidth, y + offset.second * unitHeight );
+			}
 		}
+		else
+		{
+			double widthFactor = 1.0 / (double(RAND_MAX) * buffer_width);
+			double heightFactor = 1.0 / (double(RAND_MAX) * buffer_height);
+			for (int i = 0; i < sampleNum; ++i)
+			{
+				double xOffset = rand() * widthFactor, yOffset = rand() * heightFactor;
+				col += trace(scene, x + xOffset, y + yOffset);
+			}
+		}
+		
+		col /= sampleNum;
 	}
 	else
-	{
-		double widthFactor = 1.0 / (double(RAND_MAX) * buffer_width);
-		double heightFactor = 1.0 / (double(RAND_MAX) * buffer_height);
-		for (int i = 0; i < sampleNum; ++i)
-		{
-			double xOffset = rand() * widthFactor, yOffset = rand() * heightFactor;
-			col += trace(scene, x + xOffset, y + yOffset);
-		}
-	}
-	
-	col /= sampleNum;
+		col = tracePixelMotionBlur(i, j, iter);
 	
 	unsigned char *pixel = buffer + ( i + j * buffer_width ) * 3;
 	if (!enablePathTracing)
@@ -340,6 +345,17 @@ void RayTracer::tracePixel( int i, int j, int iter )
 		backPixel[1] = (int)( 255.0 * col[1] / iter + pixel[1] * weight );
 		backPixel[2] = (int)( 255.0 * col[2] / iter + pixel[2] * weight );
 	}
+}
+
+vec3f RayTracer::tracePixelMotionBlur(int i, int j, int iter)
+{
+	vec3f col;
+	double x = double(i)/double(buffer_width);
+	double y = double(j)/double(buffer_height);
+	
+	for (int i = 0; i < motionBlurSPP; ++i)
+		col += trace( scene, x, y );
+	return col / motionBlurSPP;
 }
 
 void RayTracer::pathTrace(int iter)

@@ -24,6 +24,27 @@ public:
     }
 
 	void setEnableTexCoords(bool value) override { enableTexCoords = value; }
+
+protected:
+	virtual void setTexCoords(Isect& isect) const;
+};
+
+class movingSphere : public Sphere
+{
+public:
+	movingSphere(Scene* scene, Material* material, const vec3f& pos, const vec3f& target, double radius, double time0, double time1):
+		Sphere(scene, material), pos(pos), target(target), radius(radius), time0(time0), time1(time1) { }
+
+	bool intersect(const Ray& r, Isect& i) const override;
+	bool hasBoundingBoxCapability() const override { return false; }
+	void ComputeBoundingBox() override { }
+
+private:
+	vec3f getCurPosition(double time) const;
+	
+	vec3f pos, target;
+	double radius;
+	double time0, time1;
 };
 
 class SphereLight : public Sphere

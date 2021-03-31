@@ -9,12 +9,12 @@ double DirectionalLight::distanceAttenuation( const vec3f& P ) const
 }
 
 
-vec3f DirectionalLight::shadowAttenuation( const vec3f& P ) const
+vec3f DirectionalLight::shadowAttenuation( const vec3f& P, double t ) const
 {
     // YOUR CODE HERE:
     // You should implement shadow-handling code here.
 
-	Ray r(P, -orientation);
+	Ray r(P, -orientation, t);
 	Isect isect;
 	if (scene->bvhIntersect(r, isect))
 		return isect.getMaterial().kt;
@@ -64,19 +64,19 @@ void PointLight::setAttenuationCoeff(double constant, double linear, double quad
 }
 
 
-vec3f PointLight::shadowAttenuation(const vec3f& P) const
+vec3f PointLight::shadowAttenuation(const vec3f& P, double t) const
 {
     // YOUR CODE HERE:
     // You should implement shadow-handling code here.
 
-	Ray r(P, getDirection(P));
+	Ray r(P, getDirection(P), t);
 	Isect isect;
 	if (scene->bvhIntersect(r, isect))
 		return isect.getMaterial().kt;
     return vec3f(1,1,1);
 }
 
-vec3f SpotLight::shadowAttenuation(const vec3f& P) const
+vec3f SpotLight::shadowAttenuation(const vec3f& P, double t) const
 {
 	vec3f dir = -getDirection(P);
 	double cosAngle = dir.dot(direction);
@@ -85,7 +85,7 @@ vec3f SpotLight::shadowAttenuation(const vec3f& P) const
 	
 	double attenuation = smoothstep(cosCone, cosPenumbra, cosAngle);
 	
-	Ray r(P, getDirection(P));
+	Ray r(P, getDirection(P), t);
 	Isect isect;
 	if (scene->bvhIntersect(r, isect))
 		return attenuation * isect.getMaterial().kt;

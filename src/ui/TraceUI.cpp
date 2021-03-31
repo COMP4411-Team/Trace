@@ -166,6 +166,18 @@ void TraceUI::cb_focalLength(Fl_Widget* o, void* v)
 	ui->raytracer->setFocalLength(double( ((Fl_Slider*)o)->value() ));
 }
 
+void TraceUI::cb_enableMotionBlur(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->enableMotionBlur = (bool( ((Fl_Light_Button*)o)->value() ));
+}
+
+void TraceUI::cb_motionBlurSPP(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->motionBlurSPP = (int( ((Fl_Slider*)o)->value() ));
+}
+
 void TraceUI::cb_render(Fl_Widget* o, void* v)
 {
 	char buffer[256];
@@ -420,6 +432,15 @@ TraceUI::TraceUI() {
 
 		m_focalLengthSlider = createSlider(10, 210, 180, 20, "Focal Length",
 			0, 20, 0.01, 5, cb_focalLength);
+
+		// Motion blur
+		m_motionBlurButtion = new Fl_Light_Button(10, 235, 100, 25, "Motion Blur");
+		m_motionBlurButtion->user_data(this);
+		m_motionBlurButtion->value(0);
+		m_motionBlurButtion->callback(cb_enableMotionBlur);
+
+		m_motionBlurSPPSlider = createSlider(10, 265, 180, 20, "Motion Blur SPP",
+			1, 100, 1, 100, cb_motionBlurSPP);
 
 		m_pathTracingButton = new Fl_Light_Button(10, 350, 150, 25, "Enable Path Tracing");
 		m_pathTracingButton->user_data(this);

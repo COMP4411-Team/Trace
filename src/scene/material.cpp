@@ -16,24 +16,24 @@ inline double getRandomReal()
 
 inline vec3f Material::localToWorld(const vec3f& v, const vec3f& n)
 {
-	vec3f t;
-	if (_abs(n[0]) > _abs(n[1]))
-		t = vec3f(n[2], 0.0, -n[0]).normalize();
+	vec3f a;
+	if (_abs(n[0]) > 0.9)
+		a = vec3f(0.0, 1.0, 0.0);
 	else
-		t = vec3f(0.0, n[2], -n[1]).normalize();
-	vec3f b(t.cross(n));
-	return v[0] * b + v[1] * t + v[2] * n;
+		a = vec3f(1.0, 0.0, 0.0);
+	vec3f t(n.cross(a).normalize());
+	vec3f b(n.cross(t));
+	return v[0] * t + v[1] * b + v[2] * n;
 }
 
 vec3f Material::uniformSampleHemisphere()
 {
-	double x1 = getRandomReal(), x2 = getRandomReal();
-	double z = _abs(1.0 - 2.0 * x1);
-	double r = sqrt(1.0 - z * z), phi = 2.0 * PI * x2;
-	return vec3f(r * cos(phi), r * sin(phi), z);
+	double r1 = getRandomReal(), r2 = getRandomReal();
+	double phi = 2.0 * PI * r1, r2rt = sqrt(r2);
+	return vec3f(r2rt * cos(phi), r2rt * sin(phi), sqrt(1.0 - r2));
 }
 
-vec3f Material::reflect(const vec3f& d, const vec3f& n)
+inline vec3f Material::reflect(const vec3f& d, const vec3f& n)
 {
 	return d + 2.0 * -d.dot(n) * n;
 }
@@ -156,7 +156,7 @@ vec3f Material::fresnelReflective(const vec3f& wo, const vec3f& n) const
 	return kr + (vec3f(1.0) - kr) * fresnel;
 }
 
-vec3f Material::bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
+vec3f Material::bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
 {
 	if (!isTransmissive && wi.dot(n) > 0.0)
 		return kd * INV_PI;
@@ -168,7 +168,7 @@ vec3f Material::bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
 vec3f Material::sample(const vec3f& wo, const vec3f& n, double& pdf) const
 {
 	vec3f wi = localToWorld(uniformSampleHemisphere(), n);
-	pdf = 0.5 * INV_PI;
+	pdf = wi.dot(n) * INV_PI;
 	if (isTransmissive && wo.dot(n) > 0.0)
 		return -wi;
 	return wi;
@@ -177,7 +177,7 @@ vec3f Material::sample(const vec3f& wo, const vec3f& n, double& pdf) const
 vec3f Material::sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const
 {
 	wi = sample(wo, n, pdf);
-	return bsdf(wi, wo, n);
+	return bxdf(wi, wo, n);
 }
 
 
@@ -213,7 +213,7 @@ vec3f Microfacet::shade(Scene* scene, const Ray& ray, const Isect& isect) const
 		double lambertian = max(direction.dot(normal), 0.0);
 		vec3f attenuation = light->distanceAttenuation(position) * light->shadowAttenuation(position, ray.getTime());
 
-		color += prod(bsdf(direction, -ray.getDirection(), normal), attenuation) * lambertian;
+		color += prod(bxdf(direction, -ray.getDirection(), normal), attenuation) * lambertian;
 	}
 
 	return color;
@@ -237,7 +237,7 @@ vec3f Microfacet::calFresnel(double cosTheta, const vec3f& F0) const
 }
 
 // Sample the BRDF
-vec3f Microfacet::bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
+vec3f Microfacet::bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
 {
 	vec3f h = ((wi + wo) / 2.0).normalize();
 	vec3f F0 = vec3f(0.04, 0.04, 0.04) * (1.0 - metallic) + albedo * metallic;
@@ -262,7 +262,7 @@ vec3f Microfacet::sample(const vec3f& wo, const vec3f& n, double& pdf) const
 vec3f Microfacet::sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const
 {
 	wi = sample(wo, n, pdf);
-	return bsdf(wi, wo, n);
+	return bxdf(wi, wo, n);
 }
 
 Microfacet::Microfacet(const vec3f& albedo, double roughness, double metallic):
@@ -316,7 +316,7 @@ FresnelSpecular::FresnelSpecular(const vec3f& r, const vec3f& t, double eta)
 }
 
 // Ref: PBRT-v3
-vec3f FresnelSpecular::bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
+vec3f FresnelSpecular::bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
 {
 	double n1 = 1.0, n2 = index;
 	if (wo.dot(n) < 0.0)
@@ -391,5 +391,5 @@ vec3f FresnelSpecular::sample(const vec3f& wo, const vec3f& n, double& pdf) cons
 vec3f FresnelSpecular::sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const
 {
 	wi = sample(wo, n, pdf);
-	return bsdf(wi, wo, n);
+	return bxdf(wi, wo, n);
 }

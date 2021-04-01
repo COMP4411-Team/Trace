@@ -37,7 +37,7 @@ public:
 	vec3f fresnelReflective(const vec3f& wo, const vec3f& n) const;  // used for Whitted ray tracing
 
 	// Basic Lambertian model
-	virtual vec3f bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const;
+	virtual vec3f bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const;
 	virtual vec3f sample(const vec3f& wo, const vec3f& n, double& pdf) const;
 	virtual vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const;   // sample wi and bsdf simultaneous
 
@@ -100,7 +100,7 @@ class FresnelSpecular : public Material
 {
 public:
 	FresnelSpecular(const vec3f& r, const vec3f& t, double eta);
-	vec3f bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const override;
+	vec3f bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const override;
 	vec3f sample(const vec3f& wo, const vec3f& n, double& pdf) const override;
 	vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const override;	
 };
@@ -112,7 +112,7 @@ public:
 	Microfacet(const vec3f& albedo, double roughness, double metallic);
 
 	vec3f shade(Scene* scene, const Ray& ray, const Isect& isect) const override; // physically based shading
-	vec3f bsdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const override;
+	vec3f bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const override;
 	vec3f sample(const vec3f& wo, const vec3f& n, double& pdf) const override;
 	vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const override;
 

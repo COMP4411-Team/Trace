@@ -68,6 +68,7 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i) const
     // somewhere in your code in order to compute shadows and light falloff.
 
 	vec3f diffuse, specular, ambient;
+	vec3f diffuseColor = getDiffuseColor(r, i);
 
 	for (auto iter = scene->beginLights(); iter != scene->endLights(); ++iter)
 	{
@@ -82,7 +83,6 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i) const
 		vec3f position = r.at(i.t) + i.N * DISPLACEMENT_EPSILON;
 		vec3f normal = i.N;
 		vec3f direction = light->getDirection(position);
-		vec3f diffuseColor = getDiffuseColor(r, i);
 
 		if (i.obj->enableBumpMap)
 			normal = perturbSurfaceNormal(i);

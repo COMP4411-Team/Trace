@@ -148,6 +148,13 @@ void TraceUI::cb_pathTracingButton(Fl_Widget* o, void* v)
 	ui->raytracer->enablePathTracing = bool( ((Fl_Light_Button*)o)->value() );
 }
 
+void TraceUI::cb_fasterShadow(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->enableFasterShadow = bool(((Fl_Light_Button*)o)->value());
+	ui->raytracer->setFasterShadow(bool(((Fl_Light_Button*)o)->value()));
+}
+
 void TraceUI::cb_enableDof(Fl_Widget* o, void* v)
 {
 	auto* ui = whoami(o);
@@ -446,6 +453,11 @@ TraceUI::TraceUI() {
 		m_pathTracingButton->user_data(this);
 		m_pathTracingButton->value(0);
 		m_pathTracingButton->callback(cb_pathTracingButton);
+
+		m_fasterShadow = new Fl_Light_Button(10, 295, 150, 25, "Shadow Accelaration");
+		m_fasterShadow->user_data(this);
+		m_fasterShadow->value(0);
+		m_fasterShadow->callback(cb_fasterShadow);
 
 		m_renderButton = new Fl_Button(220, 350, 90, 25, "Render PT");
 		m_renderButton->user_data((void*)(this));

@@ -8,7 +8,7 @@
 
 * [x] 1B Add a menu option that lets you specify a background image to replace the environment's ambient color during the rendering.
 
-* [ ] 1B Find a good way to accelerate shadow attenuation.
+* [x] 1B Find a good way to accelerate shadow attenuation.
 
 * [ ] 1B Deal with overlapping objects intelligently.
 

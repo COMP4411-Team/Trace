@@ -1,0 +1,46 @@
+SBT-raytracer 1.0
+
+// perlin_noise.ray
+// To demo the generated Perlin noise solid texture
+
+camera {
+	position = (0,0,4);
+	viewdir = (0.0, 0.0, -1.0);
+	aspectratio = 1;
+	updir = (0,1,0);
+}
+
+directional_light {
+	direction = (0, -1, 0);
+	colour = (1.0, 1.0, 1.0);
+}
+
+directional_light {
+	direction = (0,1,0);
+	colour = (1.0, 1.0, 1.0);
+}
+
+skybox { 
+	back = ".\simpleSamples\bonus\skybox\back.bmp";
+	front = ".\simpleSamples\bonus\skybox\front.bmp";
+	left = ".\simpleSamples\bonus\skybox\left.bmp";
+	right = ".\simpleSamples\bonus\skybox\right.bmp";
+	top = ".\simpleSamples\bonus\skybox\top.bmp";
+	bottom = ".\simpleSamples\bonus\skybox\bottom.bmp";
+}
+
+translate( 0, 0, 0,
+	rotate( 1.0, 1.0, 1.0, 1.0, 
+		scale( 1.2,
+			sphere {
+				material = {
+					diffuse = (0.7, 0.7, 0.7); 
+					specular = (0.5, 0.5, 0.5);
+					reflective = (0, 0, 0);
+					shininess = 0.6;
+				};
+				perlin_noise = {				// specify the required parameters for the Perlin noise
+					scale = 4.0;
+					turbulence_depth = 7;
+				}
+			} ) ) )

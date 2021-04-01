@@ -32,7 +32,7 @@ public:
 		  isTransmissive(!t.iszero()) {}
 
 	virtual vec3f shade( Scene *scene, const Ray& r, const Isect& i ) const;
-	virtual vec3f getDiffuseColor(const Isect& isect) const;
+	virtual vec3f getDiffuseColor(const Ray& ray, const Isect& isect) const;
 	virtual vec3f perturbSurfaceNormal(const Isect& isect) const;
 	vec3f fresnelReflective(const vec3f& wo, const vec3f& n) const;  // used for Whitted ray tracing
 

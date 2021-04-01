@@ -274,6 +274,18 @@ bool processTexture(Obj* child, Geometry* geometry)
 		geometry->enableNormalMap = true;
 		geometry->setEnableTexCoords(true);
 	}
+	if (hasField(child, "perlin_noise"))
+	{
+		Obj* obj = getField(child, "perlin_noise");
+		double scale = 4;
+		maybeExtractField(obj, "scale", scale);
+		
+		int depth = 7;
+		if (hasField(obj, "turbulence_depth"))
+			depth = getField(obj, "turbulence_depth")->getScalar();
+		geometry->enableSolidTexture = true;
+		geometry->solidTexture = new PerlinNoise(256, scale, depth);
+	}
 	return true;
 }
 

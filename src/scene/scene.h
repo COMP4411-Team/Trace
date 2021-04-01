@@ -20,6 +20,7 @@ using namespace std;
 #include "material.h"
 #include "camera.h"
 #include "../vecmath/vecmath.h"
+#include "SolidTexture.h"
 
 extern std::mt19937_64 rng;
 extern uniform_real_distribution<double> unif;
@@ -30,10 +31,10 @@ class Scene;
 class Texture
 {
 public:
-	~Texture();
+	virtual ~Texture();
 
-	vec3f sample(double u, double v) const;
-	vec3f sample(const TexCoords& coords) const;
+	virtual vec3f sample(double u, double v) const;
+	virtual vec3f sample(const TexCoords& coords) const;
 	
 	int height, width;
 	unsigned char* data{nullptr};
@@ -259,10 +260,12 @@ public:
 	bool enableDisplacementMap{false};
 	bool enableDiffuseMap{false};
 	bool hasEmission{false};
+	bool enableSolidTexture{false};
 	
 	Texture bumpMap;
 	Texture diffuseMap;
 	Texture normalMap;
+	SolidTexture* solidTexture{nullptr};
 	vec3f emission;
 
 protected:

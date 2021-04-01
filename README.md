@@ -22,7 +22,7 @@
 
 * [x] 2B Implement bump mapping.
 
-* [ ] 2B Implement solid textures or some other form of procedural texture mapping.
+* [x] 2B Implement solid textures or some other form of procedural texture mapping.
 
 * [ ] 2B Add some new types of geometry to the ray tracer.
 

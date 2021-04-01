@@ -82,7 +82,7 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
 		vec3f position = r.at(i.t) + i.N * DISPLACEMENT_EPSILON;
 		vec3f normal = i.N;
 		vec3f direction = light->getDirection(position);
-		vec3f diffuseColor = getDiffuseColor(i);
+		vec3f diffuseColor = getDiffuseColor(r, i);
 
 		if (i.obj->enableBumpMap)
 			normal = perturbSurfaceNormal(i);
@@ -107,9 +107,11 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i ) const
 	
 }
 
-vec3f Material::getDiffuseColor(const Isect& isect) const
+vec3f Material::getDiffuseColor(const Ray& ray, const Isect& isect) const
 {
 	auto* object = isect.obj;
+	if (object->enableSolidTexture)
+		return object->solidTexture->sample(ray.at(isect.t));
 	if (isect.hasTexCoords && object->enableDiffuseMap)
 		return object->diffuseMap.sample(isect.texCoords) / 255.0;
 	return kd;

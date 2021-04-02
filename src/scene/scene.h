@@ -312,6 +312,8 @@ protected:
 
 class Scene
 {
+	friend vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i) const;
+	
 public:
 	typedef list<Light*>::iterator 			liter;
 	typedef list<Light*>::const_iterator 	cliter;
@@ -351,6 +353,8 @@ public:
 	bool useSkybox{false};
 	Skybox* skybox{nullptr};
 	bool enableFasterShadow{ false }; //Acceleration of shadow attenuation
+	bool enableDistributed{false};
+	int numChildRay{10};
 
 private:
     list<Geometry*> objects;

@@ -30,11 +30,11 @@
 
 * [x] 2B Depth of field.
 
-* [ ] 1B1W Soft shadows.
+* [x] 1B1W Soft shadows.
   
 * [x] 1B1W Motion blur.
   
-* [ ] 1B1W Glossy reflection.
+* [x] 1B1W Glossy reflection.
 
 * [ ] 3B Add some higher-level geometry to the ray tracer, such as surfaces of revolution, extrusions, metaballs or blend surfaces.
 

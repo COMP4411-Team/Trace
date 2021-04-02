@@ -34,6 +34,7 @@ public:
 	virtual vec3f shade( Scene *scene, const Ray& r, const Isect& i ) const;
 	virtual vec3f getDiffuseColor(const Ray& ray, const Isect& isect) const;
 	virtual vec3f perturbSurfaceNormal(const Isect& isect) const;
+	virtual vec3f randomReflect(const vec3f& d, const vec3f& n) const;
 	vec3f fresnelReflective(const vec3f& wo, const vec3f& n) const;  // used for Whitted ray tracing
 
 	// Basic Lambertian model
@@ -43,6 +44,7 @@ public:
 
 	static vec3f localToWorld(const vec3f& v, const vec3f& n);
 	static vec3f uniformSampleHemisphere();
+	static vec3f uniformSampleSphere();
 	static vec3f reflect(const vec3f& d, const vec3f& n);
 	static bool refract(const vec3f& d, const vec3f& n, vec3f& t, double eta);
 
@@ -56,6 +58,7 @@ public:
 	bool isTransmissive;
     
     double shininess;
+	double glossiness{0.0};
     double index;               // index of refraction
 
     
@@ -96,6 +99,8 @@ operator*( double d, Material m )
 }
 // extern Material THE_DEFAULT_MATERIAL;
 
+
+// Fresnel specular and transmissive material, for path tracing
 class FresnelSpecular : public Material
 {
 public:
@@ -104,6 +109,7 @@ public:
 	vec3f sample(const vec3f& wo, const vec3f& n, double& pdf) const override;
 	vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const override;	
 };
+
 
 // Microfacet GGX model
 class Microfacet : public Material

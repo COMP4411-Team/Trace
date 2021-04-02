@@ -67,7 +67,20 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 		if (!reflective.iszero())
 		{
 			Ray reflection = r.reflect(i);
-			indirectIllumination += prod(traceRay(scene, reflection, thresh, depth + 1, prod(curFactor, m.kr)), reflective);
+			if (enableDistributed)
+			{
+				vec3f normal = i.N.dot(r.getDirection()) < 0.0 ? i.N : -i.N;
+				vec3f tmp, position = r.at(i.t) + normal * DISPLACEMENT_EPSILON;
+				for (int j = 0; j < numChildRay; ++j)
+				{
+					reflection = Ray(position, m.randomReflect(r.getDirection(), i.N));
+					tmp += prod(traceRay(scene, reflection, thresh, depth + 1, prod(curFactor, m.kr)), reflective);
+				}
+				tmp /= numChildRay;
+				indirectIllumination += tmp;
+			}
+			else
+				indirectIllumination += prod(traceRay(scene, reflection, thresh, depth + 1, prod(curFactor, m.kr)), reflective);
 		}
 
 		Ray refraction{vec3f(), vec3f()};
@@ -249,6 +262,7 @@ bool RayTracer::loadScene( char* fn )
 
 	if (scene->useSkybox)
 		scene->skybox->initialize(buffer_width);
+	scene->enableDistributed = enableDistributed;
 
 	return true;
 }

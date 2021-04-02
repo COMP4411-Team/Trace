@@ -1,0 +1,55 @@
+SBT-raytracer 1.0
+
+// glossy.ray
+// Demo the glossy reflection created by distributed ray tracing
+// Please turn on distributed RT in GUI, recommended setting is child ray num = 10, recursive depth = 2,
+// size ~ 400px, with multithread on
+
+camera {
+	position = (0,2,-4);
+	viewdir = (0,-2,4);
+	aspectratio = 1;
+	updir = (0,1,0);
+}
+
+// Two area lights
+area_light {
+	position = (0, 0, -4);	// one corner of the area light
+	u = (-1, 0, 0);			// the width and height vector
+	v = (0, 1, 0);
+	color = (1.0, 1.0, 1.0);
+}
+
+area_light {
+	position = (4, 0, -4);
+	u = (-1, 0, 1);
+	v = (-0.5, 1, 0.5);
+	color = (1.0, 1.0, 1.0);
+}
+
+translate( 0, 0, 0,
+	rotate( 1.0, 1.0, 1.0, 1.0, 
+		scale( 1.0,
+			box {
+				material = { 
+					diffuse = (0.8, 0.1, 0.1); 
+					specular = (0.5, 0.5, 0.5);
+					reflective = (0.0, 0.0, 0.0);
+					shininess = 0.2;
+				}
+			} ) ) )
+
+// Note the glossiness setting, by default it will be zero - perfect reflection
+translate( 0.0, -1.0, 0.0,
+	rotate( 1,0,0,0,
+		scale(6, 0.1, 6,
+			box { 
+				material = { 
+					diffuse = (0.8,0.8,0.8);
+					specular = (0.5, 0.5, 0.5);
+					reflective = (1.0, 1.0, 1.0);
+					glossiness = 0.2;
+					shininess = 0.3;
+				};
+			})))
+

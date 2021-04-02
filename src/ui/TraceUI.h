@@ -40,9 +40,14 @@ public:
 
 	Fl_Light_Button* m_fasterShadow;
 
-	Fl_Light_Button* m_motionBlurButtion;
+	Fl_Light_Button* m_motionBlurButton;
 	Fl_Slider* m_motionBlurSPPSlider;
 
+	Fl_Light_Button* m_distributedButton;
+	Fl_Slider* m_childRaySlider;
+
+	Fl_Light_Button* m_multiThreadButton;
+	
 	Fl_Light_Button* m_enableDofButton;
 	Fl_Slider* m_apertureSlider;
 	Fl_Slider* m_focalLengthSlider;
@@ -70,6 +75,7 @@ private:
 	int ssaaSampleLevel{0};
 	bool enablePathTracing{false};
 	bool enableFasterShadow{ false };
+	bool enableMultiThread{false};
 	int maxIter{10000};
 	vec3f threshold;
 
@@ -101,10 +107,18 @@ private:
 	static void cb_aperture(Fl_Widget* o, void* v);
 	static void cb_focalLength(Fl_Widget* o, void* v);
 
+	// Motion Blur
 	static void cb_enableMotionBlur(Fl_Widget* o, void* v);
 	static void cb_motionBlurSPP(Fl_Widget* o, void* v);
 
+	// Distributed RT
+	static void cb_distributed(Fl_Widget* o, void* v);
+	static void cb_childRay(Fl_Widget* o, void* v);
+
+	static void cb_multiThread(Fl_Widget* o, void* v);
+
 	static void cb_render(Fl_Widget* o, void* v);
+	static void cb_renderParallel(Fl_Widget* o, void* v);
 	static void cb_renderPt(Fl_Widget* o, void* v);
 	static void cb_stop(Fl_Widget* o, void* v);
 };

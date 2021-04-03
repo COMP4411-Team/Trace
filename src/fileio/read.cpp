@@ -778,6 +778,10 @@ static Material *processMaterial( Obj *child, mmap *bindings )
 	{
 		mat->absorb = tupleToVec(getField(child, "absorb"));
 	}
+	if (hasField(child, "glossiness"))
+	{
+		mat->glossiness = getField(child, "glossiness")->getScalar();
+	}
 
     processBindings(child, bindings, mat);
 
@@ -889,6 +893,17 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 		spotLight->setPos(tupleToVec(getField(child, "position")));
 		spotLight->setTarget(tupleToVec(getField(child, "target")));
 		scene->add(spotLight);
+	}
+	else if (name == "area_light")
+	{
+		if (child == nullptr)
+			throw ParseError("No info for area_light");
+		vec3f color = tupleToVec(getField(child, "color"));
+		vec3f pos = tupleToVec(getField(child, "position"));
+		vec3f u = tupleToVec(getField(child, "u"));
+		vec3f v = tupleToVec(getField(child, "v"));
+		auto* areaLight = new AreaLight(scene, color, pos, u, v);
+		scene->add(areaLight);
 	}
 	else if( 	name == "sphere" ||
 				name == "box" ||

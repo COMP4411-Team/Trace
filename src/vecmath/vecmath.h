@@ -29,6 +29,16 @@ inline double maximum( double a, double b )
 	return a > b ? a : b;
 }
 
+inline double getRandomReal()
+{
+	return (double) rand() / RAND_MAX;
+}
+
+inline double getRandomReal(double min, double max)
+{
+	return getRandomReal() * (max - min) + min;
+}
+
 class vec3f
 {
 public:
@@ -59,6 +69,16 @@ public:
 		{ return n[i]; }
 	double operator []( int i ) const 
 		{ return n[i]; }
+
+	static vec3f random()
+	{
+		return vec3f(getRandomReal(), getRandomReal(), getRandomReal());
+	}
+
+	static vec3f random(double min, double max)
+	{
+		return vec3f(getRandomReal(min, max), getRandomReal(min, max), getRandomReal(min, max));
+	}
 
 	// Cross product between this and 'b'
 	vec3f cross(const vec3f& b) const
@@ -98,7 +118,7 @@ public:
 		return ret;
 	}
 
-	bool iszero() const { return ( (n[0]==0 && n[1]==0 && n[2]==0) ? true : false); };
+	bool iszero() const { return ( (n[0]==0 && n[1]==0 && n[2]==0) ? true : false); }
 
 public:
 	double n[3];

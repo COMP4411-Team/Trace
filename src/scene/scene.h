@@ -327,6 +327,8 @@ protected:
 
 class Scene
 {
+	friend vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i) const;
+	
 public:
 	typedef list<Light*>::iterator 			liter;
 	typedef list<Light*>::const_iterator 	cliter;
@@ -359,19 +361,22 @@ public:
 	list<Light*>::const_iterator endLights() const { return lights.end(); }
 
 	Ray uniformSampleOneLight(vec3f& emit, double& pdf);
-	
-	bool loadHFmap(const string& filename);
-	bool HFmapLoaded() { if (hfmap != nullptr) return true; else return false; }
-	bool enableHField{ true };//control HField
-	HFmap* hfmap{ nullptr };
         
 	Camera *getCamera() { return &camera; }
 
 	double lightScale{10.0};
 	bool useSkybox{false};
 	Skybox* skybox{nullptr};
+
+	bool loadHFmap(const string& filename);
+	bool HFmapLoaded() { if (hfmap != nullptr) return true; else return false; }
+	HFmap* getHFmap() { return hfmap; }
+	bool enableHField{ true };
+	HFmap* hfmap{ nullptr };
+
 	bool enableFasterShadow{ false }; //Acceleration of shadow attenuation
-	
+	bool enableDistributed{false};
+	int numChildRay{10};
 
 private:
     list<Geometry*> objects;

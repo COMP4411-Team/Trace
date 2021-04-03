@@ -1,18 +1,11 @@
 #include "Ray.h"
 #include "material.h"
 #include "light.h"
-#include <random>
 
 const double PI = 3.14159265358979323846;
 const double PI_OVER_2 = 1.57079632679489661923;
 const double PI_OVER_4 = 0.78539816339744830961;
 const double INV_PI = 0.31830988618379067153;
-
-inline double getRandomReal()
-{
-	// return unif(rng);
-	return ((double) rand() / RAND_MAX);		// for performance
-}
 
 inline vec3f Material::localToWorld(const vec3f& v, const vec3f& n)
 {
@@ -33,9 +26,19 @@ vec3f Material::uniformSampleHemisphere()
 	return vec3f(r2rt * cos(phi), r2rt * sin(phi), sqrt(1.0 - r2));
 }
 
+vec3f Material::uniformSampleSphere()
+{
+	while (true)
+	{
+		vec3f vec{vec3f::random(-1.0, 1.0)};
+		if (vec.length_squared() < 1.0)
+			return vec;
+	}
+}
+
 inline vec3f Material::reflect(const vec3f& d, const vec3f& n)
 {
-	return d + 2.0 * -d.dot(n) * n;
+	return d - 2.0 * d.dot(n) * n;
 }
 
 bool Material::refract(const vec3f& d, const vec3f& n, vec3f& t, double eta)
@@ -67,47 +70,63 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i) const
     // You will need to call both distanceAttenuation() and shadowAttenuation()
     // somewhere in your code in order to compute shadows and light falloff.
 
-	vec3f diffuse, specular, ambient;
+	vec3f diffuse, specular, ambient, accum;		// accum for area lights
+	vec3f position = r.at(i.t) + i.N * DISPLACEMENT_EPSILON;
+	vec3f normal = i.N;
+
+	if (i.obj->enableBumpMap)
+		normal = perturbSurfaceNormal(i);
+	if (i.obj->enableNormalMap)
+		normal = (i.tbn * i.obj->normalMap.sample(i.texCoords)).normalize();
+	
 	vec3f diffuseColor = getDiffuseColor(r, i);
 
+	// Punctual light
 	for (auto iter = scene->beginLights(); iter != scene->endLights(); ++iter)
 	{
 		Light* light = *iter;
-
 		if (typeid(*light) == typeid(AmbientLight))
 		{
 			ambient += light->getColor(vec3f());
 			continue;
 		}
+
+		if (light->isAreaLight() && scene->enableDistributed)
+		{
+			vec3f tmp;
+			for (int i = 0; i < scene->numChildRay; ++i)
+			{
+				vec3f atten;
+				vec3f lDir = light->getDirAndAtten(position, atten, r.getTime());
+				double lambertian = max(lDir.dot(normal), 0.0);
+				vec3f h = (lDir - r.getDirection()).normalize();
+				tmp += lambertian * prod(prod(diffuseColor, light->getColor(position)), atten);
+				tmp += pow(max(h.dot(normal), 0.0), shininess * 256.0) * 
+					prod(ks, prod(light->getColor(position), atten));
+			}
+			accum += tmp / scene->numChildRay;
+			continue;
+		}
 		
-		vec3f position = r.at(i.t) + i.N * DISPLACEMENT_EPSILON;
-		vec3f normal = i.N;
 		vec3f direction = light->getDirection(position);
-
-		if (i.obj->enableBumpMap)
-			normal = perturbSurfaceNormal(i);
-
-		if (i.obj->enableNormalMap)
-			normal = (i.tbn * i.obj->normalMap.sample(i.texCoords)).normalize();
+		if (scene->enableFasterShadow && direction.dot(normal) < 0) {
+			continue;	
+		}
 		
 		double lambertian = max(direction.dot(normal), 0.0);
-		vec3f shadowA;
-		if (!scene->enableFasterShadow || direction.dot(normal) > 0) {
-			shadowA= light->shadowAttenuation(position, r.getTime());
-		}
+		vec3f shadowA= light->shadowAttenuation(position, r.getTime());
 		vec3f attenuation = light->distanceAttenuation(position) * shadowA;
+		vec3f h = (direction - r.getDirection()).normalize();
+		
 		// Really annoying that * has been overloaded as dot product... WHY????
 		diffuse += lambertian * prod(prod(diffuseColor, light->getColor(position)), attenuation);
-
-		vec3f h = (direction - r.getDirection()).normalize();
 
 		// Using Blinn-Phong
 		specular += pow(max(h.dot(normal), 0.0), shininess * 256.0) * 
 			prod(ks, prod(light->getColor(position), attenuation));
 	}
 
-	return ke + prod(ka, ambient) + specular + diffuse;		// the direct illumination
-	
+	return ke + prod(ka, ambient) + specular + diffuse + accum;		// the direct illumination
 }
 
 vec3f Material::getDiffuseColor(const Ray& ray, const Isect& isect) const
@@ -129,6 +148,14 @@ vec3f Material::perturbSurfaceNormal(const Isect& isect) const
 
 	vec3f normal(factor * (h - h1), factor * (h - h2), 1.0);
 	return (isect.tbn * normal).normalize();
+}
+
+vec3f Material::randomReflect(const vec3f& d, const vec3f& n) const
+{
+	vec3f r = reflect(d, n);
+	if (glossiness > 0.0) 
+		return (r + glossiness * uniformSampleSphere().normalize()).normalize();
+	return r;
 }
 
 // wo is from the intersection to the previous vertex
@@ -393,3 +420,4 @@ vec3f FresnelSpecular::sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, doubl
 	wi = sample(wo, n, pdf);
 	return bxdf(wi, wo, n);
 }
+

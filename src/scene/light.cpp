@@ -112,3 +112,24 @@ double smoothstep(double edge0, double edge1, double x)
     return t * t * (3.0 - 2.0 * t);
 }
 
+AreaLight::AreaLight(Scene* scene, const vec3f& color, const vec3f& pos, const vec3f& u, const vec3f& v):
+	Light(scene, color), pos(pos), u(u), v(v) { }
+
+vec3f AreaLight::getDirAndAtten(const vec3f& objPos, vec3f& attenuation, double t) const
+{
+	vec3f lDir = sample() - objPos;
+	double distAtten = scene->lightScale / (lDir.length_squared() + LIGHT_EPSILON);
+	Ray r(objPos, lDir, t);
+	Isect isect;
+	if (scene->bvhIntersect(r, isect))
+		attenuation = isect.getMaterial().kt;
+	else
+		attenuation = vec3f(1.0);
+	attenuation *= distAtten;
+    return lDir.normalize();
+}
+
+vec3f AreaLight::sample() const
+{
+	return pos + getRandomReal() * u + getRandomReal() * v;
+}

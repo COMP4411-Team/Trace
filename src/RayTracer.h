@@ -11,6 +11,7 @@
 
 class RayTracer
 {
+	friend class TraceUI;
 public:
     RayTracer();
     ~RayTracer();
@@ -54,6 +55,9 @@ public:
 
 	bool enableMotionBlur{false};
 	int motionBlurSPP{100};
+
+	bool enableDistributed{false};
+	int numChildRay{10};
 
 	// Parameters for path tracing
 	bool enablePathTracing{false};

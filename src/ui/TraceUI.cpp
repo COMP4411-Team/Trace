@@ -206,11 +206,33 @@ void TraceUI::cb_motionBlurSPP(Fl_Widget* o, void* v)
 	ui->raytracer->motionBlurSPP = (int( ((Fl_Slider*)o)->value() ));
 }
 
+void TraceUI::cb_distributed(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->enableDistributed = (bool( ((Fl_Light_Button*)o)->value() ));
+	ui->raytracer->scene->enableDistributed = (bool( ((Fl_Light_Button*)o)->value() ));
+}
+
+void TraceUI::cb_childRay(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->numChildRay = (int( ((Fl_Slider*)o)->value() ));
+	ui->raytracer->scene->numChildRay = (int( ((Fl_Slider*)o)->value() ));
+}
+
+void TraceUI::cb_multiThread(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->enableMultiThread = (bool( ((Fl_Light_Button*)o)->value() ));
+}
+
 void TraceUI::cb_render(Fl_Widget* o, void* v)
 {
-	char buffer[256];
-
 	TraceUI* pUI=((TraceUI*)(o->user_data()));
+	if (pUI->enableMultiThread)
+		return cb_renderParallel(o, v);
+	
+	char buffer[256];
 	
 	if (pUI->raytracer->sceneLoaded()) {
 		int width=pUI->getSize();
@@ -283,6 +305,65 @@ void TraceUI::cb_render(Fl_Widget* o, void* v)
 	}
 }
 
+void TraceUI::cb_renderParallel(Fl_Widget* o, void* v)
+{
+	char buffer[256];
+
+	TraceUI* pUI=((TraceUI*)(o->user_data()));
+	
+	if (!pUI->raytracer->sceneLoaded())
+		return;
+
+	int width = pUI->getSize();
+	int height = (int)(width / pUI->raytracer->aspectRatio() + 0.5);
+	pUI->m_traceGlWindow->resizeWindow(width, height);
+	pUI->m_traceGlWindow->show();
+	pUI->raytracer->traceSetup(width, height, pUI->getDepth(), pUI->threshold);
+
+	// Save the window label
+	const char* old_label = pUI->m_traceGlWindow->label();
+
+	// start to render here	
+	done = false;
+	clock_t prev, now;
+	prev = clock();
+
+	pUI->m_traceGlWindow->refresh();
+	Fl::check();
+	Fl::flush();
+
+	for (int y = 0; y < height; y++)
+	{
+		#pragma omp parallel for num_threads(4)
+		for (int x = 0; x < width; x++)
+		{
+			pUI->raytracer->tracePixel(x, y, 1);
+		}
+		if (done) break;
+
+		// flush when finish a row
+		if (Fl::ready())
+		{
+			// refresh
+			pUI->m_traceGlWindow->refresh();
+			Fl::check();
+
+			if (Fl::damage())
+			{
+				Fl::flush();
+			}
+		}
+		// update the window label
+		sprintf(buffer, "(%d%%) %s", (int)((double)y / (double)height * 100.0), old_label);
+		pUI->m_traceGlWindow->label(buffer);
+	}
+	done = true;
+	pUI->m_traceGlWindow->refresh();
+
+	// Restore the window label
+	pUI->m_traceGlWindow->label(old_label);		
+}
+
 void TraceUI::cb_renderPt(Fl_Widget* o, void* v)
 {
 	char buffer[256];
@@ -310,51 +391,16 @@ void TraceUI::cb_renderPt(Fl_Widget* o, void* v)
 	for (int i = 1; i <= pUI->maxIter; ++i)
 	{
 		pUI->raytracer->pathTrace(i);
-		//for (int y = 0; y < height; y++)
-		//{
-		//	for (int x = 0; x < width; x++)
-		//	{
-		//		if (done) break;
-		//		now = clock();
-		//		if (((double)(now - prev) / CLOCKS_PER_SEC) > 0.5)
-		//		{
-		//			prev = now;
-		//			if (Fl::ready())
-		//			{
-		//				// refresh
-		//				pUI->m_traceGlWindow->refresh();
-		//				// check event
-		//				Fl::check();
-
-		//				if (Fl::damage())
-		//					Fl::flush();
-		//			}
-		//		}
-		//		pUI->raytracer->tracePixel(x, y, i);
-		//	}
-		//	if (done) break;
-
-		//	if (Fl::ready())
-		//	{
-		//		// refresh
-		//		pUI->m_traceGlWindow->refresh();
-		//		if (Fl::damage())
-		//			Fl::flush();
-		//	}
-		//}
-		//// update the window label
 		Fl::check();
 		if (done) break;
 		pUI->m_traceGlWindow->refresh();
 		sprintf(buffer, "Iter %d %s", i, old_label);
 		pUI->m_traceGlWindow->label(buffer);
-
 		pUI->raytracer->swapBuffer();
 	}
 
 	done = true;
 	pUI->m_traceGlWindow->refresh();
-	// Restore the window label
 	pUI->m_traceGlWindow->label(old_label);
 }
 
@@ -463,25 +509,40 @@ TraceUI::TraceUI() {
 			0, 20, 0.01, 5, cb_focalLength);
 
 		// Motion blur
-		m_motionBlurButtion = new Fl_Light_Button(10, 235, 100, 25, "Motion Blur");
-		m_motionBlurButtion->user_data(this);
-		m_motionBlurButtion->value(0);
-		m_motionBlurButtion->callback(cb_enableMotionBlur);
+		m_motionBlurButton = new Fl_Light_Button(10, 235, 100, 25, "Motion Blur");
+		m_motionBlurButton->user_data(this);
+		m_motionBlurButton->value(0);
+		m_motionBlurButton->callback(cb_enableMotionBlur);
 
 		m_motionBlurSPPSlider = createSlider(10, 265, 180, 20, "Motion Blur SPP",
 			1, 100, 1, 100, cb_motionBlurSPP);
 
-		m_pathTracingButton = new Fl_Light_Button(10, 350, 150, 25, "Enable Path Tracing");
-		m_pathTracingButton->user_data(this);
-		m_pathTracingButton->value(0);
-		m_pathTracingButton->callback(cb_pathTracingButton);
-
-		m_fasterShadow = new Fl_Light_Button(10, 295, 150, 25, "Shadow Accelaration");
+		m_fasterShadow = new Fl_Light_Button(10, 290, 160, 25, "Shadow Acceleration");
 		m_fasterShadow->user_data(this);
 		m_fasterShadow->value(0);
 		m_fasterShadow->callback(cb_fasterShadow);
 
-		m_renderButton = new Fl_Button(220, 350, 90, 25, "Render PT");
+		// Distributed RT
+		m_distributedButton = new Fl_Light_Button(180, 290, 140, 25, "Distributed RT");
+		m_distributedButton->user_data(this);
+		m_distributedButton->value(0);
+		m_distributedButton->callback(cb_distributed);
+
+		m_childRaySlider = createSlider(10, 320, 180, 20, "Child Ray Num",
+			1, 50, 1, 10, cb_childRay);
+
+		m_multiThreadButton = new Fl_Light_Button(10, 345, 140, 25, "Multi Thread");
+		m_multiThreadButton->user_data(this);
+		m_multiThreadButton->value(0);
+		m_multiThreadButton->callback(cb_multiThread);
+
+		// Path tracing
+		m_pathTracingButton = new Fl_Light_Button(10, 375, 150, 25, "Enable Path Tracing");
+		m_pathTracingButton->user_data(this);
+		m_pathTracingButton->value(0);
+		m_pathTracingButton->callback(cb_pathTracingButton);
+	
+		m_renderButton = new Fl_Button(220, 375, 90, 25, "Render PT");
 		m_renderButton->user_data((void*)(this));
 		m_renderButton->callback(cb_renderPt);
 

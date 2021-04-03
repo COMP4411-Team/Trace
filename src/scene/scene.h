@@ -395,10 +395,4 @@ inline void _swap(double& a, double& b)
 	a = tmp;
 }
 
-inline double getUniformReal()
-{
-	// return unif(rng);
-	return ((double)rand() / RAND_MAX);
-}
-
 #endif // __SCENE_H__

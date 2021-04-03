@@ -235,7 +235,7 @@ Ray Scene::uniformSampleOneLight(vec3f& emit, double& pdf)
 	double emitAreaSum = 0.0;
 	for (auto* light : emittingObjects)
 		emitAreaSum += light->getArea();
-	double prob = getUniformReal() * emitAreaSum;
+	double prob = getRandomReal() * emitAreaSum;
 	emitAreaSum = 0.0;
 	for (auto* light : emittingObjects)
 	{

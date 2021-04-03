@@ -35,12 +35,11 @@ public:
 	virtual vec3f getDiffuseColor(const Ray& ray, const Isect& isect) const;
 	virtual vec3f perturbSurfaceNormal(const Isect& isect) const;
 	virtual vec3f randomReflect(const vec3f& d, const vec3f& n) const;
-	vec3f fresnelReflective(const vec3f& wo, const vec3f& n) const;  // used for Whitted ray tracing
+	vec3f fresnelReflective(const vec3f& wo, const vec3f& n) const;
 
-	// Basic Lambertian model
-	virtual vec3f bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const;
-	virtual vec3f sample(const vec3f& wo, const vec3f& n, double& pdf) const;
-	virtual vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const;   // sample wi and bsdf simultaneous
+	virtual vec3f bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const;             // given wi and wo, calculate BxDF
+	virtual vec3f sample(const vec3f& wo, const vec3f& n, double& pdf) const;               // sample a new direction for ray
+	virtual vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const;   // sample wi and BxDF simultaneous
 
 	static vec3f localToWorld(const vec3f& v, const vec3f& n);
 	static vec3f uniformSampleHemisphere();
@@ -54,11 +53,12 @@ public:
     vec3f kd;                    // diffuse
     vec3f kr;                    // reflective
     vec3f kt;                    // transmissive
-	vec3f absorb;               // the light absorbed per unit distance traveled
+	vec3f absorb;                // the light absorbed per unit distance traveled
 	bool isTransmissive;
     
     double shininess;
 	double glossiness{0.0};
+	double translucency{0.0};
     double index;               // index of refraction
 
     
@@ -111,27 +111,27 @@ public:
 };
 
 
-// Microfacet GGX model
+// Microfacet specular
 class Microfacet : public Material
 {
 public:
 	Microfacet(const vec3f& albedo, double roughness, double metallic);
 
-	vec3f shade(Scene* scene, const Ray& ray, const Isect& isect) const override; // physically based shading
+	vec3f shade(Scene* scene, const Ray& ray, const Isect& isect) const override;
 	vec3f bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const override;
 	vec3f sample(const vec3f& wo, const vec3f& n, double& pdf) const override;
 	vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const override;
 
 protected:
-	double calNDF(double cosTheta) const; // Trowbridge-Reitz GGX normal distribution function
-	double calGGX(double cosTheta) const; // Schlick-GGX
-	vec3f calFresnel(double cosTheta, const vec3f& F0) const;
+	double calD(double cosTheta) const; 
+	double calG(double cosTheta) const;
+	vec3f calF(double cosTheta, const vec3f& F0) const;
 
 	static vec3f concentricSampleDisk();
 	static vec3f cosineSampleHemisphere();
 	static double cosineHemispherePdf(double cosTheta);
 
-	// PBR material parameters, based on UE4 BRDF
+	// Material parameters
 	vec3f albedo;
 	double roughness;
 	double metallic;

@@ -79,7 +79,7 @@ void SphereLight::calInfo()
 
 Ray SphereLight::sample(vec3f& emit, double& pdf) const
 {
-	double theta = 2.0 * PI * getUniformReal(), phi = PI * getUniformReal();
+	double theta = 2.0 * PI * getRandomReal(), phi = PI * getRandomReal();
     vec3f dir(cos(phi), sin(phi) * cos(theta), sin(phi) * sin(theta));
 	Ray ray(position + radius * dir, dir);
     emit = emission;

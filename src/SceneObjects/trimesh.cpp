@@ -204,7 +204,7 @@ void TrimeshFace::generateTbnMatrix()
 
 Ray TrimeshFace::sample(vec3f& emit, double& pdf) const
 {
-	double x = sqrt(getUniformReal()), y = getUniformReal();
+	double x = sqrt(getRandomReal()), y = getRandomReal();
 	vec3f& v1 = parent->vertices[ids[0]];
 	vec3f& v2 = parent->vertices[ids[1]];
 	vec3f& v3 = parent->vertices[ids[2]];

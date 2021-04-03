@@ -59,7 +59,7 @@ void PerlinNoise::generatePermutation(std::vector<int>& vec)
 		vec[i] = i;
 	for (int i = vec.size() - 1; i > 0; --i)
 	{
-		int idx = int(getUniformReal() * (i - 1));
+		int idx = int(getRandomReal() * (i - 1));
 		int tmp = vec[idx];
 		vec[idx] = vec[i];
 		vec[i] = tmp;
@@ -87,7 +87,7 @@ double PerlinNoise::interpolate(vec3f color[2][2][2], double u, double v, double
 
 vec3f PerlinNoise::getRandomVector()
 {
-	double x = getUniformReal(), y = getUniformReal(), z = getUniformReal();
+	double x = getRandomReal(), y = getRandomReal(), z = getRandomReal();
 	x = x * 2.0 - 1.0;
 	y = y * 2.0 - 1.0;
 	z = z * 2.0 - 1.0;

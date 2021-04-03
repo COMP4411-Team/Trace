@@ -136,13 +136,13 @@ vec3f RayTracer::tracePath(Scene* scene, const Ray& ray, int depth)
 		
 		if (isect.obj->hasEmission)
 		{
-			if (!bounce)
-				radiance += isect.obj->getEmission();
+			radiance += prod(isect.obj->getEmission(), beta);
 			break;
 		}
 
 		const Material& material = isect.getMaterial();
 		vec3f pos = curRay.at(isect.t) + isect.N * DISPLACEMENT_EPSILON;
+		assert(!material.isTransmissive || bounce);
 		if (!material.isTransmissive)
 		{
 			vec3f emission;
@@ -172,7 +172,7 @@ vec3f RayTracer::tracePath(Scene* scene, const Ray& ray, int depth)
 			}
 		}
 
-		double rr = getUniformReal(); // Russian roulette
+		double rr = getRandomReal(); // Russian roulette
 		if (rr > rrThresh)
 			break;
 
@@ -185,8 +185,7 @@ vec3f RayTracer::tracePath(Scene* scene, const Ray& ray, int depth)
 		wi = wi.normalize();
 		Ray newRay(pos, wi);
 
-		double coeff = _abs(isect.N.dot(wi)); // cosine term in render equation
-		coeff *= 1.0 / (bxdfPdf * rrThresh); // the whole pdf
+		double coeff = _abs(isect.N.dot(wi)) / (bxdfPdf * rrThresh);
 		beta = prod(bxdf, beta) * coeff;
 		curRay = newRay;
 	}

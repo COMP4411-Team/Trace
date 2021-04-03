@@ -246,24 +246,25 @@ vec3f Microfacet::shade(Scene* scene, const Ray& ray, const Isect& isect) const
 	return color;
 }
 
-double Microfacet::calNDF(double cosTheta) const
+// Trowbridge-Reitz/GGX NDF
+double Microfacet::calD(double cosTheta) const
 {
 	double denom = cosTheta * cosTheta * (alpha2 - 1.0) + 1.0;
 	denom = denom * denom * PI;
 	return alpha2 / denom;
 }
 
-double Microfacet::calGGX(double cosTheta) const
+// Schlick model
+double Microfacet::calG(double cosTheta) const
 {
 	return cosTheta / (cosTheta * (1.0 - k) + k);
 }
 
-vec3f Microfacet::calFresnel(double cosTheta, const vec3f& F0) const
+vec3f Microfacet::calF(double cosTheta, const vec3f& F0) const
 {
 	return F0 + (vec3f(1.0, 1.0, 1.0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-// Sample the BRDF
 vec3f Microfacet::bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
 {
 	vec3f h = ((wi + wo) / 2.0).normalize();
@@ -273,14 +274,12 @@ vec3f Microfacet::bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
 	double nDotL = _max(n.dot(wi), 0.0);
 	double nDotV = _max(n.dot(wo), 0.0);
 
-	return albedo * INV_PI + calFresnel(vDotH, F0) * calNDF(nDotH) * calGGX(nDotL) * calGGX(nDotV) / 
+	return albedo * INV_PI + calF(vDotH, F0) * calD(nDotH) * calG(nDotL) * calG(nDotV) / 
 		(4.0 * nDotL * nDotV + NORMAL_EPSILON);
 }
 
-// Sample the next direction for path tracing for opaque materials
 vec3f Microfacet::sample(const vec3f& wo, const vec3f& n, double& pdf) const
 {
-	// TODO: add importance sampling
 	vec3f localDir = cosineSampleHemisphere();
 	pdf = cosineHemispherePdf(localDir[2]);
 	return localToWorld(localDir, n);
@@ -342,38 +341,11 @@ FresnelSpecular::FresnelSpecular(const vec3f& r, const vec3f& t, double eta)
 	isTransmissive = true;
 }
 
-// Ref: PBRT-v3
 vec3f FresnelSpecular::bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
 {
-	double n1 = 1.0, n2 = index;
-	if (wo.dot(n) < 0.0)
-		_swap(n1, n2);
-
-	double F0 = (n1 - n2) / (n1 + n2);
-	F0 *= F0;
-	double cosTheta = _abs(wo.dot(n));
-
-	if (n1 > n2)	
-	{
-		double eta = n1 / n2;
-		double sinTheta2 = eta * eta * (1.0 - cosTheta * cosTheta);
-		if (sinTheta2 > 1.0)	
-			return kr / _abs(wi.dot(n));
-		cosTheta = sqrt(1 - sinTheta2);
-	}
-	
-	double fresnel = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-	
-	if (getRandomReal() < fresnel)
-	{
-		return fresnel * kr / _abs(wi.dot(n));
-	}
-	else
-	{
-		vec3f bsdf = kt * (1 - fresnel);
-		bsdf *= (n1 * n1) / (n2 * n2);
-		return bsdf / _abs(wi.dot(n));
-	}
+	if (wi.dot(wo) > 0.0)
+		return kr;
+	return vec3f(1.0);
 }
 
 vec3f FresnelSpecular::sample(const vec3f& wo, const vec3f& n, double& pdf) const

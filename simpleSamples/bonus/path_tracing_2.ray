@@ -87,7 +87,7 @@ polymesh {
 polymesh {
   name="";
   material={
-  	// type = "fresnel";
+  	type = "fresnel";
     diffuse=( 0.46,0.47,0.09);
     reflective=( 0.46,0.47,0.09);
     transmissive=( 0.8,0.8,0.8 );
@@ -99,7 +99,7 @@ polymesh {
 polymesh {
   name="";
   material={
-  	// type = "fresnel";
+  	type = "fresnel";
     diffuse=( 0.09,0.44,0.45);
     reflective=( 0.09,0.44,0.45);
     transmissive=( 0.6,0.6,0.6 );
@@ -111,7 +111,7 @@ polymesh {
 polymesh {
   name="";
   material={
-  	// type = "fresnel";
+  	type = "fresnel";
     diffuse=( 0.46,0.14,0.44);
     reflective=( 0.46,0.14,0.44);
     transmissive=( 0.4,0.4,0.4 );

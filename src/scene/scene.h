@@ -40,6 +40,21 @@ public:
 	unsigned char* data{nullptr};
 };
 
+class HFmap
+{
+public:
+	HFmap(unsigned char* m, int h, int w) :map(m), height(h), width(w) {}
+	~HFmap();
+
+	double getH(int x, int y) const;
+	vec3f getC(int x, int y) const;
+
+
+	int height, width, hf;
+	unsigned char* map{ nullptr };
+
+};
+
 class SceneElement
 {
 public:
@@ -352,6 +367,13 @@ public:
 	double lightScale{10.0};
 	bool useSkybox{false};
 	Skybox* skybox{nullptr};
+
+	bool loadHFmap(const string& filename);
+	bool HFmapLoaded() { if (hfmap != nullptr) return true; else return false; }
+	HFmap* getHFmap() { return hfmap; }
+	bool enableHField{ true };
+	HFmap* hfmap{ nullptr };
+
 	bool enableFasterShadow{ false }; //Acceleration of shadow attenuation
 	bool enableDistributed{false};
 	int numChildRay{10};

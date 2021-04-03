@@ -5,6 +5,7 @@
 
 #include <vector>
 
+#include "fileio/bitmap.h"
 #include "scene/scene.h"
 #include "scene/Ray.h"
 
@@ -37,8 +38,15 @@ public:
 	void setFocalLength(double focal);
 
 	bool loadScene( char* fn );
-
+	Scene* getScene() { return scene; }
 	bool sceneLoaded();
+
+	/*
+	bool loadHFmap(const string& filename);	
+	bool HFmapLoaded() { if (hfmap != nullptr) return true; else return false; }
+	HFmap* getHFmap() { return hfmap; }
+	*/
+
 
 	void setFasterShadow(bool i) { scene->enableFasterShadow = i; }
 
@@ -62,6 +70,8 @@ private:
 	int buffer_width, buffer_height;
 	int bufferSize;
 	Scene *scene;
+
+	HFmap* hfmap{ nullptr };
 
 	bool m_bSceneLoaded;
 	int maxDepth{0};

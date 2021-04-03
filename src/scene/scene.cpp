@@ -246,6 +246,18 @@ Ray Scene::uniformSampleOneLight(vec3f& emit, double& pdf)
 	return Ray{vec3f(), vec3f()};
 }
 
+
+bool Scene::loadHFmap(const string& filename) {
+	int h, w;
+	auto* hf = readBMP(const_cast<char*>(filename.c_str()), w, h);
+	if (hf == nullptr)
+		return false;
+	if (hfmap) delete hfmap;
+	hfmap = new HFmap(hf, h, w);
+	return true;
+}
+
+
 Texture::~Texture()
 {
 	delete [] data;
@@ -266,6 +278,24 @@ vec3f Texture::sample(double u, double v) const
 vec3f Texture::sample(const TexCoords& coords) const
 {
 	return sample(coords.u, coords.v);
+}
+
+//HFmap::HFmap(char* m, int h, int w) :map(m), height(h), weight(w) {}
+
+HFmap::~HFmap() {
+	delete[] map;
+	map = nullptr;
+}
+
+vec3f HFmap::getC(int x, int y) const {
+	unsigned char* pixel = map+(y * width + x) * 3;
+
+	return vec3f(pixel[0], pixel[1], pixel[2]);
+}
+
+double HFmap::getH(int x, int y) const {
+	vec3f color = getC(x, y);
+	return 0.229 * color[0] + 0.587 * color[1] + 0.114 * color[2];
 }
 
 void BVH::build(const list<Geometry*>& objects)

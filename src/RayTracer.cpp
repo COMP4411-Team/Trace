@@ -253,6 +253,19 @@ bool RayTracer::loadScene( char* fn )
 	return true;
 }
 
+/*
+bool RayTracer::loadHFmap(const string& filename) {
+	int h, w;
+	auto* hf = readBMP(const_cast<char*>(filename.c_str()), w, h);
+	if (hf == nullptr)
+		return false;
+	if (hfmap) delete hfmap;
+	hfmap = new HFmap(hf, h, w);
+	return true;
+}
+*/
+
+
 void RayTracer::traceSetup( int w, int h, int maxDepth, const vec3f& threshold )
 {
 	if( buffer_width != w || buffer_height != h )

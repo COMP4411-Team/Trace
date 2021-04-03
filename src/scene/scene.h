@@ -40,6 +40,21 @@ public:
 	unsigned char* data{nullptr};
 };
 
+class HFmap
+{
+public:
+	HFmap(unsigned char* m, int h, int w) :map(m), height(h), width(w) {}
+	~HFmap();
+
+	double getH(int x, int y) const;
+	vec3f getC(int x, int y) const;
+
+
+	int height, width, hf;
+	unsigned char* map{ nullptr };
+
+};
+
 class SceneElement
 {
 public:
@@ -344,6 +359,11 @@ public:
 	list<Light*>::const_iterator endLights() const { return lights.end(); }
 
 	Ray uniformSampleOneLight(vec3f& emit, double& pdf);
+	
+	bool loadHFmap(const string& filename);
+	bool HFmapLoaded() { if (hfmap != nullptr) return true; else return false; }
+	bool enableHField{ true };//control HField
+	HFmap* hfmap{ nullptr };
         
 	Camera *getCamera() { return &camera; }
 
@@ -351,6 +371,7 @@ public:
 	bool useSkybox{false};
 	Skybox* skybox{nullptr};
 	bool enableFasterShadow{ false }; //Acceleration of shadow attenuation
+	
 
 private:
     list<Geometry*> objects;

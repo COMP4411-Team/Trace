@@ -33,21 +33,26 @@ static Obj *getField( Obj *obj, const string& name );
 static bool hasField( Obj *obj, const string& name );
 static vec3f tupleToVec( Obj *obj );
 static TexCoords tupleToTexCoords(Obj *obj);
-static void processGeometry( string name, Obj *child, Scene *scene,
-	const mmap& materials, TransformNode *transform );
+static void processGeometry(Obj* obj, Scene* scene,
+	const mmap& materials, TransformNode* transform);
+static void processGeometry(string name, Obj* child, Scene* scene,
+	const mmap& materials, TransformNode* transform);
 static void processTrimesh( string name, Obj *child, Scene *scene,
-                                     const mmap& materials, TransformNode *transform );
+    const mmap& materials, TransformNode *transform );
 static void processCamera( Obj *child, Scene *scene );
 static Material *getMaterial( Obj *child, const mmap& bindings );
 static Material *processMaterial( Obj *child, mmap *bindings = NULL );
 static void processBindings(Obj* child, mmap* bindings, Material* mat);
 static void verifyTuple( const mytuple& tup, size_t size );
 
+static bool processHField(Scene* scene, TransformNode* transform);
+
 static bool loadTexture(const string& filename, Texture& texture);
 static bool processTexture(Obj* child, Geometry* geometry);
 static bool processSkybox(Obj* child, Scene* scene);
 static Microfacet* processMicrofacet(Obj* child, mmap* bindings);
 static FresnelSpecular* processFresnelSpecular(Obj* child, mmap* bindings);
+
 
 Scene *readScene( const string& filename )
 {
@@ -105,6 +110,9 @@ Scene *readScene( istream& is )
 	while( true ) {
 		Obj *cur = readFile( is );
 		if( !cur ) {
+			if (ret->enableHField && ret->HFmapLoaded()) {
+				processHField(ret, &ret->transformRoot);
+			}
 			break;
 		}
 
@@ -182,7 +190,7 @@ TexCoords tupleToTexCoords(Obj* obj)
 }
 
 static void processGeometry( Obj *obj, Scene *scene,
-	const mmap& materials, TransformNode *transform )
+	const mmap& materials, TransformNode *transform)
 {
 	string name;
 	Obj *child; 
@@ -200,8 +208,7 @@ static void processGeometry( Obj *obj, Scene *scene,
 
 		throw ParseError( string( oss.str() ) );
 	}
-
-	processGeometry( name, child, scene, materials, transform );
+	processGeometry( name, child, scene, materials, transform);
 }
 
 // Extract the named scalar field into ret, if it exists.
@@ -289,6 +296,8 @@ bool processTexture(Obj* child, Geometry* geometry)
 	return true;
 }
 
+
+
 bool processSkybox(Obj* child, Scene* scene)
 {
 	if (!hasField(child, "front") || !hasField(child, "back") || !hasField(child, "top") ||
@@ -346,6 +355,17 @@ FresnelSpecular* processFresnelSpecular(Obj* child, mmap* bindings)
 
 	return material;
 }
+
+/*
+bool loadHFMap(const string& filename, HFmap& hfmap)
+{
+	auto* h = readBMP(const_cast<char*>(filename.c_str()), hfmap.width, hfmap.height);
+	if (h == nullptr)
+		return false;
+	hfmap.map = h;
+	return true;
+}
+*/
 
 static void processGeometry( string name, Obj *child, Scene *scene,
                              const mmap& materials, TransformNode *transform )
@@ -571,6 +591,104 @@ static void processTrimesh( string name, Obj *child, Scene *scene,
     scene->add(tmesh);
 }
 
+static bool processHField(Scene* scene, TransformNode*transform) {
+	Material* mat = new Material();
+	Trimesh* tmesh = new Trimesh(scene, mat, transform);
+	HFmap* thf = scene->hfmap;
+/*
+	const mytuple& points = getField(child, "points")->getTuple();
+	for (mytuple::const_iterator pi = points.begin(); pi != points.end(); ++pi)
+		tmesh->addVertex(tupleToVec(*pi));
+*/
+	for (double i = 0; i < thf->width; i++) {
+		for (double j = 0; j < thf->height; j++) {
+			double y = thf->getH(i, j)*thf->width/255.0;
+			tmesh->addVertex(vec3f(i - thf->width / 2, y, j - thf->height / 2));
+			auto diffuse = thf->getC(i, j)/255.0;
+			Material* tempmat = new Material();
+			tempmat->kd = diffuse;
+			tmesh->addMaterial(tempmat);
+		}
+	}
+
+	for (double i = 0; i < thf->width-1; i++) {
+		for (double j = 0; j < thf->height-1; j++) {
+			tmesh->addFace(i * thf->height + j, i * thf->height + j + 1, (i + 1) * thf->height + j + 1);
+			tmesh->addFace(i * thf->height + j, (i + 1) * thf->height + j + 1, i * thf->height + j);
+		}
+	}
+
+	tmesh->generateNormals();
+
+	scene->add(tmesh);
+	return true;
+
+	/*
+	const mytuple& faces = getField(child, "faces")->getTuple();
+	for (mytuple::const_iterator fi = faces.begin(); fi != faces.end(); ++fi)
+	{
+		const mytuple& pointids = (*fi)->getTuple();
+
+		// triangulate here and now.  assume the poly is
+		// concave and we can triangulate using an arbitrary fan
+		if (pointids.size() < 3)
+			throw ParseError("Faces must have at least 3 vertices.");
+
+		mytuple::const_iterator i = pointids.begin();
+		int a = (int)(*i++)->getScalar();
+		int b = (int)(*i++)->getScalar();
+		while (i != pointids.end())
+		{
+			int c = (int)(*i++)->getScalar();
+			if (!tmesh->addFace(a, b, c))
+				throw ParseError("Bad face in trimesh.");
+			b = c;
+		}
+	}
+
+	bool generateNormals = false;
+	maybeExtractField(child, "gennormals", generateNormals);
+	if (generateNormals)
+		tmesh->generateNormals();
+
+	if (hasField(child, "materials"))
+	{
+		const mytuple& mats = getField(child, "materials")->getTuple();
+		for (mytuple::const_iterator mi = mats.begin(); mi != mats.end(); ++mi)
+			tmesh->addMaterial(getMaterial(*mi, materials));
+	}
+
+	if (hasField(child, "normals"))
+	{
+		const mytuple& norms = getField(child, "normals")->getTuple();
+		for (mytuple::const_iterator ni = norms.begin(); ni != norms.end(); ++ni)
+			tmesh->addNormal(tupleToVec(*ni));
+	}
+
+	if (hasField(child, "tex_coords"))
+	{
+		tmesh->setEnableTexCoords(true);
+		const mytuple& coords = getField(child, "tex_coords")->getTuple();
+		for (auto iter = coords.begin(); iter != coords.end(); ++iter)
+			tmesh->addTexCoords(tupleToTexCoords(*iter));
+	}
+
+	if (hasField(child, "emission"))
+	{
+		tmesh->setEmission(tupleToVec(getField(child, "emission")));
+	}
+
+	if (!processTexture(child, tmesh))
+		throw ParseError("Failed to load texture, please check texture format or path.");
+
+	char* error;
+	if (error = tmesh->doubleCheck())
+		throw ParseError(error);
+
+	scene->add(tmesh);
+	*/
+}
+
 static Material *getMaterial( Obj *child, const mmap& bindings )
 {
 	string tfield = child->getTypeName();
@@ -793,7 +911,8 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 	}
 	else if( name == "camera" ) {
 		processCamera( child, scene );
-	} else {
-		throw ParseError( string( "Unrecognized object: " ) + name );
+	} 
+	else {
+		throw ParseError(string("Unrecognized object: ") + name);
 	}
 }

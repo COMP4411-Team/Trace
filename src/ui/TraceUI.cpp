@@ -65,6 +65,27 @@ void TraceUI::cb_load_scene(Fl_Menu_* o, void* v)
 	}
 }
 
+void TraceUI::cb_load_hf(Fl_Menu_* o, void* v)
+{
+	TraceUI* pUI = whoami(o);
+
+	char* newfile = fl_file_chooser("Open HFmap?", "*.bmp", NULL);
+
+	if (newfile != NULL) {
+		char buf[256];
+
+		if (pUI->raytracer->getScene()->loadHFmap(newfile)) {
+			sprintf(buf, "HFmap <%s>", newfile);
+			done = true;	// terminate the previous rendering
+		}
+		else {
+			sprintf(buf, "HFmap <Not Loaded>");
+		}
+
+		pUI->m_mainWindow->label(buf);
+	}
+}
+
 void TraceUI::cb_save_image(Fl_Menu_* o, void* v) 
 {
 	TraceUI* pUI=whoami(o);
@@ -367,6 +388,7 @@ int TraceUI::getDepth()
 Fl_Menu_Item TraceUI::menuitems[] = {
 	{ "&File",		0, 0, 0, FL_SUBMENU },
 		{ "&Load Scene...",	FL_ALT + 'l', (Fl_Callback *)TraceUI::cb_load_scene },
+		{ "&Load HFmap...",	FL_ALT + 'h', (Fl_Callback*)TraceUI::cb_load_hf },
 		{ "&Save Image...",	FL_ALT + 's', (Fl_Callback *)TraceUI::cb_save_image },
 		{ "&Exit",			FL_ALT + 'e', (Fl_Callback *)TraceUI::cb_exit },
 		{ 0 },

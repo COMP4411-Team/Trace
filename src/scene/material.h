@@ -24,17 +24,17 @@ public:
         , kr( vec3f( 0.0, 0.0, 0.0 ) )
         , kt( vec3f( 0.0, 0.0, 0.0 ) )
         , shininess( 0.0 ) 
-		, index(1.0), isTransmissive(false) {}
+		, index(1.0) {}
 
     Material( const vec3f& e, const vec3f& a, const vec3f& s, 
               const vec3f& d, const vec3f& r, const vec3f& t, double sh, double in)
-        : ke( e ), ka( a ), ks( s ), kd( d ), kr( r ), kt( t ), shininess( sh ), index( in ),
-		  isTransmissive(!t.iszero()) {}
+        : ke( e ), ka( a ), ks( s ), kd( d ), kr( r ), kt( t ), shininess( sh ), index( in ) {}
 
 	virtual vec3f shade( Scene *scene, const Ray& r, const Isect& i ) const;
 	virtual vec3f getDiffuseColor(const Ray& ray, const Isect& isect) const;
 	virtual vec3f perturbSurfaceNormal(const Isect& isect) const;
 	virtual vec3f randomReflect(const vec3f& d, const vec3f& n) const;
+	double fresnel(const vec3f& wo, const vec3f& n) const;
 	vec3f fresnelReflective(const vec3f& wo, const vec3f& n) const;
 
 	virtual vec3f bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const;             // given wi and wo, calculate BxDF
@@ -54,11 +54,10 @@ public:
     vec3f kr;                    // reflective
     vec3f kt;                    // transmissive
 	vec3f absorb;                // the light absorbed per unit distance traveled
-	bool isTransmissive;
-    
+
+	bool isTransmissive{false}; // for path tracing, no relation to kt
     double shininess;
 	double glossiness{0.0};
-	double translucency{0.0};
     double index;               // index of refraction
 
     
@@ -100,14 +99,22 @@ operator*( double d, Material m )
 // extern Material THE_DEFAULT_MATERIAL;
 
 
-// Fresnel specular and transmissive material, for path tracing
 class FresnelSpecular : public Material
 {
 public:
-	FresnelSpecular(const vec3f& r, const vec3f& t, double eta);
+	FresnelSpecular(const vec3f& albedo, double roughness, double metallic, double translucency):
+		albedo(albedo), roughness(roughness), metallic(metallic), translucency(translucency),
+		roughness2(roughness * roughness) { isTransmissive = translucency > 0.0; index = 1.5; ks = vec3f(1.0); }
 	vec3f bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const override;
 	vec3f sample(const vec3f& wo, const vec3f& n, double& pdf) const override;
-	vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const override;	
+	vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const override;
+
+protected:
+	vec3f albedo;
+	double roughness;
+	double roughness2;
+	double metallic;
+	double translucency;
 };
 
 

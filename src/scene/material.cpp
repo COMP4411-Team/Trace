@@ -159,7 +159,7 @@ vec3f Material::randomReflect(const vec3f& d, const vec3f& n) const
 }
 
 // wo is from the intersection to the previous vertex
-vec3f Material::fresnelReflective(const vec3f& wo, const vec3f& n) const
+double Material::fresnel(const vec3f& wo, const vec3f& n) const
 {
 	double n1 = 1.0, n2 = index;
 	if (wo.dot(n) < 0.0)
@@ -174,30 +174,31 @@ vec3f Material::fresnelReflective(const vec3f& wo, const vec3f& n) const
 		double eta = n1 / n2;
 		double sinTheta2 = eta * eta * (1.0 - cosTheta * cosTheta);
 		if (sinTheta2 > 1.0)		// total internal reflection
-			return kr;
+			return 1.0;
 		// cosTheta should always be the cosine of the larger angle relative to the normal
 		cosTheta = sqrt(1 - sinTheta2);
 	}
 	
-	double fresnel = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-	return kr + (vec3f(1.0) - kr) * fresnel;
+	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+// wo is from the intersection to the previous vertex
+vec3f Material::fresnelReflective(const vec3f& wo, const vec3f& n) const
+{	
+	return kr + (vec3f(1.0) - kr) * fresnel(wo, n);
 }
 
 vec3f Material::bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
 {
-	if (!isTransmissive && wi.dot(n) > 0.0)
+	if (wi.dot(n) > 0.0)
 		return kd * INV_PI;
-	if (isTransmissive && wi.dot(wo) < 0.0)
-		return kt * INV_PI;
-	return vec3f();
+	return vec3f(0.0);
 }
 
 vec3f Material::sample(const vec3f& wo, const vec3f& n, double& pdf) const
 {
 	vec3f wi = localToWorld(uniformSampleHemisphere(), n);
 	pdf = wi.dot(n) * INV_PI;
-	if (isTransmissive && wo.dot(n) > 0.0)
-		return -wi;
 	return wi;
 }
 
@@ -333,63 +334,44 @@ inline double Microfacet::cosineHemispherePdf(double cosTheta)
 	return cosTheta * INV_PI;
 }
 
-FresnelSpecular::FresnelSpecular(const vec3f& r, const vec3f& t, double eta)
-{
-	kr = r;
-	kt = t;
-	index = eta;
-	isTransmissive = true;
-}
-
 vec3f FresnelSpecular::bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
 {
-	if (wi.dot(wo) > 0.0)
-		return kr;
-	return vec3f(1.0);
+	return albedo;
 }
 
 vec3f FresnelSpecular::sample(const vec3f& wo, const vec3f& n, double& pdf) const
 {
-	double n1 = 1.0, n2 = index;
-	if (wo.dot(n) < 0.0)
-		_swap(n1, n2);
-
-	double F0 = (n1 - n2) / (n1 + n2);
-	F0 *= F0;
-	double cosTheta = _abs(wo.dot(n));
-
-	if (n1 > n2)	
-	{
-		double eta = n1 / n2;
-		double sinTheta2 = eta * eta * (1.0 - cosTheta * cosTheta);
-		if (sinTheta2 > 1.0)	
-		{
-			pdf = 1.0;
-			vec3f normal = n.dot(wo) > 0.0 ? n : -n;
-			return localToWorld(reflect(-wo, n), n);
-		}
-		cosTheta = sqrt(1 - sinTheta2);
-	}
-	
-	double fresnel = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-
-	if (getRandomReal() < fresnel)
-	{
-		pdf = fresnel;
-		return localToWorld(reflect(-wo, n), n);
-	}
-	else
-	{
-		pdf = 1 - fresnel;
-		vec3f wi;
-		refract(-wo, n, wi, n1 / n2);
-		return localToWorld(wi, n);
-	}
+	vec3f wi = localToWorld(uniformSampleHemisphere(), n);
+	pdf = wi.dot(n) * INV_PI;
+	return albedo;
 }
 
 vec3f FresnelSpecular::sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const
 {
-	wi = sample(wo, n, pdf);
-	return bxdf(wi, wo, n);
+	double f = fresnel(wo, n);
+	double specularProb = (1.0 - f) * metallic + f;
+	double refractProb = (1.0 - specularProb) / (1.0 - metallic) * translucency;
+	double r = getRandomReal();
+	vec3f diffuseRay = localToWorld(uniformSampleHemisphere(), n);
+	
+	if (r < specularProb)
+	{
+		pdf = specularProb;
+		wi = reflect(-wo, n);
+		wi = roughness2 * diffuseRay + (1.0 - roughness2) * wi;
+		return vec3f(1.0);
+	}
+	if (r < specularProb + refractProb)
+	{
+		pdf = refractProb;
+		double eta = index;
+		if (wo.dot(n) > 0.0)
+			eta = 1.0 / eta;
+		refract(-wo, n, wi, eta);
+		wi = roughness2 * diffuseRay + (1.0 - roughness2) * wi;
+		return vec3f(1.0);
+	}
+	pdf = 1.0 - specularProb - refractProb;
+	wi = diffuseRay;
+	return albedo;
 }
-

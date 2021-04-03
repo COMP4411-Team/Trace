@@ -142,7 +142,6 @@ vec3f RayTracer::tracePath(Scene* scene, const Ray& ray, int depth)
 
 		const Material& material = isect.getMaterial();
 		vec3f pos = curRay.at(isect.t) + isect.N * DISPLACEMENT_EPSILON;
-		assert(!material.isTransmissive || bounce);
 		if (!material.isTransmissive)
 		{
 			vec3f emission;

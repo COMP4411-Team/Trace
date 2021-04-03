@@ -342,14 +342,22 @@ Microfacet* processMicrofacet(Obj* child, mmap* bindings)
 
 FresnelSpecular* processFresnelSpecular(Obj* child, mmap* bindings)
 {
-	if (!hasField(child, "reflective") || !hasField(child, "transmissive") || !hasField(child, "index"))
-		return nullptr;
+	if (!hasField(child, "albedo") || !hasField(child, "metallic") 
+		|| !hasField(child, "roughness") || !hasField(child, "translucency"))
+		throw ParseError("parameters missing for FresnelSpecular material");
 
-	vec3f r = tupleToVec(getField(child, "reflective"));
-	vec3f t = tupleToVec(getField(child, "transmissive"));
-	double eta = getField(child, "index")->getScalar();
+	vec3f albedo = tupleToVec(getField(child, "albedo"));
+	double roughness = getField(child, "roughness")->getScalar();
+	double metallic = getField(child, "metallic")->getScalar();
+	double translucency = getField(child, "translucency")->getScalar();
 
-	auto* material = new FresnelSpecular(r, t, eta);
+	auto* material = new FresnelSpecular(albedo, roughness, metallic, translucency);
+
+	if (hasField(child, "index"))
+		material->index = getField(child, "index")->getScalar();
+
+	if (hasField(child, "specular"))
+		material->ks = tupleToVec(getField(child, "specular"));
 
 	processBindings(child, bindings, material);
 

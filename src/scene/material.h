@@ -41,12 +41,6 @@ public:
 	virtual vec3f sample(const vec3f& wo, const vec3f& n, double& pdf) const;               // sample a new direction for ray
 	virtual vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const;   // sample wi and BxDF simultaneous
 
-	static vec3f localToWorld(const vec3f& v, const vec3f& n);
-	static vec3f uniformSampleHemisphere();
-	static vec3f uniformSampleSphere();
-	static vec3f reflect(const vec3f& d, const vec3f& n);
-	static bool refract(const vec3f& d, const vec3f& n, vec3f& t, double eta);
-
     vec3f ke;                    // emissive
     vec3f ka;                    // ambient
     vec3f ks;                    // specular
@@ -133,10 +127,6 @@ protected:
 	double calD(double cosTheta) const; 
 	double calG(double cosTheta) const;
 	vec3f calF(double cosTheta, const vec3f& F0) const;
-
-	static vec3f concentricSampleDisk();
-	static vec3f cosineSampleHemisphere();
-	static double cosineHemispherePdf(double cosTheta);
 
 	// Material parameters
 	vec3f albedo;

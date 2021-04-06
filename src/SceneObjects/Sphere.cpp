@@ -2,9 +2,6 @@
 
 #include "Sphere.h"
 
-const double PI = 3.14159265358979323846;
-const double PI_2 = 6.28318530717958647692;
-
 bool Sphere::intersectLocal( const Ray& r, Isect& i ) const
 {
 	vec3f v = -r.getPosition();

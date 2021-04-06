@@ -10,6 +10,13 @@
 
 using namespace std;
 
+const double PI = 3.14159265358979323846;
+const double PI_2 = 6.28318530717958647692;
+const double PI_4 = 12.5663706143591729538;
+const double PI_OVER_2 = 1.57079632679489661923;
+const double PI_OVER_4 = 0.78539816339744830961;
+const double INV_PI = 0.31830988618379067153;
+
 class vec3f;
 class vec4f;
 class mat3f;
@@ -696,6 +703,104 @@ inline vec3f::vec3f( const vec4f& v )
 	n[1] = v[1]; 
 	n[2] = v[2]; 
 }
+
+inline double _max(double a, double b)
+{
+	return a > b ? a : b;
+}
+
+inline double _min(double a, double b)
+{
+	return a < b ? a : b;
+}
+
+inline double _abs(double a)
+{
+	return a < 0.0 ? -a : a;
+}
+
+inline void _swap(double& a, double& b)
+{
+	double tmp = b;
+	b = a;
+	a = tmp;
+}
+
+inline vec3f localToWorld(const vec3f& v, const vec3f& n)
+{
+	vec3f a;
+	if (_abs(n[0]) > 0.9)
+		a = vec3f(0.0, 1.0, 0.0);
+	else
+		a = vec3f(1.0, 0.0, 0.0);
+	vec3f t(n.cross(a).normalize());
+	vec3f b(n.cross(t));
+	return v[0] * t + v[1] * b + v[2] * n;
+}
+
+
+// Reference: PBRT-v3 for following sampling functions
+inline vec3f uniformSampleHemisphere()
+{
+	double z = getRandomReal();
+	double r = sqrt(_max(0.0, 1.0 - z * z));
+	double phi = PI_2 * getRandomReal();
+	return vec3f(r * cos(phi), r * sin(phi), z);
+}
+
+inline vec3f uniformSampleSphere()
+{
+	double z = 1.0 - 2.0 * getRandomReal();
+	double r = sqrt(_max(0.0, 1.0 - z * z));
+	double phi = PI_2 * getRandomReal();
+	return vec3f(r * cos(phi), r * sin(phi), z);
+}
+
+// The results are stored in the x and y components
+inline vec3f concentricSampleDisk()
+{
+	double x = 2.0 * getRandomReal() - 1.0, y = 2.0 * getRandomReal() - 1.0;
+	if (x == 0.0 && y == 0.0)
+		return vec3f();
+	double theta, r;
+	if (_abs(x) > _abs(y))
+	{
+		r = x;
+		theta = PI_OVER_4 * (y / x);
+	}
+	else
+	{
+		r = y;
+		theta = PI_OVER_2 - PI_OVER_4 * (x / y);
+	}
+	return vec3f(r * cos(theta), r * sin(theta), 0.0);
+}
+
+inline vec3f cosineSampleHemisphere()
+{
+    vec3f d = concentricSampleDisk();
+    double z = sqrt(_max(0.0, 1 - d[0] * d[0] - d[1] * d[1]));
+    return vec3f(d[0], d[1], z);
+}
+
+inline vec3f reflect(const vec3f& d, const vec3f& n)
+{
+	return d - 2.0 * d.dot(n) * n;
+}
+
+inline bool refract(const vec3f& d, const vec3f& n, vec3f& t, double eta)
+{
+	// Theta is the angle with the normal of the light in
+	// Phi is the angle with the normal of the light out
+	vec3f normal = d.dot(n) < 0.0 ? n : -n;
+	double cosTheta = -d.dot(normal);
+	double cosPhi2 = 1.0 - eta * eta * (1 - cosTheta * cosTheta);
+	if (cosPhi2 < 0.0)
+		return false;
+	t = (eta * cosTheta - sqrt(cosPhi2)) * normal + eta * d;
+	return true;
+}
+
 /*
 inline vec3f clamp( const vec3f& other )
 {

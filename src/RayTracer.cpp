@@ -99,6 +99,11 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 			factor[2] = exp(factor[2]);
 		}
 
+		// So far we don't have a uniform model in Whitted ray tracing to
+		// distinguish diffuse and specular surfaces
+		if (enablePM && m.kr.iszero() && m.kt.iszero())
+			indirectIllumination += prod(gatherPhoton(r.at(i.t)), m.kd);
+
 		return prod(directIllumination + indirectIllumination, factor);
 	
 	} else {
@@ -191,6 +196,99 @@ vec3f RayTracer::tracePath(Scene* scene, const Ray& ray, int depth)
 	return radiance;
 }
 
+void RayTracer::buildPhotonMap()
+{
+	if (!m_bSceneLoaded)
+		return;
+	photonMap.clear();
+	delete kdTree;
+	
+	vector<Light*> lights;
+	for (auto* light : scene->lights)
+	{
+		if (typeid(*light) != typeid(SpotLight) && typeid(*light) != typeid(AmbientLight))
+			lights.push_back(light);
+		light->buildProjectionMap();
+	}
+
+	// TODO: emit photons according to the importance of each light
+	while (photonMap.size() < numPhotons)
+	{
+		for (auto* light : lights)
+			tracePhoton(light->emitPhoton());
+	}
+
+	kdTree = new KdTree(photonMap, 3);
+}
+
+void RayTracer::tracePhoton(Photon* cur)
+{
+	int bounce = 0;
+	bool hitSpecular = false;
+	Ray ray(cur->position, cur->direction);
+	while (bounce < maxBounce)
+	{
+		Isect isect;
+		// TODO: add projection maps
+		if (!scene->bvhIntersect(ray, isect))
+			break;
+
+		Material material = isect.getMaterial();
+		//double refractProb = _max(material.kt[0], _max(material.kt[1], material.kt[2]));
+		//double reflectProb = 1.0 - refractProb;
+		//reflectProb *= _max(material.kr[0], _max(material.kr[1], material.kr[2]));
+
+		// Only trace caustic photons so far
+		// double roll = getRandomReal();
+
+		if (!material.kt.iszero())
+		{
+			Ray tmp(ray);
+			if (!ray.refract(isect, tmp))
+				break;
+			hitSpecular = true;
+			cur->power = prod(cur->power, material.kt);
+			ray = tmp;
+			++bounce;
+			continue;
+		}
+		
+		if (!material.kr.iszero())
+		{
+			ray = ray.reflect(isect);
+			hitSpecular = true;
+			cur->power[0] *= material.kr[0];
+			cur->power[1] *= material.kr[1];
+			cur->power[2] *= material.kr[2];
+			++bounce;
+			continue;
+		}
+
+		if (hitSpecular)
+		{
+			auto* photon = new Photon{ray.at(isect.t), ray.getDirection(), cur->power};
+			photonMap.push_back(photon);
+		}
+		break;
+	}
+	delete cur;
+}
+
+vec3f RayTracer::gatherPhoton(const vec3f& pos)
+{
+	vec3f flux;
+	double maxDist2 = 0.0;
+	auto nearestPhotons = kdTree->getKnn(pos, numNeighbours);
+	for (auto* photon : nearestPhotons)
+	{
+		double curDist2 = (photon->position - pos).length_squared();
+		if (curDist2 > maxDist2)
+			maxDist2 = curDist2;
+		flux += photon->power;
+	}
+	return prod(flux, totalFlux) / (numPhotons * PI * maxDist2);
+}
+
 RayTracer::RayTracer()
 {
 	buffer = NULL;
@@ -239,11 +337,15 @@ bool RayTracer::loadScene( char* fn )
 	catch( ParseError pe )
 	{
 		fl_alert( "ParseError: %s\n", pe );
+		m_bSceneLoaded = false;
 		return false;
 	}
 
 	if( !scene )
+	{
+		m_bSceneLoaded = false;
 		return false;
+	}
 	
 	buffer_width = 256;
 	buffer_height = (int)(buffer_width / scene->getCamera()->getAspectRatio() + 0.5);

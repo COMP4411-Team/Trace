@@ -226,6 +226,19 @@ void TraceUI::cb_multiThread(Fl_Widget* o, void* v)
 	ui->enableMultiThread = (bool( ((Fl_Light_Button*)o)->value() ));
 }
 
+void TraceUI::cb_buildPM(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->buildPhotonMap();
+	fl_alert("Photon Map Construction Done.");
+}
+
+void TraceUI::cb_enablePM(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->enablePM = bool( ((Fl_Light_Button*)o)->value() );
+}
+
 void TraceUI::cb_render(Fl_Widget* o, void* v)
 {
 	TraceUI* pUI=((TraceUI*)(o->user_data()));
@@ -450,7 +463,7 @@ TraceUI::TraceUI() {
 	// init.
 	m_nDepth = 0;
 	m_nSize = 150;
-	m_mainWindow = new Fl_Window(100, 40, 330, 410, "Ray <Not Loaded>");
+	m_mainWindow = new Fl_Window(100, 40, 330, 460, "Ray <Not Loaded>");
 		m_mainWindow->user_data((void*)(this));	// record self to be used by static callback functions
 		// install menu bar
 		m_menubar = new Fl_Menu_Bar(0, 0, 330, 25);
@@ -536,13 +549,23 @@ TraceUI::TraceUI() {
 		m_multiThreadButton->value(0);
 		m_multiThreadButton->callback(cb_multiThread);
 
+		// Photon mapping
+		m_buildPMButton = new Fl_Button(10, 375, 120, 25, "Build Photon Map");
+		m_buildPMButton->user_data(this);
+		m_buildPMButton->callback(cb_buildPM);
+
+		m_enablePMButton = new Fl_Light_Button(140, 375, 180, 25, "Enable Photon Mapping");
+		m_enablePMButton->user_data(this);
+		m_enablePMButton->value(0);
+		m_enablePMButton->callback(cb_enablePM);
+
 		// Path tracing
-		m_pathTracingButton = new Fl_Light_Button(10, 375, 150, 25, "Enable Path Tracing");
+		m_pathTracingButton = new Fl_Light_Button(10, 425, 150, 25, "Enable Path Tracing");
 		m_pathTracingButton->user_data(this);
 		m_pathTracingButton->value(0);
 		m_pathTracingButton->callback(cb_pathTracingButton);
 	
-		m_renderButton = new Fl_Button(220, 375, 90, 25, "Render PT");
+		m_renderButton = new Fl_Button(220, 425, 90, 25, "Render PT");
 		m_renderButton->user_data((void*)(this));
 		m_renderButton->callback(cb_renderPt);
 

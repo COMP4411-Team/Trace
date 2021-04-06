@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include "light.h"
+#include "../photon_map/Photon.h"
 
 double DirectionalLight::distanceAttenuation( const vec3f& P ) const
 {
@@ -32,6 +33,80 @@ vec3f DirectionalLight::getDirection( const vec3f& P ) const
 	return -orientation;
 }
 
+Photon* DirectionalLight::emitPhoton() const
+{
+	int idx = round(getRandomReal() * (cells.size() - 1));
+	auto* photon = new Photon;
+	double x = cells[idx] % mapSize + getRandomReal(), y = cells[idx] / mapSize + getRandomReal();
+	photon->position = unproject(x, y);
+	photon->direction = orientation;
+	photon->power = color * PI * sceneRadius * sceneRadius;
+	
+	return photon;
+}
+
+void DirectionalLight::buildProjectionMap()
+{
+	delete projMap;
+	projMap = new bool[mapSize * mapSize];
+	for (int i = 0; i < mapSize * mapSize; ++i)
+		projMap[i] = false;
+	cells.clear();
+
+	sceneRadius = (scene->sceneBounds.max - scene->sceneBounds.min).length() / 2.0;
+	position = (scene->sceneBounds.max + scene->sceneBounds.min) / 2.0 - orientation * sceneRadius;
+
+	for (auto* geometry : scene->boundedobjects)
+	{
+		auto* object = dynamic_cast<MaterialSceneObject*>(geometry);
+		if (object == nullptr)
+			continue;
+		const auto& material = object->getMaterial();
+		if (material.kr.iszero() && material.kt.iszero())
+			continue;
+		const auto& box = object->getBoundingBox();
+
+		vec3f max = box.max, min = box.min;
+		vec3f vertices[] = 
+		{
+			max, min,
+			{max[0], max[1], min[2]},
+			{max[0], min[1], max[2]},
+			{min[0], max[1], max[2]},
+			{min[0], min[1], max[2]},
+			{min[0], max[1], min[2]},
+			{max[0], min[1], min[2]}
+		};
+
+		for (int i = 0; i < 8; ++i)
+		{
+			vec3f proj = project(vertices[i]);
+			int x = proj[0] + mapSize / 2;
+			int y = proj[1] + mapSize / 2;
+			projMap[x + y * mapSize] = true;
+		}
+	}
+
+	for (int i = 0; i < mapSize * mapSize; ++i)
+		if (projMap[i])
+			cells.push_back(i);
+}
+
+vec3f DirectionalLight::project(const vec3f& pos) const
+{
+	vec3f vec = pos - position;
+	vec3f proj = vec - vec.dot(orientation) * orientation;
+	return vec3f(proj.dot(u), proj.dot(v), 0.0) / (sceneRadius * 2) * mapSize;
+}
+
+vec3f DirectionalLight::unproject(double x, double y) const
+{
+	double tmp = mapSize / 2;
+	double uu = (x - tmp) / tmp * sceneRadius;
+	double vv = (y - tmp) / tmp * sceneRadius;
+	return uu * u + vv * v + position;
+}
+
 double PointLight::distanceAttenuation( const vec3f& P ) const
 {
 	// YOUR CODE HERE
@@ -54,6 +129,15 @@ vec3f PointLight::getColor( const vec3f& P ) const
 vec3f PointLight::getDirection( const vec3f& P ) const
 {
 	return (position - P).normalize();
+}
+
+Photon* PointLight::emitPhoton() const
+{
+	auto* photon = new Photon;
+	photon->position = position;
+	photon->direction = uniformSampleSphere().normalize();
+	photon->power = color * PI_4;
+	return photon;
 }
 
 void PointLight::setAttenuationCoeff(double constant, double linear, double quadratic)
@@ -113,7 +197,7 @@ double smoothstep(double edge0, double edge1, double x)
 }
 
 AreaLight::AreaLight(Scene* scene, const vec3f& color, const vec3f& pos, const vec3f& u, const vec3f& v):
-	Light(scene, color), pos(pos), u(u), v(v) { }
+	Light(scene, color), pos(pos), u(u), v(v), direction(u.cross(v).normalize()), area(u.cross(v).length()) { }
 
 vec3f AreaLight::getDirAndAtten(const vec3f& objPos, vec3f& attenuation, double t) const
 {
@@ -127,6 +211,15 @@ vec3f AreaLight::getDirAndAtten(const vec3f& objPos, vec3f& attenuation, double 
 		attenuation = vec3f(1.0);
 	attenuation *= distAtten;
     return lDir.normalize();
+}
+
+Photon* AreaLight::emitPhoton() const
+{
+	auto* photon = new Photon;
+	photon->position = sample();
+	photon->direction = localToWorld(cosineSampleHemisphere(), direction);
+	photon->power = color * (PI * area);
+	return photon;
 }
 
 vec3f AreaLight::sample() const

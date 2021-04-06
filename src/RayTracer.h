@@ -8,6 +8,8 @@
 #include "fileio/bitmap.h"
 #include "scene/scene.h"
 #include "scene/Ray.h"
+#include "photon_map/Photon.h"
+#include "photon_map/KdTree.h"
 
 class RayTracer
 {
@@ -19,7 +21,10 @@ public:
     vec3f trace( Scene *scene, double x, double y );
 	vec3f traceRay( Scene *scene, const Ray& r, const vec3f& thresh, int depth, const vec3f& curFactor );
 	vec3f tracePath(Scene* scene, const Ray& ray, int depth);		// path tracing
-
+	
+	void buildPhotonMap();
+	void tracePhoton(Photon* cur);
+	vec3f gatherPhoton(const vec3f& pos);
 
 	void getBuffer( unsigned char *&buf, int &w, int &h );
 	void swapBuffer();
@@ -64,12 +69,22 @@ public:
 	int SPP{64};		// sample per pixel
 	double rrThresh{0.7};	// russian roulette threshold
 
+	// Photon mapping
+	bool enablePM{false};
+	vec3f totalFlux{0.01, 0.01, 0.01};
+	int numPhotons{20000};	// total num of photons emitted
+	int numNeighbours{50};	// num of nearest neighbours
+	int maxBounce{16};
+
 private:
 	unsigned char *buffer;
 	unsigned char* backBuffer;		// used for progressive path tracing
 	int buffer_width, buffer_height;
 	int bufferSize;
 	Scene *scene;
+
+	KdTree* kdTree{nullptr};
+	std::vector<Photon*> photonMap;
 
 	HFmap* hfmap{ nullptr };
 

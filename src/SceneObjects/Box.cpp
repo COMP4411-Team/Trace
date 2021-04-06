@@ -3,8 +3,6 @@
 
 #include "Box.h"
 
-const double PI = 3.14159265358979323846;
-
 bool Box::intersectLocal( const Ray& r, Isect& i ) const
 {
 	// YOUR CODE HERE:

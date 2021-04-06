@@ -12,8 +12,10 @@
 #include <vector>
 #include <random>
 
+class Photon;
 class Geometry;
 class Skybox;
+class DirectionalLight;
 using namespace std;
 
 #include "Ray.h"
@@ -328,6 +330,8 @@ protected:
 class Scene
 {
 	friend vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i) const;
+	friend class DirectionalLight;
+	friend class RayTracer;
 	
 public:
 	typedef list<Light*>::iterator 			liter;
@@ -393,28 +397,5 @@ private:
 
 	BVH bvh;
 };
-
-
-inline double _max(double a, double b)
-{
-	return a > b ? a : b;
-}
-
-inline double _min(double a, double b)
-{
-	return a < b ? a : b;
-}
-
-inline double _abs(double a)
-{
-	return a < 0.0 ? -a : a;
-}
-
-inline void _swap(double& a, double& b)
-{
-	double tmp = b;
-	b = a;
-	a = tmp;
-}
 
 #endif // __SCENE_H__

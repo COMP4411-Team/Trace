@@ -47,6 +47,9 @@ public:
 	Fl_Slider* m_childRaySlider;
 
 	Fl_Light_Button* m_multiThreadButton;
+
+	Fl_Button* m_buildPMButton;
+	Fl_Light_Button* m_enablePMButton;
 	
 	Fl_Light_Button* m_enableDofButton;
 	Fl_Slider* m_apertureSlider;
@@ -117,6 +120,10 @@ private:
 	static void cb_childRay(Fl_Widget* o, void* v);
 
 	static void cb_multiThread(Fl_Widget* o, void* v);
+
+	// Photon mapping
+	static void cb_buildPM(Fl_Widget* o, void* v);
+	static void cb_enablePM(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_renderParallel(Fl_Widget* o, void* v);

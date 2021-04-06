@@ -2,57 +2,6 @@
 #include "material.h"
 #include "light.h"
 
-const double PI = 3.14159265358979323846;
-const double PI_OVER_2 = 1.57079632679489661923;
-const double PI_OVER_4 = 0.78539816339744830961;
-const double INV_PI = 0.31830988618379067153;
-
-inline vec3f Material::localToWorld(const vec3f& v, const vec3f& n)
-{
-	vec3f a;
-	if (_abs(n[0]) > 0.9)
-		a = vec3f(0.0, 1.0, 0.0);
-	else
-		a = vec3f(1.0, 0.0, 0.0);
-	vec3f t(n.cross(a).normalize());
-	vec3f b(n.cross(t));
-	return v[0] * t + v[1] * b + v[2] * n;
-}
-
-vec3f Material::uniformSampleHemisphere()
-{
-	double r1 = getRandomReal(), r2 = getRandomReal();
-	double phi = 2.0 * PI * r1, r2rt = sqrt(r2);
-	return vec3f(r2rt * cos(phi), r2rt * sin(phi), sqrt(1.0 - r2));
-}
-
-vec3f Material::uniformSampleSphere()
-{
-	while (true)
-	{
-		vec3f vec{vec3f::random(-1.0, 1.0)};
-		if (vec.length_squared() < 1.0)
-			return vec;
-	}
-}
-
-inline vec3f Material::reflect(const vec3f& d, const vec3f& n)
-{
-	return d - 2.0 * d.dot(n) * n;
-}
-
-bool Material::refract(const vec3f& d, const vec3f& n, vec3f& t, double eta)
-{
-	// Theta is the angle with the normal of the light in
-	// Phi is the angle with the normal of the light out
-	vec3f normal = d.dot(n) < 0.0 ? n : -n;
-	double cosTheta = -d.dot(normal);
-	double cosPhi2 = 1.0 - eta * eta * (1 - cosTheta * cosTheta);
-	if (cosPhi2 < 0.0)
-		return false;
-	t = (eta * cosTheta - sqrt(cosPhi2)) * normal + eta * d;
-	return true;
-}
 
 // Apply the phong model to this point on the surface of the object, returning
 // the color of that point.
@@ -282,7 +231,7 @@ vec3f Microfacet::bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
 vec3f Microfacet::sample(const vec3f& wo, const vec3f& n, double& pdf) const
 {
 	vec3f localDir = cosineSampleHemisphere();
-	pdf = cosineHemispherePdf(localDir[2]);
+	pdf = localDir[2] * INV_PI;
 	return localToWorld(localDir, n);
 }
 
@@ -300,39 +249,6 @@ Microfacet::Microfacet(const vec3f& albedo, double roughness, double metallic):
 	k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
 }
 
-// The result is stored in the x and y component
-// Ref: PBRT-v3
-inline vec3f Microfacet::concentricSampleDisk()
-{
-	double x = 2.0 * getRandomReal() - 1.0, y = 2.0 * getRandomReal() - 1.0;
-	if (x == 0.0 && y == 0.0)
-		return vec3f();
-	double theta, r;
-	if (_abs(x) > _abs(y))
-	{
-		r = x;
-		theta = PI_OVER_4 * (y / x);
-	}
-	else
-	{
-		r = y;
-		theta = PI_OVER_2 - PI_OVER_4 * (x / y);
-	}
-	return vec3f(r * cos(theta), r * sin(theta), 0.0);
-}
-
-// Ref: PBRT-v3
-inline vec3f Microfacet::cosineSampleHemisphere()
-{
-    vec3f d = concentricSampleDisk();
-    double z = sqrt(_max(0.0, 1 - d[0] * d[0] - d[1] * d[1]));
-    return vec3f(d[0], d[1], z);
-}
-
-inline double Microfacet::cosineHemispherePdf(double cosTheta)
-{
-	return cosTheta * INV_PI;
-}
 
 vec3f FresnelSpecular::bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const
 {

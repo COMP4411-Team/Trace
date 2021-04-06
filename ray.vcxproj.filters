@@ -52,6 +52,12 @@
       <UniqueIdentifier>{2a500cad-34e4-4544-a082-ff2e3169691d}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
+    <Filter Include="Header Files\photon_map.">
+      <UniqueIdentifier>{72a4d70c-ccdd-4160-b05f-dba31595cbea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\photon_map">
+      <UniqueIdentifier>{29ae3e64-8465-4b08-8e8f-145fdf1b8711}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\getopt.cpp">
@@ -117,6 +123,12 @@
     <ClCompile Include="src\scene\SolidTexture.cpp">
       <Filter>Source Files\scene</Filter>
     </ClCompile>
+    <ClCompile Include="src\photon_map\KdTree.cpp">
+      <Filter>Source Files\photon_map</Filter>
+    </ClCompile>
+    <ClCompile Include="src\photon_map\Photon.cpp">
+      <Filter>Source Files\photon_map</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\RayTracer.h">
@@ -175,6 +187,12 @@
     </ClInclude>
     <ClInclude Include="src\scene\SolidTexture.h">
       <Filter>Header Files\scene.</Filter>
+    </ClInclude>
+    <ClInclude Include="src\photon_map\KdTree.h">
+      <Filter>Header Files\photon_map.</Filter>
+    </ClInclude>
+    <ClInclude Include="src\photon_map\Photon.h">
+      <Filter>Header Files\photon_map.</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

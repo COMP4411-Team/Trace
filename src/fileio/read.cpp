@@ -25,8 +25,6 @@
 
 typedef map<string,Material*> mmap;
 
-const double PI = 3.14159265358979323846;
-
 static void processObject( Obj *obj, Scene *scene, mmap& materials );
 static Obj *getColorField( Obj *obj );
 static Obj *getField( Obj *obj, const string& name );

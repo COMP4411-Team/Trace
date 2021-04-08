@@ -71,8 +71,8 @@ public:
 
 	// Photon mapping
 	bool enablePM{false};
-	vec3f totalFlux{0.01, 0.01, 0.01};
-	int numPhotons{20000};	// total num of photons emitted
+	vec3f totalFlux{0.1, 0.1, 0.1};
+	int numPhotons{40000};	// total num of photons emitted
 	int numNeighbours{50};	// num of nearest neighbours
 	int maxBounce{16};
 

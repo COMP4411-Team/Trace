@@ -22,6 +22,7 @@
 #include "../SceneObjects/Sphere.h"
 #include "../SceneObjects/Square.h"
 #include "../scene/light.h"
+#include "../SceneObjects/CSG.h"
 
 typedef map<string,Material*> mmap;
 
@@ -31,10 +32,10 @@ static Obj *getField( Obj *obj, const string& name );
 static bool hasField( Obj *obj, const string& name );
 static vec3f tupleToVec( Obj *obj );
 static TexCoords tupleToTexCoords(Obj *obj);
-static void processGeometry(Obj* obj, Scene* scene,
-	const mmap& materials, TransformNode* transform);
-static void processGeometry(string name, Obj* child, Scene* scene,
-	const mmap& materials, TransformNode* transform);
+static Geometry* processGeometry(Obj* obj, Scene* scene,
+                                 const mmap& materials, TransformNode* transform);
+static Geometry* processGeometry(string name, Obj* child, Scene* scene,
+                                 const mmap& materials, TransformNode* transform);
 static void processTrimesh( string name, Obj *child, Scene *scene,
     const mmap& materials, TransformNode *transform );
 static void processCamera( Obj *child, Scene *scene );
@@ -50,7 +51,8 @@ static bool processTexture(Obj* child, Geometry* geometry);
 static bool processSkybox(Obj* child, Scene* scene);
 static Microfacet* processMicrofacet(Obj* child, mmap* bindings);
 static FresnelSpecular* processFresnelSpecular(Obj* child, mmap* bindings);
-
+static CSG* processCSG(Obj* child, Scene* scene, const mmap& materials, TransformNode* transform);
+static CSG* parseCSG(const mytuple& expression, const std::map<string, Geometry*>& map, Scene* scene);
 
 Scene *readScene( const string& filename )
 {
@@ -187,8 +189,8 @@ TexCoords tupleToTexCoords(Obj* obj)
 	return TexCoords(t[0]->getScalar(), t[1]->getScalar());
 }
 
-static void processGeometry( Obj *obj, Scene *scene,
-	const mmap& materials, TransformNode *transform)
+static Geometry* processGeometry(Obj* obj, Scene* scene,
+                                 const mmap& materials, TransformNode* transform)
 {
 	string name;
 	Obj *child; 
@@ -206,7 +208,7 @@ static void processGeometry( Obj *obj, Scene *scene,
 
 		throw ParseError( string( oss.str() ) );
 	}
-	processGeometry( name, child, scene, materials, transform);
+	return processGeometry( name, child, scene, materials, transform);
 }
 
 // Extract the named scalar field into ret, if it exists.
@@ -362,6 +364,94 @@ FresnelSpecular* processFresnelSpecular(Obj* child, mmap* bindings)
 	return material;
 }
 
+CSG* processCSG(Obj* child, Scene* scene, const mmap& materials, TransformNode* transform)
+{
+	if (!hasField(child, "primitives"))
+		throw ParseError("CSG must have primitives field");
+	const auto& primitives = getField(child, "primitives")->getTuple();
+
+	std::map<string, Geometry*> map;
+	
+	for (auto* obj : primitives)
+	{
+		string name = obj->getString();
+		if (!hasField(child, name))
+			throw ParseError("CSG: primitive not found");
+		Obj* primitive = getField(child, name);
+		auto* geometry = processGeometry(primitive->getName(), primitive->getChild(), scene, materials, transform);
+		if (geometry == nullptr)
+			throw ParseError("CSG: unknown primitive. Note: mesh is not support in CSG");
+		map[name] = geometry;
+	}
+
+	if (!hasField(child, "operation"))
+		throw ParseError("CSG must have operation");
+	
+	try
+	{
+		return parseCSG(getField(child, "operation")->getTuple(), map, scene);
+	}
+	catch (...)
+	{
+		for (auto& item : map)
+			delete item.second;
+		throw;
+	}
+}
+
+CSG* parseCSG(const mytuple& expression, const std::map<string, Geometry*>& map, Scene* scene)
+{
+	if (expression.size() != 3)
+		throw ParseError("CSG: invalid expression");
+
+	auto* csg = new CSG(scene);
+	Geometry* left = nullptr, *right = nullptr;
+	if (typeid(*expression[0]) == typeid(StringObj))
+	{
+		string name = expression[0]->getString();
+		auto iter = map.find(name);
+		if (iter == map.end())
+		{
+			delete csg;
+			throw ParseError("CSG: unknown primitive name in expression");
+		}
+		left = iter->second;
+	}
+	else
+		left = parseCSG(expression[0]->getTuple(), map, scene);
+
+	if (typeid(*expression[2]) == typeid(StringObj))
+	{
+		string name = expression[2]->getString();
+		auto iter = map.find(name);
+		if (iter == map.end())
+		{
+			delete csg;
+			throw ParseError("CSG: unknown primitive name in expression");
+		}
+		right = iter->second;
+	}
+	else
+		right = parseCSG(expression[2]->getTuple(), map, scene);
+
+	string op = expression[1]->getString();
+	if (op == "and")
+		csg->op = CSG::Operator::AND;
+	else if (op == "or")
+		csg->op = CSG::Operator::OR;
+	else if (op == "sub")
+		csg->op = CSG::Operator::SUB;
+	else
+	{
+		delete csg;
+		throw ParseError("CSG: unknown operator");
+	}
+	
+	csg->left = left;
+	csg->right = right;
+	return csg;
+}
+
 /*
 bool loadHFMap(const string& filename, HFmap& hfmap)
 {
@@ -373,13 +463,13 @@ bool loadHFMap(const string& filename, HFmap& hfmap)
 }
 */
 
-static void processGeometry( string name, Obj *child, Scene *scene,
-                             const mmap& materials, TransformNode *transform )
+static Geometry* processGeometry(string name, Obj* child, Scene* scene,
+                                 const mmap& materials, TransformNode* transform)
 {
 	if( name == "translate" ) {
 		const mytuple& tup = child->getTuple();
 		verifyTuple( tup, 4 );
-        processGeometry( tup[3],
+        return processGeometry( tup[3],
                          scene,
                          materials,
                          transform->createChild(mat4f::translate( vec3f(tup[0]->getScalar(), 
@@ -388,29 +478,29 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 	} else if( name == "rotate" ) {
 		const mytuple& tup = child->getTuple();
 		verifyTuple( tup, 5 );
-		processGeometry( tup[4],
-                         scene,
-                         materials,
-                         transform->createChild(mat4f::rotate( vec3f(tup[0]->getScalar(),
-                                                                     tup[1]->getScalar(),
-                                                                     tup[2]->getScalar() ),
-                                                               tup[3]->getScalar() ) ) );
+		return processGeometry( tup[4],
+		                 scene,
+		                 materials,
+		                 transform->createChild(mat4f::rotate( vec3f(tup[0]->getScalar(),
+		                                                             tup[1]->getScalar(),
+		                                                             tup[2]->getScalar() ),
+		                                                       tup[3]->getScalar() ) ) );
 	} else if( name == "scale" ) {
 		const mytuple& tup = child->getTuple();
 		if( tup.size() == 2 ) {
 			double sc = tup[0]->getScalar();
-			processGeometry( tup[1],
-                             scene,
-                             materials,
-                             transform->createChild(mat4f::scale( vec3f( sc, sc, sc ) ) ) );
+			return processGeometry( tup[1],
+			                 scene,
+			                 materials,
+			                 transform->createChild(mat4f::scale( vec3f( sc, sc, sc ) ) ) );
 		} else {
 			verifyTuple( tup, 4 );
-			processGeometry( tup[3],
-                             scene,
-                             materials,
-                             transform->createChild(mat4f::scale( vec3f(tup[0]->getScalar(),
-                                                                        tup[1]->getScalar(),
-                                                                        tup[2]->getScalar() ) ) ) );
+			return processGeometry( tup[3],
+			                 scene,
+			                 materials,
+			                 transform->createChild(mat4f::scale( vec3f(tup[0]->getScalar(),
+			                                                            tup[1]->getScalar(),
+			                                                            tup[2]->getScalar() ) ) ) );
 		}
 	} else if( name == "transform" ) {
 		const mytuple& tup = child->getTuple();
@@ -425,33 +515,34 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 		verifyTuple( l3, 4 );
 		verifyTuple( l4, 4 );
 
-		processGeometry( tup[4],
-			             scene,
-                         materials,
-                         transform->createChild(mat4f(vec4f( l1[0]->getScalar(),
-                                                             l1[1]->getScalar(),
-                                                             l1[2]->getScalar(),
-                                                             l1[3]->getScalar() ),
-                                                      vec4f( l2[0]->getScalar(),
-                                                             l2[1]->getScalar(),
-                                                             l2[2]->getScalar(),
-                                                             l2[3]->getScalar() ),
-                                                      vec4f( l3[0]->getScalar(),
-                                                             l3[1]->getScalar(),
-                                                             l3[2]->getScalar(),
-                                                             l3[3]->getScalar() ),
-                                                      vec4f( l4[0]->getScalar(),
-                                                             l4[1]->getScalar(),
-                                                             l4[2]->getScalar(),
-                                                             l4[3]->getScalar() ) ) ) );
+		return processGeometry( tup[4],
+		                 scene,
+		                 materials,
+		                 transform->createChild(mat4f(vec4f( l1[0]->getScalar(),
+		                                                     l1[1]->getScalar(),
+		                                                     l1[2]->getScalar(),
+		                                                     l1[3]->getScalar() ),
+		                                              vec4f( l2[0]->getScalar(),
+		                                                     l2[1]->getScalar(),
+		                                                     l2[2]->getScalar(),
+		                                                     l2[3]->getScalar() ),
+		                                              vec4f( l3[0]->getScalar(),
+		                                                     l3[1]->getScalar(),
+		                                                     l3[2]->getScalar(),
+		                                                     l3[3]->getScalar() ),
+		                                              vec4f( l4[0]->getScalar(),
+		                                                     l4[1]->getScalar(),
+		                                                     l4[2]->getScalar(),
+		                                                     l4[3]->getScalar() ) ) ) );
 	} else if( name == "trimesh" || name == "polymesh" ) { // 'polymesh' is for backwards compatibility
         processTrimesh( name, child, scene, materials, transform);
+		return nullptr;
     } else {
 		SceneObject *obj = NULL;
        	Material *mat = nullptr;
         
         //if( hasField( child, "material" ) )
-		if (name != "skybox" && name != "sphere_light")
+		if (name != "skybox" && name != "sphere_light" && name != "csg")
 		{
 			mat = getMaterial(getField(child, "material"), materials);
 		}
@@ -485,15 +576,14 @@ static void processGeometry( string name, Obj *child, Scene *scene,
     		{
     			if (!processSkybox(child, scene))
     				throw ParseError("Failed to load skybox.");
-    			return;
+    			return nullptr;
     		}
 		else if (name == "sphere_light")
 		{
 			auto* light = new SphereLight(scene, nullptr, tupleToVec(getField(child, "emission")));
 			light->setTransform(transform);
 			light->calInfo();
-			scene->add(light);
-			return;
+			return light;
 		}
 		else if (name == "moving_sphere")
 		{
@@ -505,6 +595,10 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 			vec3f end = tupleToVec(getField(child, "end"));
 			obj = new movingSphere(scene, mat, start, end, radius, time0, time1);
 		}
+		else if (name == "csg")
+		{
+			return processCSG(child, scene, materials, transform);
+		}
 
     		if (hasField(child, "has_tex_coords"))
 			obj->setEnableTexCoords(true);
@@ -513,7 +607,7 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 			throw ParseError("Failed to load texture, please check texture format or path.");
 
         obj->setTransform(transform);
-		scene->add(obj);
+		return obj;
 	}
 }
 
@@ -924,8 +1018,11 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
                 name == "polymesh" ||
 				name == "moving_sphere" ||
 				name == "sphere_light" ||
+				name == "csg" ||
 				name == "skybox") { // polymesh is for backwards compatibility.
-		processGeometry( name, child, scene, materials, &scene->transformRoot);
+		auto* geometry = processGeometry( name, child, scene, materials, &scene->transformRoot);
+		if (geometry)
+			scene->add(geometry);
 		//scene->add( geo );
 	} else if( name == "material" ) {
 		processMaterial( child, &materials );

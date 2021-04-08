@@ -1,0 +1,53 @@
+SBT-raytracer 1.0
+
+camera {
+	position = (0,0,4);
+	viewdir = (0.0, 0.0, -1.0);
+	aspectratio = 1;
+	updir = (0,1,0);
+}
+
+directional_light {
+	direction = (0, -1, 0);
+	colour = (1.0, 1.0, 1.0);
+}
+
+directional_light {
+	direction = (0,1,0);
+	colour = (0.2,0.2,0.2);
+}
+
+skybox { 
+	back = ".\simpleSamples\bonus\skybox\back.bmp";
+	front = ".\simpleSamples\bonus\skybox\front.bmp";
+	left = ".\simpleSamples\bonus\skybox\left.bmp";
+	right = ".\simpleSamples\bonus\skybox\right.bmp";
+	top = ".\simpleSamples\bonus\skybox\top.bmp";
+	bottom = ".\simpleSamples\bonus\skybox\bottom.bmp";
+}
+
+material {
+	name = glass;
+	diffuse = (0.2, 0.2, 0.2);
+	transmissive = (0.8, 0.8, 0.8);
+	index = 1.5;
+}
+
+csg {
+	primitives = ("box1", "sphere1");		// list all the primitive names
+
+	box1 = 	rotate (1, 1, 1, 1,
+				box {
+					material = glass;
+				} 
+			);
+
+	sphere1 = 	scale (0.67,
+					sphere {
+						material = glass;
+					}
+				);
+
+	// Specify the operation: sub, or, and
+	operation = ("box1", "sub", "sphere1");
+}

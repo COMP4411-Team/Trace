@@ -57,6 +57,7 @@ protected:
 	vec3f 		orientation;
 	vec3f u, v;		// for projection map
 	double sceneRadius{-1.0};
+	double factor;
 	vec3f position;		// virtual position of the directional light plane
 };
 

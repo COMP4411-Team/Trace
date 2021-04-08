@@ -45,7 +45,7 @@
   * [x] Beer's law (extra)
   * [x] GGX microfacet BRDF  
 
-* [ ] 4B Implement CSG.
+* [x] 4B Implement CSG.
 
 * [ ] 4B Add a particle systems simulation and renderer.
 

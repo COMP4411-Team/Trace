@@ -40,7 +40,7 @@ Photon* DirectionalLight::emitPhoton() const
 	double x = cells[idx] % mapSize + getRandomReal(), y = cells[idx] / mapSize + getRandomReal();
 	photon->position = unproject(x, y);
 	photon->direction = orientation;
-	photon->power = color * PI * sceneRadius * sceneRadius;
+	photon->power = color * PI * sceneRadius * sceneRadius * factor;
 	
 	return photon;
 }
@@ -90,6 +90,8 @@ void DirectionalLight::buildProjectionMap()
 	for (int i = 0; i < mapSize * mapSize; ++i)
 		if (projMap[i])
 			cells.push_back(i);
+
+	factor = cells.size() / (PI / 4 * mapSize * mapSize);
 }
 
 vec3f DirectionalLight::project(const vec3f& pos) const

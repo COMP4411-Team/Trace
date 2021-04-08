@@ -129,6 +129,9 @@
     <ClCompile Include="src\photon_map\Photon.cpp">
       <Filter>Source Files\photon_map</Filter>
     </ClCompile>
+    <ClCompile Include="src\SceneObjects\CSG.cpp">
+      <Filter>Source Files\SceneObjects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\RayTracer.h">
@@ -193,6 +196,9 @@
     </ClInclude>
     <ClInclude Include="src\photon_map\Photon.h">
       <Filter>Header Files\photon_map.</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SceneObjects\CSG.h">
+      <Filter>Header Files\SceneObjects.</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,0 +1,35 @@
+SBT-raytracer 1.0
+
+// a particle system simulator of a firework
+
+camera {
+	position = (0, 0, -10);
+	viewdir = (0, 0, 1);
+	aspectratio = 1;
+	updir = (0,1,0);
+}
+
+emitter
+{
+	initial_material = {
+		emissive = (0.1, 0.1, 0.6);
+	};
+
+	end_material = {
+		emissive = (1.0, 0.1, 0.1);
+	};
+
+	emission_rate = 50;
+	emission_cut = 4;
+	initial_speed = 10.0;
+	force = (0, -0.98, 0);
+	drag = 0.2;
+	tail = 100;
+	lifespan = 10;
+	mass = 0.1;
+	max_num_particles = 100000;
+	particle_radius = 0.01;
+	source_position = (0, 2, 0);
+	time_step = 0.01;
+	tick = 100;
+}

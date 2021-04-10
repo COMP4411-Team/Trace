@@ -12,6 +12,7 @@
 #include <vector>
 #include <random>
 
+class Emitter;
 class Photon;
 class Geometry;
 class Skybox;
@@ -332,6 +333,7 @@ class Scene
 	friend vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i) const;
 	friend class DirectionalLight;
 	friend class RayTracer;
+	friend class FluidSystem;
 	
 public:
 	typedef list<Light*>::iterator 			liter;
@@ -377,6 +379,8 @@ public:
 	HFmap* getHFmap() { return hfmap; }
 	bool enableHField{ true };
 	HFmap* hfmap{ nullptr };
+
+	Emitter* emitter;
 
 	bool enableFasterShadow{ false }; //Acceleration of shadow attenuation
 	bool enableDistributed{false};

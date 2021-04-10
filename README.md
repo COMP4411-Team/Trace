@@ -10,7 +10,7 @@
 
 * [x] 1B Find a good way to accelerate shadow attenuation.
 
-* [ ] 1B Deal with overlapping objects intelligently.
+* [x] 1B Deal with overlapping objects intelligently.
 
 * [x] 1B1W Add texture mapping support to the program. Additional (variable) extra credit will be given for such additional mappings. Additional credit will be awarded for quality implementation of texture mapping on general trimeshes.
   * [x] Diffuse mapping
@@ -47,7 +47,7 @@
 
 * [x] 4B Implement CSG.
 
-* [ ] 4B Add a particle systems simulation and renderer.
+* [x] 4B Add a particle systems simulation and renderer.
 
 * [ ] 4B Implement caustics.
   

@@ -139,6 +139,7 @@ Scene::~Scene()
 		delete (*l);
 	}
 	delete skybox;
+	delete emitter;
 }
 
 // Get any intersection with an object.  Return information about the 

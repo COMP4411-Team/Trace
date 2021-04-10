@@ -18,11 +18,16 @@ Ray Ray::reflect(const Isect& isect) const
 // If TIR happens, return false
 bool Ray::refract(const Isect& isect, Ray& out) const
 {
-	double eta = isect.getMaterial().index;		// eta = n1 / n2
+	// This correctly handles refraction when objects overlap
+	double eta = isect.getMaterial().index / prevIndex;		// eta = n1 / n2
+	// Comment the line above and uncomment the line below to see the wrong result
+	// double eta = isect.getMaterial().index;
+	double newIndex = 1.0;
 	vec3f normal = -isect.N;
 	if (d.dot(isect.N) < 0.0)	// intersects from outside
 	{
-		eta = 1.0 / eta;		// TODO handle different indices of refraction of the other medium
+		newIndex = isect.getMaterial().index;
+		eta = 1.0 / eta;	
 		normal = isect.N;
 	}
 	
@@ -31,9 +36,10 @@ bool Ray::refract(const Isect& isect, Ray& out) const
 
 	if (cosTheta2Square < 0.0)
 		return false;		// TIR
-	
-	out = Ray(at(isect.t) - normal * DISPLACEMENT_EPSILON, 
-				eta * d + (eta * cosTheta1 - sqrt(cosTheta2Square)) * normal, time); // dir will be normalized in Ray ctor
+
+	out = Ray(at(isect.t) - normal * DISPLACEMENT_EPSILON,
+	          eta * d + (eta * cosTheta1 - sqrt(cosTheta2Square)) * normal,
+	          time, newIndex); // dir will be normalized in Ray ctor
 	return true;
 }
 

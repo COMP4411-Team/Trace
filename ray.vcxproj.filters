@@ -58,6 +58,12 @@
     <Filter Include="Source Files\photon_map">
       <UniqueIdentifier>{29ae3e64-8465-4b08-8e8f-145fdf1b8711}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\particle.">
+      <UniqueIdentifier>{1c3f09f6-9879-4636-b53d-fdd50add263d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\particle">
+      <UniqueIdentifier>{5c0a9532-f6d3-4421-b4fc-256b5c229cc3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\getopt.cpp">
@@ -132,6 +138,15 @@
     <ClCompile Include="src\SceneObjects\CSG.cpp">
       <Filter>Source Files\SceneObjects</Filter>
     </ClCompile>
+    <ClCompile Include="src\particle\Particle.cpp">
+      <Filter>Source Files\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="src\particle\FluidSystem.cpp">
+      <Filter>Source Files\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="src\particle\Emitter.cpp">
+      <Filter>Source Files\particle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\RayTracer.h">
@@ -199,6 +214,15 @@
     </ClInclude>
     <ClInclude Include="src\SceneObjects\CSG.h">
       <Filter>Header Files\SceneObjects.</Filter>
+    </ClInclude>
+    <ClInclude Include="src\particle\Particle.h">
+      <Filter>Header Files\particle.</Filter>
+    </ClInclude>
+    <ClInclude Include="src\particle\FluidSystem.h">
+      <Filter>Header Files\particle.</Filter>
+    </ClInclude>
+    <ClInclude Include="src\particle\Emitter.h">
+      <Filter>Header Files\particle.</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -168,6 +168,9 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="src\particle\Emitter.cpp" />
+    <ClCompile Include="src\particle\FluidSystem.cpp" />
+    <ClCompile Include="src\particle\Particle.cpp" />
     <ClCompile Include="src\photon_map\KdTree.cpp" />
     <ClCompile Include="src\photon_map\Photon.cpp" />
     <ClCompile Include="src\RayTracer.cpp">
@@ -282,6 +285,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\particle\Emitter.h" />
+    <ClInclude Include="src\particle\FluidSystem.h" />
+    <ClInclude Include="src\particle\Particle.h" />
     <ClInclude Include="src\photon_map\KdTree.h" />
     <ClInclude Include="src\photon_map\Photon.h" />
     <ClInclude Include="src\RayTracer.h" />

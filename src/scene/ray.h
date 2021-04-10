@@ -25,16 +25,14 @@ public:
 
 class Ray {
 public:
-	Ray( const vec3f& pp, const vec3f& dd )
-        : p( pp ), d( dd.normalize() ), time(0.0) {}
-	Ray( const vec3f& pp, const vec3f& dd, double time )
-		: p( pp ), d( dd.normalize() ), time(time) {}
+	Ray( const vec3f& pp, const vec3f& dd, double time = 0.0, double prevIndex = 1.0 )
+        : p( pp ), d( dd.normalize() ), time(time), prevIndex(prevIndex) {}
 	Ray( const Ray& other ) 
-		: p( other.p ), d( other.d ), time(other.time) {}
+		: p( other.p ), d( other.d ), time(other.time), prevIndex(other.prevIndex) {}
 	~Ray() {}
 
 	Ray& operator =( const Ray& other ) 
-	{ p = other.p; d = other.d; time = other.time; return *this; }
+	{ p = other.p; d = other.d; time = other.time; prevIndex = other.prevIndex; return *this; }
 
 	vec3f at( double t ) const
 	{ return p + (t*d); }
@@ -48,6 +46,8 @@ public:
 	vec3f normalToPoint(const vec3f& point) const;    // return the vector that starts from the point
 													  // ends on the ray, and is normal to the ray
 	double solveT(const vec3f& point) const;    // assume point is on the ray
+
+	double prevIndex{1.0};
 
 protected:
 	vec3f p;

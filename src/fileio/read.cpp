@@ -23,6 +23,8 @@
 #include "../SceneObjects/Square.h"
 #include "../scene/light.h"
 #include "../SceneObjects/CSG.h"
+#include "../particle/FluidSystem.h"
+#include "../particle/Emitter.h"
 
 typedef map<string,Material*> mmap;
 
@@ -53,6 +55,8 @@ static Microfacet* processMicrofacet(Obj* child, mmap* bindings);
 static FresnelSpecular* processFresnelSpecular(Obj* child, mmap* bindings);
 static CSG* processCSG(Obj* child, Scene* scene, const mmap& materials, TransformNode* transform);
 static CSG* parseCSG(const mytuple& expression, const std::map<string, Geometry*>& map, Scene* scene);
+static void processFluidSystem(Obj* obj, Scene* scene);
+static void processEmitter(Obj* obj, Scene* scene);
 
 Scene *readScene( const string& filename )
 {
@@ -450,6 +454,51 @@ CSG* parseCSG(const mytuple& expression, const std::map<string, Geometry*>& map,
 	csg->left = left;
 	csg->right = right;
 	return csg;
+}
+
+void processFluidSystem(Obj* obj, Scene* scene)
+{
+	double size = getField(obj, "size")->getScalar();
+	double kernelRadius = getField(obj, "kernel_radius")->getScalar();
+	vec3f center = tupleToVec(getField(obj, "center"));
+	int tick = getField(obj, "tick")->getScalar();
+	
+	FluidSystem fluid(scene, center, size, kernelRadius);
+	const auto& blocks = getField(obj, "initial_blocks")->getTuple();
+	for (auto* block : blocks)
+	{
+		vec3f min = tupleToVec(getField(block, "min"));
+		vec3f max = tupleToVec(getField(block, "max"));
+		double spacing = getField(block, "spacing")->getScalar();
+		fluid.addParticles(min, max, spacing);
+	}
+	fluid.simulate(tick);
+}
+
+void processEmitter(Obj* obj, Scene* scene)
+{
+	auto* initMaterial = processMaterial(getField(obj, "initial_material"));
+	auto* endMaterial = initMaterial;
+	if (hasField(obj, "end_material"))
+		endMaterial = processMaterial(getField(obj, "end_material"));
+	Emitter* emitter = new Emitter(scene, initMaterial, endMaterial);
+
+	emitter->emissionRate = getField(obj, "emission_rate")->getScalar();
+	emitter->initialSpeed = getField(obj, "initial_speed")->getScalar();
+	emitter->gravity = tupleToVec(getField(obj, "force"));
+	emitter->lifespan = getField(obj, "lifespan")->getScalar();
+	emitter->mass = getField(obj, "mass")->getScalar();
+	emitter->maxNumParticle = getField(obj, "max_num_particles")->getScalar();
+	emitter->renderingRadius = getField(obj, "particle_radius")->getScalar();
+	emitter->source = tupleToVec(getField(obj, "source_position"));
+	emitter->drag = getField(obj, "drag")->getScalar();
+	emitter->tail = getField(obj, "tail")->getScalar();
+	emitter->emissionCut = getField(obj, "emission_cut")->getScalar();
+
+	double timeStep = getField(obj, "time_step")->getScalar();
+	int tick = getField(obj, "tick")->getScalar(); 
+	emitter->simulate(timeStep, tick);
+	scene->emitter = emitter;
 }
 
 /*
@@ -1004,6 +1053,18 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 		vec3f v = tupleToVec(getField(child, "v"));
 		auto* areaLight = new AreaLight(scene, color, pos, u, v);
 		scene->add(areaLight);
+	}
+	else if (name == "fluid")
+	{
+		if (child == nullptr)
+			throw ParseError("No info for fluid");
+		processFluidSystem(child, scene);
+	}
+	else if (name == "emitter")
+	{
+		if (child == nullptr)
+			throw ParseError("No info for emitter");
+		processEmitter(child, scene);
 	}
 	else if( 	name == "sphere" ||
 				name == "box" ||

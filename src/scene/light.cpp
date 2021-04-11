@@ -58,7 +58,7 @@ void DirectionalLight::buildProjectionMap()
 
 	for (auto* geometry : scene->boundedobjects)
 	{
-		auto* object = dynamic_cast<MaterialSceneObject*>(geometry);
+		auto* object = dynamic_cast<SceneObject*>(geometry);
 		if (object == nullptr)
 			continue;
 		const auto& material = object->getMaterial();
@@ -78,13 +78,22 @@ void DirectionalLight::buildProjectionMap()
 			{max[0], min[1], min[2]}
 		};
 
+		int maxX = 0, minX = mapSize, maxY = 0, minY = mapSize;
+
 		for (int i = 0; i < 8; ++i)
 		{
 			vec3f proj = project(vertices[i]);
 			int x = proj[0] + mapSize / 2;
 			int y = proj[1] + mapSize / 2;
-			projMap[x + y * mapSize] = true;
+			maxX = std::max(maxX, x);
+			maxY = std::max(maxY, y);
+			minX = std::min(minX, x);
+			minY = std::min(minY, y);
 		}
+
+		for (int i = minY; i <= maxY; ++i)
+			for (int j = minX; j <= maxX; ++j)
+				projMap[i * mapSize + j] = true;
 	}
 
 	for (int i = 0; i < mapSize * mapSize; ++i)

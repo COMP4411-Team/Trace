@@ -278,7 +278,9 @@ vec3f RayTracer::gatherPhoton(const vec3f& pos)
 {
 	vec3f flux;
 	double maxDist2 = 0.0;
-	auto nearestPhotons = kdTree->getKnn(pos, numNeighbours);
+	auto nearestPhotons = kdTree->getKnn(pos, numNeighbours, maxDist);
+	if (nearestPhotons.empty())
+		return vec3f();
 	for (auto* photon : nearestPhotons)
 	{
 		double curDist2 = (photon->position - pos).length_squared();
@@ -286,7 +288,7 @@ vec3f RayTracer::gatherPhoton(const vec3f& pos)
 			maxDist2 = curDist2;
 		flux += photon->power;
 	}
-	return prod(flux, totalFlux) / (numPhotons * PI * maxDist2);
+	return prod(flux, totalFlux) / (numPhotons * PI * maxDist2 + RAY_EPSILON);
 }
 
 RayTracer::RayTracer()

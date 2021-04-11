@@ -11,10 +11,10 @@ Photon* KdTree::getMedian(int l, int r, int dimension)
 	return photons[(l + r) / 2];
 }
 
-vector<Photon*> KdTree::getKnn(const vec3f& pos, int k)
+vector<Photon*> KdTree::getKnn(const vec3f& pos, int k, double maxDist)
 {
 	knn = priority_queue<Pair>{less<Pair>(), vector<Pair>{(unsigned)k, {nullptr, numeric_limits<double>::lowest()}}};
-	traverse(pos, root);
+	traverse(pos, root, maxDist);
 	vector<Photon*> result;
 	while (!knn.empty())
 	{
@@ -27,23 +27,26 @@ vector<Photon*> KdTree::getKnn(const vec3f& pos, int k)
 }
 
 // TODO: add optimization: do not build the heap before the required number of photons are collected
-void KdTree::traverse(const vec3f& pos, Node* cur)
+void KdTree::traverse(const vec3f& pos, Node* cur, double maxDist)
 {
 	if (cur == nullptr)	return;
 	double dist = pos[cur->dimension] - cur->photon->position[cur->dimension];
 
-	if (dist < 0) traverse(pos, cur->left);
-	else traverse(pos, cur->right);
+	if (dist < 0) traverse(pos, cur->left, maxDist);
+	else traverse(pos, cur->right, maxDist);
 	
 	double curDist2 = (pos - cur->photon->position).length_squared();
 
-	knn.push({cur->photon, -curDist2});
-	knn.pop();
-
+	if (sqrt(curDist2) <= maxDist)
+	{
+		knn.push({cur->photon, -curDist2});
+		knn.pop();
+	}
+	
 	if (-knn.top().distance > std::abs(dist))
 	{
-		if (dist < 0) traverse(pos, cur->right);
-		else traverse(pos, cur->left);
+		if (dist < 0) traverse(pos, cur->right, maxDist);
+		else traverse(pos, cur->left, maxDist);
 	}
 }
 

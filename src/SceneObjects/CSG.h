@@ -2,7 +2,7 @@
 
 #include "../scene/scene.h"
 
-class CSG : public Geometry
+class CSG : public SceneObject
 {
 public:
 	enum class Operator
@@ -18,11 +18,17 @@ public:
 	bool hasBoundingBoxCapability() const override;
 	void ComputeBoundingBox() override;
 
-	Geometry* left{nullptr}, *right{nullptr};
+	void setMaterial(Material* m) override;
+	const Material& getMaterial() const override;
+	
+	SceneObject* left{nullptr}, *right{nullptr};
 	Operator op;
 
 private:
-	void getAllIsect(const Ray& ray, std::vector<Isect>& list, Geometry* geometry) const;
+	void getAllIsect(const Ray& ray, std::vector<Isect>& list, SceneObject* geometry) const;
 	bool computeState(bool l, bool r) const;
+
+	mutable Material* material{nullptr};
+	mutable bool materialLoaded{false};
 };
 

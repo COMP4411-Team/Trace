@@ -71,10 +71,11 @@ public:
 
 	// Photon mapping
 	bool enablePM{false};
-	vec3f totalFlux{0.1, 0.1, 0.1};
-	int numPhotons{40000};	// total num of photons emitted
-	int numNeighbours{50};	// num of nearest neighbours
+	vec3f totalFlux{0.05};
+	int numPhotons{100000};	// total num of photons emitted
+	int numNeighbours{20};	// num of nearest neighbours
 	int maxBounce{16};
+	double maxDist{0.01};
 
 private:
 	unsigned char *buffer;

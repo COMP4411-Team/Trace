@@ -54,7 +54,7 @@ static bool processSkybox(Obj* child, Scene* scene);
 static Microfacet* processMicrofacet(Obj* child, mmap* bindings);
 static FresnelSpecular* processFresnelSpecular(Obj* child, mmap* bindings);
 static CSG* processCSG(Obj* child, Scene* scene, const mmap& materials, TransformNode* transform);
-static CSG* parseCSG(const mytuple& expression, const std::map<string, Geometry*>& map, Scene* scene);
+static CSG* parseCSG(const mytuple& expression, const std::map<string, SceneObject*>& map, Scene* scene);
 static void processFluidSystem(Obj* obj, Scene* scene);
 static void processEmitter(Obj* obj, Scene* scene);
 
@@ -374,7 +374,7 @@ CSG* processCSG(Obj* child, Scene* scene, const mmap& materials, TransformNode* 
 		throw ParseError("CSG must have primitives field");
 	const auto& primitives = getField(child, "primitives")->getTuple();
 
-	std::map<string, Geometry*> map;
+	std::map<string, SceneObject*> map;
 	
 	for (auto* obj : primitives)
 	{
@@ -382,7 +382,7 @@ CSG* processCSG(Obj* child, Scene* scene, const mmap& materials, TransformNode* 
 		if (!hasField(child, name))
 			throw ParseError("CSG: primitive not found");
 		Obj* primitive = getField(child, name);
-		auto* geometry = processGeometry(primitive->getName(), primitive->getChild(), scene, materials, transform);
+		auto* geometry = dynamic_cast<SceneObject*>(processGeometry(primitive->getName(), primitive->getChild(), scene, materials, transform));
 		if (geometry == nullptr)
 			throw ParseError("CSG: unknown primitive. Note: mesh is not support in CSG");
 		map[name] = geometry;
@@ -403,13 +403,13 @@ CSG* processCSG(Obj* child, Scene* scene, const mmap& materials, TransformNode* 
 	}
 }
 
-CSG* parseCSG(const mytuple& expression, const std::map<string, Geometry*>& map, Scene* scene)
+CSG* parseCSG(const mytuple& expression, const std::map<string, SceneObject*>& map, Scene* scene)
 {
 	if (expression.size() != 3)
 		throw ParseError("CSG: invalid expression");
 
 	auto* csg = new CSG(scene);
-	Geometry* left = nullptr, *right = nullptr;
+	SceneObject* left = nullptr, *right = nullptr;
 	if (typeid(*expression[0]) == typeid(StringObj))
 	{
 		string name = expression[0]->getString();

@@ -1,11 +1,12 @@
 #include "CSG.h"
 
-CSG::CSG(Scene* scene): Geometry(scene) { }
+CSG::CSG(Scene* scene): SceneObject(scene) { }
 
 CSG::~CSG()
 {
 	delete left;
 	delete right;
+	delete material;
 }
 
 bool CSG::intersect(const Ray& ray, Isect& isect) const
@@ -187,7 +188,23 @@ void CSG::ComputeBoundingBox()
 	bounds.min = minimum(l.min, r.min);
 }
 
-void CSG::getAllIsect(const Ray& ray, std::vector<Isect>& list, Geometry* geometry) const
+void CSG::setMaterial(Material* m)
+{
+	material = m;
+	materialLoaded = true;
+}
+
+const Material& CSG::getMaterial() const
+{
+	if (!materialLoaded)
+	{
+		material = new Material(left->getMaterial());
+		materialLoaded = true;
+	}
+	return *material;
+}
+
+void CSG::getAllIsect(const Ray& ray, std::vector<Isect>& list, SceneObject* geometry) const
 {
 	if (typeid(*geometry) == typeid(CSG))
 	{

@@ -32,12 +32,12 @@ public:
 	
 	Node* build(int l, int r);
 	Photon* getMedian(int l, int r, int dimension);
-	std::vector<Photon*> getKnn(const vec3f& pos, int k);
+	std::vector<Photon*> getKnn(const vec3f& pos, int k, double maxDist);
 	
 	std::vector<Photon*>& photons;
 
 private:
-	void traverse(const vec3f& pos, Node* cur);
+	void traverse(const vec3f& pos, Node* cur, double maxDist);
 	double getRange(int l, int r, int dimension);
 
 	std::priority_queue<Pair> knn;

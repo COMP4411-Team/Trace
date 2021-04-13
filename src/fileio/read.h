@@ -6,7 +6,7 @@
 
 #include "../scene/scene.h"
 
-Scene *readScene( const string& filename );
-Scene *readScene( istream& is );
+Scene* readScene(const string& filename, HFmap* hfm);
+Scene *readScene( istream& is, HFmap* hfm);
 
 #endif // __READ_H__

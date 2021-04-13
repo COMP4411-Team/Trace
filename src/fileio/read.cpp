@@ -58,7 +58,7 @@ static CSG* parseCSG(const mytuple& expression, const std::map<string, SceneObje
 static void processFluidSystem(Obj* obj, Scene* scene);
 static void processEmitter(Obj* obj, Scene* scene);
 
-Scene *readScene( const string& filename )
+Scene *readScene( const string& filename, HFmap * hfm )
 {
 	ifstream ifs( filename.c_str() );
 	if( !ifs ) {
@@ -67,14 +67,14 @@ Scene *readScene( const string& filename )
 	}
 
 	try {
-		return readScene( ifs );
+		return readScene( ifs, hfm);
 	} catch( ParseError& pe ) {
 		cout << "Parse error: " << pe << endl;
 		return NULL;
 	}
 }
 
-Scene *readScene( istream& is )
+Scene *readScene( istream& is, HFmap* hfm)
 {
 	Scene *ret = new Scene;
 	
@@ -114,14 +114,16 @@ Scene *readScene( istream& is )
 	while( true ) {
 		Obj *cur = readFile( is );
 		if( !cur ) {
-			if (ret->enableHField && ret->HFmapLoaded()) {
-				processHField(ret, &ret->transformRoot);
-			}
 			break;
 		}
-
 		processObject( cur, ret, materials );
 		delete cur;
+	}
+
+	if (hfm != nullptr && !ret->HFmapLoaded()) {
+		delete[] ret->hfmap;
+		ret->hfmap = hfm;
+		processHField(ret, &ret->transformRoot);
 	}
 
 	return ret;
@@ -751,11 +753,13 @@ static bool processHField(Scene* scene, TransformNode*transform) {
 */
 	for (double i = 0; i < thf->width; i++) {
 		for (double j = 0; j < thf->height; j++) {
-			double y = thf->getH(i, j)*thf->width/255.0;
-			tmesh->addVertex(vec3f(i - thf->width / 2, y, j - thf->height / 2));
+			double y = thf->getH(i, j) * thf->width / 255.0 / 100.0;
+			tmesh->addVertex(vec3f((i - thf->width / 2) / 100.0, y, (j - thf->height / 2) / 100.0));
 			auto diffuse = thf->getC(i, j)/255.0;
 			Material* tempmat = new Material();
 			tempmat->kd = diffuse;
+			tempmat->ks = vec3f(0.5, 0.5, 0.5);
+			tempmat->shininess = 0.2;
 			tmesh->addMaterial(tempmat);
 		}
 	}
@@ -763,7 +767,7 @@ static bool processHField(Scene* scene, TransformNode*transform) {
 	for (double i = 0; i < thf->width-1; i++) {
 		for (double j = 0; j < thf->height-1; j++) {
 			tmesh->addFace(i * thf->height + j, i * thf->height + j + 1, (i + 1) * thf->height + j + 1);
-			tmesh->addFace(i * thf->height + j, (i + 1) * thf->height + j + 1, i * thf->height + j);
+			tmesh->addFace(i * thf->height + j, (i + 1) * thf->height + j + 1, (i+1) * thf->height + j);
 		}
 	}
 

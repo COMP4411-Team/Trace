@@ -253,10 +253,15 @@ bool Scene::loadHFmap(const string& filename) {
 	auto* hf = readBMP(const_cast<char*>(filename.c_str()), w, h);
 	if (hf == nullptr)
 		return false;
+	string grey = filename.substr(0, filename.length() - 5).append("grey_.bmp");
+	auto* gf = readBMP(const_cast<char*>(filename.c_str()), w, h);
+	if (gf == nullptr)
+		return false;
 	if (hfmap) delete hfmap;
-	hfmap = new HFmap(hf, h, w);
+	hfmap = new HFmap(hf, gf, h, w);
 	return true;
 }
+
 
 
 Texture::~Texture()
@@ -284,7 +289,8 @@ vec3f Texture::sample(const TexCoords& coords) const
 //HFmap::HFmap(char* m, int h, int w) :map(m), height(h), weight(w) {}
 
 HFmap::~HFmap() {
-	delete[] map;
+	delete map;
+	delete greymap;
 	map = nullptr;
 }
 
@@ -295,7 +301,7 @@ vec3f HFmap::getC(int x, int y) const {
 }
 
 double HFmap::getH(int x, int y) const {
-	vec3f color = getC(x, y);
+	unsigned char* color = greymap + (y * width + x) * 3;
 	return 0.229 * color[0] + 0.587 * color[1] + 0.114 * color[2];
 }
 

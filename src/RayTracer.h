@@ -46,11 +46,11 @@ public:
 	Scene* getScene() { return scene; }
 	bool sceneLoaded();
 
-	/*
+	
 	bool loadHFmap(const string& filename);	
 	bool HFmapLoaded() { if (hfmap != nullptr) return true; else return false; }
 	HFmap* getHFmap() { return hfmap; }
-	*/
+	
 
 
 	void setFasterShadow(bool i) { scene->enableFasterShadow = i; }

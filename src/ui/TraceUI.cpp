@@ -74,8 +74,11 @@ void TraceUI::cb_load_hf(Fl_Menu_* o, void* v)
 	if (newfile != NULL) {
 		char buf[256];
 
-		if (pUI->raytracer->getScene()->loadHFmap(newfile)) {
+		if (pUI->raytracer->loadHFmap(newfile)) {
 			sprintf(buf, "HFmap <%s>", newfile);
+			if (pUI->raytracer->getScene() != nullptr) {
+				pUI->raytracer->getScene()->loadHFmap(newfile);
+			}
 			done = true;	// terminate the previous rendering
 		}
 		else {

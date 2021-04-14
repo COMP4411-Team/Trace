@@ -46,7 +46,7 @@ public:
 class HFmap
 {
 public:
-	HFmap(unsigned char* m, int h, int w) :map(m), height(h), width(w) {}
+	HFmap(unsigned char* m, unsigned char* g, int h, int w) :map(m), greymap(g), height(h), width(w) {}
 	~HFmap();
 
 	double getH(int x, int y) const;
@@ -55,7 +55,7 @@ public:
 
 	int height, width, hf;
 	unsigned char* map{ nullptr };
-
+	unsigned char* greymap{ nullptr };
 };
 
 class SceneElement

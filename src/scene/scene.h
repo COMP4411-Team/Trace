@@ -275,7 +275,7 @@ public:
 
 	bool enableBumpMap{false};
 	bool enableNormalMap{false};
-	bool enableDisplacementMap{false};
+	bool enableAnisotropicSpecular{false};
 	bool enableDiffuseMap{false};
 	bool hasEmission{false};
 	bool enableSolidTexture{false};
@@ -283,6 +283,7 @@ public:
 	Texture bumpMap;
 	Texture diffuseMap;
 	Texture normalMap;
+	Texture anisoSpecular;
 	SolidTexture* solidTexture{nullptr};
 	vec3f emission;
 

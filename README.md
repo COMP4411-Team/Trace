@@ -44,11 +44,12 @@
   * [x] Fresnel
   * [x] Beer's law (extra)
   * [x] GGX microfacet BRDF  
+  * [x] Anisotropic specular 
 
 * [x] 4B Implement CSG.
 
 * [x] 4B Add a particle systems simulation and renderer.
 
-* [ ] 4B Implement caustics.
+* [x] 4B Implement caustics.
   
 * [x] Extra Path tracing. 

@@ -297,6 +297,14 @@ bool processTexture(Obj* child, Geometry* geometry)
 		geometry->enableSolidTexture = true;
 		geometry->solidTexture = new PerlinNoise(256, scale, depth);
 	}
+	if (hasField(child, "anisotropic_specular"))
+	{
+		string filename = getField(child, "anisotropic_specular")->getString();
+		if (!loadTexture(filename, geometry->anisoSpecular))
+			return false;
+		geometry->enableAnisotropicSpecular = true;
+		geometry->setEnableTexCoords(true);
+	}
 	return true;
 }
 

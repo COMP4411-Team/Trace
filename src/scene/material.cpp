@@ -71,8 +71,17 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i) const
 		diffuse += lambertian * prod(prod(diffuseColor, light->getColor(position)), attenuation);
 
 		// Using Blinn-Phong
-		specular += pow(max(h.dot(normal), 0.0), shininess * 256.0) * 
-			prod(ks, prod(light->getColor(position), attenuation));
+		if (!i.obj->enableAnisotropicSpecular)
+		{
+			specular += pow(max(h.dot(normal), 0.0), shininess * 256.0) * 
+				prod(ks, prod(light->getColor(position), attenuation));
+		}
+		else
+		{
+			vec3f anisoDir = (i.tbn * i.obj->anisoSpecular.sample(i.texCoords)).normalize();
+			double hDotA = h.dot((normal + anisoDir).normalize());
+			specular += pow(_max(0.0, hDotA), shininess * 128.0) * prod(ks, prod(light->getColor(position), attenuation));
+		}
 	}
 
 	return ke + prod(ka, ambient) + specular + diffuse + accum;		// the direct illumination

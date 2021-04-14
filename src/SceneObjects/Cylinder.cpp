@@ -62,6 +62,8 @@ bool Cylinder::intersectBody( const Ray& r, Isect& i ) const
 			// It's okay.
 			i.t = t1;
 			i.N = vec3f( P[0], P[1], 0.0 ).normalize();
+			if (enableTexCoords)
+				setTexCoords(P, i);
 			return true;
 		}
 	}
@@ -79,6 +81,8 @@ bool Cylinder::intersectBody( const Ray& r, Isect& i ) const
 			normal = -normal;
 
 		i.N = normal.normalize();
+		if (enableTexCoords)
+			setTexCoords(P, i);
 		return true;
 	}
 
@@ -140,4 +144,17 @@ bool Cylinder::intersectCaps( const Ray& r, Isect& i ) const
 	}
 
 	return false;
+}
+
+void Cylinder::setTexCoords(const vec3f& isectPos, Isect& isect) const
+{
+	double theta = atan2(isectPos[1], isectPos[0]) + PI;
+	isect.hasTexCoords = true;
+	isect.texCoords.u = theta * INV_PI * 0.5;
+	isect.texCoords.v = isectPos[2];
+	
+	isect.tbn[0] = vec3f(0.0, 0.0, 1.0);
+	isect.tbn[1] = isect.N.cross(isect.tbn[0]);
+	isect.tbn[2] = isect.N;
+	isect.tbn = isect.tbn.transpose();
 }

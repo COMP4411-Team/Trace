@@ -1,0 +1,48 @@
+SBT-raytracer 1.0
+
+
+camera {
+	position = (0,0,-4);
+	viewdir = (0,0,1);
+	aspectratio = 1;
+	updir = (0,1,0);
+}
+
+directional_light {
+	direction = (0, 0, 3);
+	colour = (1, 1, 1);
+}
+
+skybox { 
+	back = ".\simpleSamples\bonus\skybox\back.bmp";
+	front = ".\simpleSamples\bonus\skybox\front.bmp";
+	left = ".\simpleSamples\bonus\skybox\left.bmp";
+	right = ".\simpleSamples\bonus\skybox\right.bmp";
+	top = ".\simpleSamples\bonus\skybox\top.bmp";
+	bottom = ".\simpleSamples\bonus\skybox\bottom.bmp";
+}
+
+translate(1.0, 1.0, 0.0,
+	rotate( 1,0,0,1.57,
+		scale( 0.6, 0.6, 1.7,
+			cylinder { 
+				material = { 
+					diffuse = (0.8,0.3,0.1);
+					specular = (0.7, 0.7, 0.7);
+					reflective = (0, 0, 0);
+					shininess = 0.8;
+				};
+				anisotropic_specular = "./simpleSamples/bonus/texture/anisotropic_specular.bmp";
+			})))
+
+translate(-1.0, 1.0, 0.0,
+	rotate( 1,0,0,1.57,
+		scale( 0.6, 0.6, 1.7,
+			cylinder { 
+				material = { 
+					diffuse = (0.8,0.3,0.1);
+					specular = (0.7, 0.7, 0.7);
+					reflective = (0, 0, 0);
+					shininess = 0.8;
+				};
+			})))

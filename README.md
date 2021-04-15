@@ -16,7 +16,7 @@
   * [x] Diffuse mapping
   * [x] Normal mapping
 
-* [ ] 1B1W Implement antialiasing by adaptive supersampling.
+* [x] 1B1W Implement antialiasing by adaptive supersampling.
 
 * [ ] 1B1W Implement more versatile lighting controls.
 

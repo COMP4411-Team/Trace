@@ -32,8 +32,14 @@ public:
 	void traceSetup( int w, int h, int maxDepth, const vec3f& threshold );
 	void traceLines( int start = 0, int stop = 10000000 );
 	void tracePixel( int i, int j, int iter );
+
+	// Adaptive supersampling
+	void adaptiveTrace();
+	vec3f subdivide(double x1, double y1, double x2, double y2,
+		const vec3f& color1, const vec3f& color2, int& newSampleNum, int depth);
+	void visualizeSamples();
 	
-	vec3f tracePixelMotionBlur(int i, int j, int iter);
+	vec3f tracePixelMotionBlur(int i, int j);
 	void pathTrace(int iter);
 	void setLightScale(double value);
 
@@ -50,13 +56,17 @@ public:
 	bool loadHFmap(const string& filename);	
 	bool HFmapLoaded() { if (hfmap != nullptr) return true; else return false; }
 	HFmap* getHFmap() { return hfmap; }
-	
 
 
 	void setFasterShadow(bool i) { scene->enableFasterShadow = i; }
 
 	int ssaaSample{0};	// the exponent of 2
 	bool ssaaJitter{false};
+
+	// Adaptive supersampling
+	double adaptiveThresh{0.25};
+	int maxSubdivisionDepth{3};
+	std::vector<std::vector<int>> sampleNum;
 
 	bool enableMotionBlur{false};
 	int motionBlurSPP{100};
@@ -78,6 +88,8 @@ public:
 	double maxDist{0.01};
 
 private:
+	void setPixel(int x, int y, const vec3f& color);
+	
 	unsigned char *buffer;
 	unsigned char* backBuffer;		// used for progressive path tracing
 	int buffer_width, buffer_height;

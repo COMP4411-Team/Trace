@@ -229,6 +229,24 @@ void TraceUI::cb_multiThread(Fl_Widget* o, void* v)
 	ui->enableMultiThread = (bool( ((Fl_Light_Button*)o)->value() ));
 }
 
+void TraceUI::cb_adaptiveSS(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->enableAdaptiveSS = (bool( ((Fl_Light_Button*)o)->value() ));
+}
+
+void TraceUI::cb_visualizeSS(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->visualizeAdaptiveSS = (bool( ((Fl_Light_Button*)o)->value() ));
+}
+
+void TraceUI::cb_adaptiveThresh(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->adaptiveThresh = (double( ((Fl_Slider*)o)->value() ));
+}
+
 void TraceUI::cb_buildPM(Fl_Widget* o, void* v)
 {
 	auto* ui = whoami(o);
@@ -245,6 +263,7 @@ void TraceUI::cb_enablePM(Fl_Widget* o, void* v)
 void TraceUI::cb_render(Fl_Widget* o, void* v)
 {
 	TraceUI* pUI=((TraceUI*)(o->user_data()));
+	
 	if (pUI->enableMultiThread)
 		return cb_renderParallel(o, v);
 	
@@ -258,6 +277,19 @@ void TraceUI::cb_render(Fl_Widget* o, void* v)
 		pUI->m_traceGlWindow->show();
 
 		pUI->raytracer->traceSetup(width, height, pUI->getDepth(), pUI->threshold);
+
+		if (pUI->enableAdaptiveSS)
+		{
+			pUI->raytracer->adaptiveTrace();
+			pUI->m_traceGlWindow->refresh();
+			return;
+		}
+		if (pUI->visualizeAdaptiveSS)
+		{
+			pUI->raytracer->visualizeSamples();
+			pUI->m_traceGlWindow->refresh();
+			return;
+		}
 		
 		// Save the window label
 		const char *old_label = pUI->m_traceGlWindow->label();
@@ -466,7 +498,7 @@ TraceUI::TraceUI() {
 	// init.
 	m_nDepth = 0;
 	m_nSize = 150;
-	m_mainWindow = new Fl_Window(100, 40, 330, 460, "Ray <Not Loaded>");
+	m_mainWindow = new Fl_Window(100, 40, 330, 485, "Ray <Not Loaded>");
 		m_mainWindow->user_data((void*)(this));	// record self to be used by static callback functions
 		// install menu bar
 		m_menubar = new Fl_Menu_Bar(0, 0, 330, 25);
@@ -525,58 +557,72 @@ TraceUI::TraceUI() {
 			0, 20, 0.01, 5, cb_focalLength);
 
 		// Motion blur
-		m_motionBlurButton = new Fl_Light_Button(10, 235, 100, 25, "Motion Blur");
+		m_motionBlurButton = new Fl_Light_Button(10, 260, 150, 25, "Motion Blur");
 		m_motionBlurButton->user_data(this);
 		m_motionBlurButton->value(0);
 		m_motionBlurButton->callback(cb_enableMotionBlur);
 
-		m_motionBlurSPPSlider = createSlider(10, 265, 180, 20, "Motion Blur SPP",
+		m_motionBlurSPPSlider = createSlider(10, 235, 180, 20, "Motion Blur SPP",
 			1, 100, 1, 100, cb_motionBlurSPP);
 
-		m_fasterShadow = new Fl_Light_Button(10, 290, 160, 25, "Shadow Acceleration");
+		m_fasterShadow = new Fl_Light_Button(150, 370, 170, 25, "Shadow Acceleration");
 		m_fasterShadow->user_data(this);
 		m_fasterShadow->value(0);
 		m_fasterShadow->callback(cb_fasterShadow);
 
 		// Distributed RT
-		m_distributedButton = new Fl_Light_Button(180, 290, 140, 25, "Distributed RT");
+		m_distributedButton = new Fl_Light_Button(170, 260, 150, 25, "Distributed RT");
 		m_distributedButton->user_data(this);
 		m_distributedButton->value(0);
 		m_distributedButton->callback(cb_distributed);
 
-		m_childRaySlider = createSlider(10, 320, 180, 20, "Child Ray Num",
+		m_childRaySlider = createSlider(10, 290, 180, 20, "Child Ray Num",
 			1, 50, 1, 10, cb_childRay);
 
-		m_multiThreadButton = new Fl_Light_Button(10, 345, 140, 25, "Multi Thread");
+		m_multiThreadButton = new Fl_Light_Button(10, 370, 130, 25, "Multi Thread");
 		m_multiThreadButton->user_data(this);
 		m_multiThreadButton->value(0);
 		m_multiThreadButton->callback(cb_multiThread);
 
+		// Adaptive supersampling
+		m_adaptiveSSButton = new Fl_Light_Button(10, 315, 130, 25, "Adaptive SS");
+		m_adaptiveSSButton->user_data(this);
+		m_adaptiveSSButton->value(0);
+		m_adaptiveSSButton->callback(cb_adaptiveSS);
+
+		m_adaptiveVisButton = new Fl_Light_Button(150, 315, 170, 25, "Visualize Adaptive SS");
+		m_adaptiveVisButton->user_data(this);
+		m_adaptiveVisButton->value(0);
+		m_adaptiveVisButton->callback(cb_visualizeSS);
+
+		m_adaptiveThreshSlider = createSlider(10, 345, 180, 20, "Adaptive SS Thresh",
+			0.0, 1.0, 0.01, 0.25, cb_adaptiveThresh);
+
 		// Photon mapping
-		m_buildPMButton = new Fl_Button(10, 375, 120, 25, "Build Photon Map");
+		m_buildPMButton = new Fl_Button(10, 405, 120, 25, "Build Photon Map");
 		m_buildPMButton->user_data(this);
 		m_buildPMButton->callback(cb_buildPM);
 
-		m_enablePMButton = new Fl_Light_Button(140, 375, 180, 25, "Enable Photon Mapping");
+		m_enablePMButton = new Fl_Light_Button(140, 405, 180, 25, "Enable Photon Mapping");
 		m_enablePMButton->user_data(this);
 		m_enablePMButton->value(0);
 		m_enablePMButton->callback(cb_enablePM);
 
 		// Path tracing
-		m_pathTracingButton = new Fl_Light_Button(10, 425, 150, 25, "Enable Path Tracing");
+		m_pathTracingButton = new Fl_Light_Button(10, 450, 150, 25, "Enable Path Tracing");
 		m_pathTracingButton->user_data(this);
 		m_pathTracingButton->value(0);
 		m_pathTracingButton->callback(cb_pathTracingButton);
 	
-		m_renderButton = new Fl_Button(220, 425, 90, 25, "Render PT");
+		m_renderButton = new Fl_Button(220, 450, 100, 25, "Render PT");
 		m_renderButton->user_data((void*)(this));
 		m_renderButton->callback(cb_renderPt);
 
-		m_renderButton = new Fl_Button(240, 27, 70, 25, "&Render");
+		m_renderButton = new Fl_Button(240, 27, 80, 25, "&Render");
 		m_renderButton->user_data((void*)(this));
 		m_renderButton->callback(cb_render);
 
-		m_stopButton = new Fl_Button(240, 55, 70, 25, "&Stop");
+		m_stopButton = new Fl_Button(240, 55, 80, 25, "&Stop");
 		m_stopButton->user_data((void*)(this));
 		m_stopButton->callback(cb_stop);
 

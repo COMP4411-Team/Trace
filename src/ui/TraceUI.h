@@ -46,6 +46,10 @@ public:
 	Fl_Light_Button* m_distributedButton;
 	Fl_Slider* m_childRaySlider;
 
+	Fl_Light_Button* m_adaptiveSSButton;
+	Fl_Light_Button* m_adaptiveVisButton;
+	Fl_Slider* m_adaptiveThreshSlider;
+
 	Fl_Light_Button* m_multiThreadButton;
 
 	Fl_Button* m_buildPMButton;
@@ -79,6 +83,8 @@ private:
 	bool enablePathTracing{false};
 	bool enableFasterShadow{ false };
 	bool enableMultiThread{false};
+	bool enableAdaptiveSS{false};
+	bool visualizeAdaptiveSS{false};
 	int maxIter{10000};
 	vec3f threshold;
 
@@ -120,6 +126,11 @@ private:
 	static void cb_childRay(Fl_Widget* o, void* v);
 
 	static void cb_multiThread(Fl_Widget* o, void* v);
+
+	// Adaptive supersampling
+	static void cb_adaptiveSS(Fl_Widget* o, void* v);
+	static void cb_visualizeSS(Fl_Widget* o, void* v);
+	static void cb_adaptiveThresh(Fl_Widget* o, void* v);
 
 	// Photon mapping
 	static void cb_buildPM(Fl_Widget* o, void* v);

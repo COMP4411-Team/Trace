@@ -1,5 +1,6 @@
 SBT-raytracer 1.0
 
+// Demo anisotropic specular
 
 camera {
 	position = (0,0,-4);
@@ -22,6 +23,7 @@ skybox {
 	bottom = ".\simpleSamples\bonus\skybox\bottom.bmp";
 }
 
+// Cylinder with anisotropic specular
 translate(1.0, 1.0, 0.0,
 	rotate( 1,0,0,1.57,
 		scale( 0.6, 0.6, 1.7,
@@ -35,6 +37,7 @@ translate(1.0, 1.0, 0.0,
 				anisotropic_specular = "./simpleSamples/bonus/texture/anisotropic_specular.bmp";
 			})))
 
+// Cylinder with normal specular
 translate(-1.0, 1.0, 0.0,
 	rotate( 1,0,0,1.57,
 		scale( 0.6, 0.6, 1.7,

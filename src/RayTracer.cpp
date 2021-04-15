@@ -384,6 +384,13 @@ bool RayTracer::loadHFmap(const string& filename) {
 	return true;
 }
 
+void RayTracer::setPixel(int x, int y, const vec3f& color)
+{
+	auto* pixel = buffer + (x + y * buffer_width) * 3;
+	pixel[0] = static_cast<unsigned char>(255.0 * color[0]);
+	pixel[1] = static_cast<unsigned char>(255.0 * color[1]);
+	pixel[2] = static_cast<unsigned char>(255.0 * color[2]);
+}
 
 
 void RayTracer::traceSetup( int w, int h, int maxDepth, const vec3f& threshold )
@@ -460,7 +467,7 @@ void RayTracer::tracePixel( int i, int j, int iter )
 		col /= sampleNum;
 	}
 	else
-		col = tracePixelMotionBlur(i, j, iter);
+		col = tracePixelMotionBlur(i, j);
 	
 	unsigned char *pixel = buffer + ( i + j * buffer_width ) * 3;
 	if (!enablePathTracing)
@@ -479,7 +486,94 @@ void RayTracer::tracePixel( int i, int j, int iter )
 	}
 }
 
-vec3f RayTracer::tracePixelMotionBlur(int i, int j, int iter)
+void RayTracer::adaptiveTrace()
+{
+	if (scene == nullptr)
+		return;
+
+	vector<vector<vec3f>> grid(buffer_height + 1);
+	for (int i = 0; i <= buffer_height; ++i)
+	{
+		grid[i].resize(buffer_width + 1);
+		#pragma omp parallel for num_threads(8)
+		for (int j = 0; j <= buffer_width; ++j)
+		{
+			double x = static_cast<double>(j) / buffer_width;
+			double y = static_cast<double>(i) / buffer_height;
+			grid[i][j] = trace(scene, x, y);
+		}
+	}
+
+	vector<vector<vec3f>> centers(buffer_height);
+	sampleNum.resize(buffer_height);
+	for (int i = 0; i < buffer_height; ++i)
+	{
+		centers[i].resize(buffer_width);
+		sampleNum[i].resize(buffer_width);
+		#pragma omp parallel for num_threads(8)
+		for (int j = 0; j < buffer_width; ++j)
+		{
+			double x = (static_cast<double>(j) + 0.5) / buffer_width;
+			double y = (static_cast<double>(i) + 0.5) / buffer_height;
+			centers[i][j] = trace(scene, x, y);
+		}
+	}
+
+	for (int i = 0; i < buffer_height; ++i)
+		#pragma omp parallel for num_threads(8)
+		for (int j = 0; j < buffer_width; ++j)
+		{
+			sampleNum[i][j] = 0;
+			double x = (static_cast<double>(j) + 0.5) / buffer_width;
+			double y = (static_cast<double>(i) + 0.5) / buffer_height;
+			vec3f c1 = subdivide(x, y, x - 0.5, y - 0.5, centers[i][j], grid[i][j], sampleNum[i][j], 0);
+			vec3f c2 = subdivide(x, y, x + 0.5, y - 0.5, centers[i][j], grid[i][j + 1], sampleNum[i][j], 0);
+			vec3f c3 = subdivide(x, y, x - 0.5, y + 0.5, centers[i][j], grid[i + 1][j], sampleNum[i][j], 0);
+			vec3f c4 = subdivide(x, y, x + 0.5, y + 0.5, centers[i][j], grid[i + 1][j + 1], sampleNum[i][j], 0);
+
+			unsigned char *pixel = buffer + ( j + i * buffer_width ) * 3;
+			vec3f c = (c1 + c2 + c3 + c4) * 0.25;
+			setPixel(j, i, c);
+		}
+}
+
+// (x1, y1) should be the coords of the center 
+vec3f RayTracer::subdivide(double x1, double y1, double x2, double y2,
+	const vec3f& color1, const vec3f& color2, int& newSampleNum, int depth)
+{
+	if (depth >= maxSubdivisionDepth || (color1 - color2).length() < adaptiveThresh)
+		return color2;
+
+	newSampleNum += 3;
+	double midX = (x1 + x2) * 0.5, midY = (y1 + y2) * 0.5;
+	vec3f c = trace(scene, midX, midY);
+	vec3f c1 = subdivide(midX, midY, x1, y1, c, color1, newSampleNum, depth + 1);
+	vec3f c2 = subdivide(midX, midY, x2, y2, c, color2, newSampleNum, depth + 1);
+
+	vec3f c3 = trace(scene, x1, y2);
+	c3 = subdivide(midX, midY, x1, y2, c, c3, newSampleNum, depth + 1);
+
+	vec3f c4 = trace(scene, y1, x2);
+	c4 = subdivide(midX, midY, y1, x2, c, c4, newSampleNum, depth + 1);
+
+	return c2 * 0.445 + c1 * 0.111 + (c3 + c4) * 0.222;
+}
+
+void RayTracer::visualizeSamples()
+{
+	if (sampleNum.size() != buffer_height || sampleNum[0].size() != buffer_width)
+		return;
+	int maxSampleNum = 0;
+	for (auto& row : sampleNum)
+		for (auto& col : row)
+			maxSampleNum = max(maxSampleNum, col);
+
+	for (int i = 0; i < buffer_height; ++i)
+		for (int j = 0; j < buffer_width; ++j)
+			setPixel(j, i, vec3f(static_cast<double>(sampleNum[i][j]) / maxSampleNum));
+}
+
+vec3f RayTracer::tracePixelMotionBlur(int i, int j)
 {
 	vec3f col;
 	double x = double(i)/double(buffer_width);

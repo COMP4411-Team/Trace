@@ -375,7 +375,7 @@ bool RayTracer::loadHFmap(const string& filename) {
 	auto* hf = readBMP(const_cast<char*>(filename.c_str()), w, h);
 	if (hf == nullptr)
 		return false;
-	string grey = filename.substr(0, filename.length() - 5).append("grey_.bmp");
+	string grey = filename.substr(0, filename.length() - 4).append("grey_.bmp");
 	auto* gf = readBMP(const_cast<char*>(filename.c_str()), w, h);
 	if (gf == nullptr)
 		return false;

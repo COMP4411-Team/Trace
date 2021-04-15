@@ -53,7 +53,7 @@ public:
 	vec3f getC(int x, int y) const;
 
 
-	int height, width, hf;
+	int height, width,f;
 	unsigned char* map{ nullptr };
 	unsigned char* greymap{ nullptr };
 };

@@ -17,7 +17,7 @@ W antialiasing by supersampling			yes - at main UI
 B spot lights							yes - see bonus/spotlight.ray
 B background image						yes - see bonus/skybox.ray
 B accelerate shadow atteuation			yes - enable at main UI
-B overlapping tranparent objects		yes - see bonus/sphere_refract_overlapping.ray
+B overlapping tranparent objects		yes - see bonus/sphere_refract_overlapping.ray (Depth > 3 needed)
 
 BW texture mapping (diffuse and transparent)	
 										yes - diffuse mapping: see bonus/diffuse_map.ray

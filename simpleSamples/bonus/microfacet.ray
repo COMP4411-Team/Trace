@@ -1,0 +1,84 @@
+SBT-raytracer 1.0
+
+// microfacet.ray
+// Demo the GGX microfacet material
+// Please enable distributed ray tracing in GUI
+
+camera {
+	position = (0, 0, -4);
+	viewdir = (0,0,1);
+	aspectratio = 1;
+	updir = (0,1,0);
+}
+
+// Two area lights
+area_light {
+	position = (0, 0, -4);	// one corner of the area light
+	u = (-1, 0, 0);			// the width and height vector
+	v = (0, 1, 0);
+	color = (1.0, 1.0, 1.0);
+}
+
+area_light {
+	position = (4, 0, -4);
+	u = (-1, 0, 1);
+	v = (-0.5, 1, 0.5);
+	color = (1.0, 1.0, 1.0);
+}
+
+translate( -1, 1, 0,
+	rotate( 1.0, 1.0, 1.0, 1.0, 
+		scale( 0.6,
+			sphere {
+				material = { 
+					type = "microfacet";
+					albedo = (1, 0.64, 0);
+					roughness = 0.7;
+					metallic = 0.2;
+				}
+			} ) ) )
+
+translate( 1, 1, 0,
+	rotate( 1.0, 1.0, 1.0, 1.0, 
+		scale( 0.6,
+			sphere {
+				material = { 
+					type = "microfacet";
+					albedo = (1, 0.64, 0);
+					roughness = 0.1;
+					metallic = 0.8;
+				}
+			} ) ) )
+
+translate( -1, -1, 0,
+	rotate( 1.0, 1.0, 1.0, 1.0, 
+		scale( 0.6,
+			sphere {
+				material = { 
+					type = "microfacet";
+					albedo = (1, 0.64, 0);
+					roughness = 0.1;
+					metallic = 0.1;
+				}
+			} ) ) )
+
+translate( 1, -1, 0,
+	rotate( 1.0, 1.0, 1.0, 1.0, 
+		scale( 0.6,
+			sphere {
+				material = { 
+					type = "microfacet";
+					albedo = (1, 0.64, 0);
+					roughness = 0.9;
+					metallic = 0.8;
+				}
+			} ) ) )
+
+translate(0, 0, 1,
+	rotate(1, 0, 0, 1.57,
+		scale(8, 0.1, 8,
+			box {
+				material = { 
+					diffuse = (0.8, 0.8, 0.8);
+				}
+			})))

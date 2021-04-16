@@ -55,7 +55,7 @@ For the following four, enabling multi-thread is recommended.
 
 4B (varying) realistic shading model	yes - Fresnel term: see bonus/fresnel.ray
 											  Beer's law: see bonus/beers_law.ray
-											  GGX Microfacet BRDF: see bonus/microfacet.ray
+											  GGX Microfacet BRDF: enable Distributed RT and load bonus/microfacet.ray
 											  Anisotropic specular: see bonus/anisotropic_specular.ray
 
 4B CSG									yes - see bonus/CSG.ray

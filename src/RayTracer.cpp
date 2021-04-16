@@ -80,7 +80,10 @@ vec3f RayTracer::traceRay( Scene *scene, const Ray& r,
 				indirectIllumination += tmp;
 			}
 			else
-				indirectIllumination += prod(traceRay(scene, reflection, thresh, depth + 1, prod(curFactor, m.kr)), reflective);
+			{
+				indirectIllumination += prod(traceRay(scene, reflection, thresh, depth + 1,
+					prod(curFactor, m.kr)), reflective);
+			}
 		}
 
 		Ray refraction{vec3f(), vec3f()};

@@ -122,6 +122,7 @@ public:
 	vec3f bxdf(const vec3f& wi, const vec3f& wo, const vec3f& n) const override;
 	vec3f sample(const vec3f& wo, const vec3f& n, double& pdf) const override;
 	vec3f sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pdf) const override;
+	vec3f sampleNormal() const;
 
 protected:
 	double calD(double cosTheta) const; 
@@ -132,6 +133,7 @@ protected:
 	vec3f albedo;
 	double roughness;
 	double metallic;
+	double alpha;
 	double alpha2; // roughness ^ 4
 	double k; // (roughness + 1) ^ 2 / 8
 };

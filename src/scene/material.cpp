@@ -190,6 +190,7 @@ vec3f Microfacet::shade(Scene* scene, const Ray& ray, const Isect& isect) const
 		}
 		
 		vec3f position = ray.at(isect.t) + isect.N * DISPLACEMENT_EPSILON;
+		// vec3f normal = localToWorld(sampleNormal(), isect.N);
 		vec3f normal = isect.N;
 		vec3f direction = light->getDirection(position);
 
@@ -198,6 +199,23 @@ vec3f Microfacet::shade(Scene* scene, const Ray& ray, const Isect& isect) const
 
 		if (object->enableNormalMap)
 			normal = (isect.tbn * isect.obj->normalMap.sample(isect.texCoords)).normalize();
+
+		if (light->isAreaLight())
+		{
+			vec3f tmp;
+			for (int i = 0; i < scene->numChildRay; ++i)
+			{
+				vec3f atten;
+				vec3f lDir = light->getDirAndAtten(position, atten, ray.getTime());
+				// normal = localToWorld(sampleNormal(), isect.N);
+				double lambertian = max(lDir.dot(normal), 0.0);
+				vec3f h = (lDir - ray.getDirection()).normalize();
+				vec3f brdf = bxdf(direction, -ray.getDirection(), normal);
+				tmp += lambertian * prod(prod(brdf, light->getColor(position)), atten);
+			}
+			color += tmp / scene->numChildRay;
+			continue;
+		}
 		
 		double lambertian = max(direction.dot(normal), 0.0);
 		vec3f attenuation = light->distanceAttenuation(position) * light->shadowAttenuation(position, ray.getTime());
@@ -253,11 +271,18 @@ vec3f Microfacet::sampleF(const vec3f& wo, vec3f& wi, const vec3f& n, double& pd
 	return bxdf(wi, wo, n);
 }
 
+vec3f Microfacet::sampleNormal() const
+{
+	vec3f P = concentricSampleDisk();
+    vec3f N = vec3f(P[0], sqrt(_max(0.0, 1.0 - P[0] * P[0] - P[1] * P[1])), P[1]);
+    return (vec3f(alpha * N[0], _max(0.0, N[1]), alpha * N[2])).normalize();
+}
+
 Microfacet::Microfacet(const vec3f& albedo, double roughness, double metallic):
 	Material(), albedo(albedo), roughness(roughness), metallic(metallic)
 {
-	alpha2 = roughness * roughness;
-	alpha2 = alpha2 * alpha2;
+	alpha = roughness * roughness;
+	alpha2 = alpha * alpha;
 	k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
 }
 

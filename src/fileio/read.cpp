@@ -24,7 +24,7 @@
 #include "../scene/light.h"
 #include "../SceneObjects/CSG.h"
 #include "../SceneObjects/TorusKnot.h"
-#include "../SceneObjects/Metaball.h"
+#include "../SceneObjects/metaball.h"
 #include "../particle/FluidSystem.h"
 #include "../particle/Emitter.h"
 
@@ -343,7 +343,7 @@ bool processSkybox(Obj* child, Scene* scene)
 Microfacet* processMicrofacet(Obj* child, mmap* bindings)
 {
 	if (!hasField(child, "albedo") || !hasField(child, "roughness") || !hasField(child, "metallic"))
-		return nullptr;
+		throw ParseError("parameters missing for microfacet material");
 
 	vec3f albedo = tupleToVec( getField( child, "albedo" ) );
 	double roughness = getField( child, "roughness" )->getScalar();

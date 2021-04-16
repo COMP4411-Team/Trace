@@ -24,6 +24,7 @@
 #include "../scene/light.h"
 #include "../SceneObjects/CSG.h"
 #include "../SceneObjects/TorusKnot.h"
+#include "../SceneObjects/Metaball.h"
 #include "../particle/FluidSystem.h"
 #include "../particle/Emitter.h"
 
@@ -667,6 +668,13 @@ static Geometry* processGeometry(string name, Obj* child, Scene* scene,
 			double q = getField(child, "q")->getScalar();
 			obj = new TorusKnot(scene, mat, radius, tube, p, q);
 		}
+		else if (name == "metaball") {
+			double radius = getField(child, "size")->getScalar();
+			obj = new Metaball(scene, mat, radius, transform);
+			const mytuple& points = getField(child, "points")->getTuple();
+			for (mytuple::const_iterator pi = points.begin(); pi != points.end(); ++pi)
+				obj->addBalls(tupleToVec(*pi));
+		}
 
     		if (hasField(child, "has_tex_coords"))
 			obj->setEnableTexCoords(true);
@@ -784,8 +792,8 @@ static bool processHField(Scene* scene, TransformNode*transform) {
 
 	for (double i = 0; i < thf->width-1; i++) {
 		for (double j = 0; j < thf->height-1; j++) {
-			tmesh->addFace(j * thf->width + i,j* thf->width + i + 1, (j+1) * thf->width + i + 1);
-			tmesh->addFace(j * thf->width + i, (j + 1) * thf->width + i+1, (j + 1) * thf->width + i );
+			tmesh->addFace(i * thf->height + j,i* thf->height + j + 1, (i+1) * thf->height + j + 1);
+			tmesh->addFace(i * thf->height + j, (i + 1) * thf->height + j+1, (i + 1) * thf->height + j );
 		}
 	}
 

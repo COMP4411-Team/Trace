@@ -147,6 +147,9 @@
     <ClCompile Include="src\particle\Emitter.cpp">
       <Filter>Source Files\particle</Filter>
     </ClCompile>
+    <ClCompile Include="metaball.cpp">
+      <Filter>Source Files\SceneObjects</Filter>
+    </ClCompile>
     <ClCompile Include="src\SceneObjects\TorusKnot.cpp">
       <Filter>Source Files\SceneObjects</Filter>
     </ClCompile>
@@ -227,11 +230,22 @@
     <ClInclude Include="src\particle\Emitter.h">
       <Filter>Header Files\particle.</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="metaball.h">
+      <Filter>Header Files\SceneObjects.</Filter>
+    </ClInclude>
     <ClInclude Include="src\SceneObjects\TorusKnot.h">
       <Filter>Header Files\SceneObjects.</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ray.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

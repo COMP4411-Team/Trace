@@ -1,6 +1,7 @@
 #include "Ray.h"
 #include "material.h"
 #include "light.h"
+#include "../SceneObjects/TorusKnot.h"
 
 
 // Apply the phong model to this point on the surface of the object, returning
@@ -64,6 +65,8 @@ vec3f Material::shade( Scene *scene, const Ray& r, const Isect& i) const
 		
 		double lambertian = max(direction.dot(normal), 0.0);
 		vec3f shadowA= light->shadowAttenuation(position, r.getTime());
+		if (typeid(*i.obj) == typeid(TorusKnot))
+			shadowA = vec3f(1.0);
 		vec3f attenuation = light->distanceAttenuation(position) * shadowA;
 		vec3f h = (direction - r.getDirection()).normalize();
 		

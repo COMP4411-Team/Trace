@@ -275,6 +275,13 @@ void TraceUI::cb_render(Fl_Widget* o, void* v)
 
 		pUI->raytracer->traceSetup(width, height, pUI->getDepth(), pUI->threshold);
 
+		if (pUI->debug)
+		{
+			pUI->raytracer->renderHFMap();
+			pUI->m_traceGlWindow->refresh();
+			return;
+		}
+
 		if (pUI->enableAdaptiveSS)
 		{
 			pUI->raytracer->adaptiveTrace();

@@ -23,6 +23,7 @@
 #include "../SceneObjects/Square.h"
 #include "../scene/light.h"
 #include "../SceneObjects/CSG.h"
+#include "../SceneObjects/TorusKnot.h"
 #include "../particle/FluidSystem.h"
 #include "../particle/Emitter.h"
 
@@ -652,11 +653,19 @@ static Geometry* processGeometry(string name, Obj* child, Scene* scene,
 			maybeExtractField(child, "time1", time1);
 			vec3f start = tupleToVec(getField(child, "start"));
 			vec3f end = tupleToVec(getField(child, "end"));
-			obj = new movingSphere(scene, mat, start, end, radius, time0, time1);
+			obj = new MovingSphere(scene, mat, start, end, radius, time0, time1);
 		}
 		else if (name == "csg")
 		{
 			return processCSG(child, scene, materials, transform);
+		}
+		else if (name == "torus_knot")
+		{
+			double radius = getField(child, "radius")->getScalar();
+			double tube = getField(child, "tube")->getScalar();
+			double p = getField(child, "p")->getScalar();
+			double q = getField(child, "q")->getScalar();
+			obj = new TorusKnot(scene, mat, radius, tube, p, q);
 		}
 
     		if (hasField(child, "has_tex_coords"))
@@ -762,6 +771,7 @@ static bool processHField(Scene* scene, TransformNode*transform) {
 	for (double i = 0; i < thf->width; i++) {
 		for (double j = 0; j < thf->height; j++) {
 			double y = thf->getH(i, j) * thf->width / 255.0 / 100.0 - thf->width / 200.0 - 2;
+			y *= 0.2;
 			tmesh->addVertex(vec3f((i- thf->width / 2) / 100.0, y, (j - thf->height / 2) / 100.0 - 2));
 			auto diffuse = thf->getC(i, j)/255.0;
 			Material* tempmat = new Material();
@@ -780,6 +790,10 @@ static bool processHField(Scene* scene, TransformNode*transform) {
 	}
 
 	tmesh->generateNormals();
+
+	char* error;
+	if (error = tmesh->doubleCheck())
+		throw ParseError(error);
 
 	scene->add(tmesh);
 	return true;
@@ -1089,6 +1103,7 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 				name == "transform" ||
                 name == "trimesh" ||
                 name == "polymesh" ||
+				name == "torus_knot" ||
 				name == "moving_sphere" ||
 				name == "sphere_light" ||
 				name == "csg" ||

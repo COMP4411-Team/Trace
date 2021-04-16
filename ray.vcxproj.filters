@@ -147,6 +147,9 @@
     <ClCompile Include="src\particle\Emitter.cpp">
       <Filter>Source Files\particle</Filter>
     </ClCompile>
+    <ClCompile Include="src\SceneObjects\TorusKnot.cpp">
+      <Filter>Source Files\SceneObjects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\RayTracer.h">
@@ -223,6 +226,9 @@
     </ClInclude>
     <ClInclude Include="src\particle\Emitter.h">
       <Filter>Header Files\particle.</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SceneObjects\TorusKnot.h">
+      <Filter>Header Files\SceneObjects.</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

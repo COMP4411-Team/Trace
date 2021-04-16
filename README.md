@@ -24,7 +24,7 @@
 
 * [x] 2B Implement solid textures or some other form of procedural texture mapping.
 
-* [ ] 2B Add some new types of geometry to the ray tracer.
+* [x] 2B Add some new types of geometry to the ray tracer.
 
 * [ ] 2B Add support for height-fields.
 

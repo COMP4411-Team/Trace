@@ -302,7 +302,7 @@ vec3f HFmap::getC(int x, int y) const {
 
 double HFmap::getH(int x, int y) const {
 	unsigned char* color = greymap + (y * width + x) * 3;
-	return (color[0] + color[1] + color[2]) / 3;
+	return (static_cast<double>(color[0]) + color[1] + color[2]) / 3.0;
 }
 
 void BVH::build(const list<Geometry*>& objects)

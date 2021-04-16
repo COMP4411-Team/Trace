@@ -1,0 +1,33 @@
+SBT-raytracer 1.0
+
+// torus_knot.ray
+// Used to demo a torus knot geometry
+
+camera {
+	position = (0,5,-5);
+	viewdir = (0,-1,1);
+	aspectratio = 1;
+	updir = (0,1,0);
+}
+
+directional_light {
+	direction = (0, -1, 0);
+	colour = (1.0, 1.0, 1.0);
+}
+
+directional_light {
+	direction = (0,1,0);
+	colour = (1.0, 1.0, 1.0);
+}
+
+torus_knot { 
+	material = { 
+		diffuse = (0.8,0.8,0.8);
+		specular = (0.5, 0.5, 0.5);
+		shininess = 0.6;
+	};
+	radius = 1.0;
+	tube = 0.15;
+	p = 0.4;
+	q = 3.5;
+}

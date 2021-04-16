@@ -56,7 +56,7 @@ public:
 	bool loadHFmap(const string& filename);	
 	bool HFmapLoaded() { if (hfmap != nullptr) return true; else return false; }
 	HFmap* getHFmap() { return hfmap; }
-
+	void renderHFMap();
 
 	void setFasterShadow(bool i) { scene->enableFasterShadow = i; }
 

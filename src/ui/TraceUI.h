@@ -85,6 +85,7 @@ private:
 	bool enableMultiThread{false};
 	bool enableAdaptiveSS{false};
 	bool visualizeAdaptiveSS{false};
+	bool debug{false};
 	int maxIter{10000};
 	vec3f threshold;
 

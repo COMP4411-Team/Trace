@@ -376,12 +376,18 @@ bool RayTracer::loadHFmap(const string& filename) {
 	if (hf == nullptr)
 		return false;
 	string grey = filename.substr(0, filename.length() - 4).append("grey_.bmp");
-	auto* gf = readBMP(const_cast<char*>(filename.c_str()), w, h);
+	auto* gf = readBMP(const_cast<char*>(grey.c_str()), w, h);
 	if (gf == nullptr)
 		return false;
 	if (hfmap) delete hfmap;
 	hfmap = new HFmap(hf, gf, h, w);
 	return true;
+}
+
+// For debugging
+void RayTracer::renderHFMap()
+{
+	memcpy(buffer, scene->hfmap->greymap, scene->hfmap->height * scene->hfmap->width * 3);
 }
 
 void RayTracer::setPixel(int x, int y, const vec3f& color)

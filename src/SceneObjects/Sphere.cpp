@@ -85,7 +85,7 @@ Ray SphereLight::sample(vec3f& emit, double& pdf) const
 }
 
 
-bool movingSphere::intersect(const Ray& r, Isect& i) const
+bool MovingSphere::intersect(const Ray& r, Isect& i) const
 {
 	vec3f center = getCurPosition(r.getTime());
 	vec3f normal = r.normalToPoint(center);
@@ -102,7 +102,7 @@ bool movingSphere::intersect(const Ray& r, Isect& i) const
 	return true;
 }
 
-vec3f movingSphere::getCurPosition(double time) const
+vec3f MovingSphere::getCurPosition(double time) const
 {
 	if (time1 == time0 || time < time0)
 		return pos;

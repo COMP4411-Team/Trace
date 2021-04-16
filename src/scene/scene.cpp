@@ -140,6 +140,7 @@ Scene::~Scene()
 	}
 	delete skybox;
 	delete emitter;
+	delete hfmap;
 }
 
 // Get any intersection with an object.  Return information about the 
@@ -290,6 +291,8 @@ vec3f Texture::sample(const TexCoords& coords) const
 //HFmap::HFmap(char* m, int h, int w) :map(m), height(h), weight(w) {}
 
 HFmap::~HFmap() {
+	delete[] map;
+	delete[] greymap;
 	map = nullptr;
 	greymap = nullptr;
 }

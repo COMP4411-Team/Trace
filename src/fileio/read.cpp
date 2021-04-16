@@ -782,7 +782,7 @@ static bool processHField(Scene* scene, TransformNode*transform) {
 		for (double j = 0; j < thf->height; j++) {
 			double y = thf->getH(i, j) * thf->width / 255.0 / 100.0 - thf->width / 200.0 - 2;
 			y *= 0.2;
-			tmesh->addVertex(vec3f((i- thf->width / 2) / 100.0, y, (j - thf->height / 2) / 100.0 - 2));
+			tmesh->addVertex(vec3f((i- thf->width / 2) / 100.0-2, y, (j - thf->height / 2) / 100.0 - 2));
 			auto diffuse = thf->getC(i, j)/255.0;
 			Material* tempmat = new Material();
 			tempmat->kd = diffuse;

@@ -7,6 +7,10 @@ HKUST login(s): bhuai hqinac
 NOTE: Ray files and textures for b&w are under simpleSamples/bonus. Each bonus ray file contains comments about extension of .ray format.
 
 NOTE: We provide multi-thread acceleration and you can enable it at main UI. It uses OpenMP shipped with VS so as long as you run the project with VS 2019 it should work. If not, make sure you enable support for OpenMP under Project Property->C/C++->Language->Open MP Support (it should already be enabled if you load our project).
+
+4 or 8 threads will be used if multi-thread is enabled.
+
+Please use Release configuration to build the project.
 ################################################################
 
 All the bells and whistles are finished

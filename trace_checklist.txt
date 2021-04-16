@@ -31,14 +31,16 @@ BW antialiasing by adaptive supersampling
 										NOTE: it may take some time for the program to response since the whole
 										image is rendered in one pass
 
-BW Warn model							yes - see bonus/warnlight.ray, youcan change xmin and xmax to control flat map,
+BW Warn model							yes - see bonus/warnlight.ray. In the ray file, you can change xmin and xmax to control flat map,
 								        and p is the power number of warn model.
 2B bump mapping							yes - see bonus/bump_map.ray
 2B solid/procedural texture				yes - see bonus/perlin_noise.ray
 2B new geometry (quadrics)				yes - see bonus/torus_knot.ray (definitely cooler than quadrics or 
 											normal torus)
 2B height fields						yes - first load height field map under File->load HFMap, then load
-											bonus/blank.ray and render
+											bonus/blank.ray and render,
+											after loading new map, need to load blank.ray again.
+											Besides, it takes sevaral minutes to add the field to objects.
 
 
 For the following four, enabling multi-thread is recommended.

@@ -28,6 +28,8 @@ BW antialiasing by adaptive supersampling
 											then disable Adaptive SS and enable Visualize Adaptive SS to
 											see the number of samples at each pixel, white indicates more
 											samples)
+										NOTE: it may take some time for the program to response since the whole
+										image is rendered in one pass
 
 BW Warn model							yes - see bonus/warnlight.ray. In the ray file, you can change xmin and xmax to control flat map,
 								        and p is the power number of warn model.
@@ -55,8 +57,8 @@ For the following four, enabling multi-thread is recommended.
 											a switch to enable/disable it, you can verify it yourself by checking
 											scene.h line 97-123 and scene.cpp line 308-EOF. Thank you :)
 
-4B (varying) realistic shading model	yes - Fresnel term: see bonus/fresnel.ray
-											  Beer's law: see bonus/beers_law.ray
+4B (varying) realistic shading model	yes - Fresnel term: see bonus/fresnel.ray (Depth > 1 is needed)
+											  Beer's law: see bonus/beers_law.ray (Depth > 3 is needed)
 											  GGX Microfacet BRDF: enable Distributed RT and load bonus/microfacet.ray
 											  Anisotropic specular: see bonus/anisotropic_specular.ray
 
@@ -64,10 +66,12 @@ For the following four, enabling multi-thread is recommended.
 4B Particle system						yes - see bonue/particle_system.ray
 
 4B caustics								yes - first load bonus/caustics.ray, then click Build Photon Map and 
-											enable Enable Photon Mapping, then click render
-										NOTE: Please do NOT enable multi-thread for photon mapping
+											enable Photon Mapping, then click render
+										NOTE: Please do NOT enable multi-thread for photon mapping. 
+										Recommended setting: Depth = 1, Size = 300~
 
-Extra (4-8B?): Path tracing				load bonus/cornell_box.ray or bonus/cornell_box2.ray, enable Enable Path
-										tracing and then click Render PT. Recommend to use multi-thread.
+Extra (4-8B?): Path tracing				load bonus/cornell_box.ray, bonus/cornell_box2.ray or 
+										bonus/path_tracing.ray, 
+										enable path tracing and multi-thread, then click Render PT.
 
 										The path tracer is iterative, 64 iteration will usually give a satisfying result within reasonable amount of time. 5000+ iteration will usually be enough for rendering a noise-free image.

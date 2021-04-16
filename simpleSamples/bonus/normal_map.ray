@@ -28,6 +28,7 @@ translate( -1.0, 0.0, 0.0,
 				material = { 
 					diffuse = (0.8,0.3,0.1);
 					specular = (0.5, 0.5, 0.5);
+					reflective = (0, 0, 0);
 					shininess = 0.3;
 				};
 				diffuse_map = "./simpleSamples/bonus/texture/concrete_brick_wall_Diffuse.bmp";
@@ -43,6 +44,7 @@ translate( 1.0, 0.0, 0.0,
 				material = { 
 					diffuse = (0.8,0.3,0.1);
 					specular = (0.5, 0.5, 0.5);
+					reflective = (0, 0, 0);
 					shininess = 0.3;
 				};
 				diffuse_map = "./simpleSamples/bonus/texture/concrete_brick_wall_Diffuse.bmp";

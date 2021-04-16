@@ -11,6 +11,8 @@ NOTE: We provide multi-thread acceleration and you can enable it at main UI. It 
 4 or 8 threads will be used if multi-thread is enabled.
 
 Please use Release configuration to build the project.
+
+If for some b&w the program cannot find the textures, you may need to modify corresponding .ray file and change the texture path to the relative path of the executable.
 ################################################################
 
 All the bells and whistles are finished

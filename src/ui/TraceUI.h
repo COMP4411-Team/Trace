@@ -54,6 +54,9 @@ public:
 
 	Fl_Button* m_buildPMButton;
 	Fl_Light_Button* m_enablePMButton;
+	Fl_Slider* m_numPhotonSlider;
+	Fl_Slider* m_numNeighbourSlider;
+	Fl_Slider* m_fluxSlider;
 	
 	Fl_Light_Button* m_enableDofButton;
 	Fl_Slider* m_apertureSlider;
@@ -136,6 +139,9 @@ private:
 	// Photon mapping
 	static void cb_buildPM(Fl_Widget* o, void* v);
 	static void cb_enablePM(Fl_Widget* o, void* v);
+	static void cb_photonNum(Fl_Widget* o, void* v);
+	static void cb_neighbourNum(Fl_Widget* o, void* v);
+	static void cb_flux(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_renderParallel(Fl_Widget* o, void* v);

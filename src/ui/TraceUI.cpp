@@ -257,11 +257,29 @@ void TraceUI::cb_enablePM(Fl_Widget* o, void* v)
 	ui->raytracer->enablePM = bool( ((Fl_Light_Button*)o)->value() );
 }
 
+void TraceUI::cb_photonNum(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->numPhotons = 1000 * (int( ((Fl_Slider*)o)->value() ));
+}
+
+void TraceUI::cb_neighbourNum(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->numNeighbours = (int( ((Fl_Slider*)o)->value() ));
+}
+
+void TraceUI::cb_flux(Fl_Widget* o, void* v)
+{
+	auto* ui = whoami(o);
+	ui->raytracer->totalFlux = vec3f((double( ((Fl_Slider*)o)->value() )));
+}
+
 void TraceUI::cb_render(Fl_Widget* o, void* v)
 {
 	TraceUI* pUI=((TraceUI*)(o->user_data()));
 	
-	if (pUI->enableMultiThread)
+	if (pUI->enableMultiThread && !pUI->enableAdaptiveSS)
 		return cb_renderParallel(o, v);
 	
 	char buffer[256];
@@ -502,7 +520,7 @@ TraceUI::TraceUI() {
 	// init.
 	m_nDepth = 0;
 	m_nSize = 150;
-	m_mainWindow = new Fl_Window(100, 40, 330, 485, "Ray <Not Loaded>");
+	m_mainWindow = new Fl_Window(100, 40, 330, 540, "Ray <Not Loaded>");
 		m_mainWindow->user_data((void*)(this));	// record self to be used by static callback functions
 		// install menu bar
 		m_menubar = new Fl_Menu_Bar(0, 0, 330, 25);
@@ -567,7 +585,7 @@ TraceUI::TraceUI() {
 		m_motionBlurButton->callback(cb_enableMotionBlur);
 
 		m_motionBlurSPPSlider = createSlider(10, 235, 180, 20, "Motion Blur SPP",
-			1, 100, 1, 100, cb_motionBlurSPP);
+			1, 1000, 1, 100, cb_motionBlurSPP);
 
 		m_fasterShadow = new Fl_Light_Button(150, 370, 170, 25, "Shadow Acceleration");
 		m_fasterShadow->user_data(this);
@@ -603,22 +621,28 @@ TraceUI::TraceUI() {
 			0.0, 1.0, 0.01, 0.25, cb_adaptiveThresh);
 
 		// Photon mapping
-		m_buildPMButton = new Fl_Button(10, 405, 120, 25, "Build Photon Map");
+		m_buildPMButton = new Fl_Button(10, 400, 120, 25, "Build Photon Map");
 		m_buildPMButton->user_data(this);
 		m_buildPMButton->callback(cb_buildPM);
 
-		m_enablePMButton = new Fl_Light_Button(140, 405, 180, 25, "Enable Photon Mapping");
+		m_enablePMButton = new Fl_Light_Button(140, 400, 180, 25, "Enable Photon Mapping");
 		m_enablePMButton->user_data(this);
 		m_enablePMButton->value(0);
 		m_enablePMButton->callback(cb_enablePM);
 
+		m_numPhotonSlider = createSlider(10, 430, 180, 20, "Photon Num(k)", 10, 100, 1, 50, cb_photonNum);
+
+		m_numNeighbourSlider = createSlider(10, 455, 180, 20, "Neighbour Num", 10, 100, 1, 20, cb_neighbourNum);
+
+		m_fluxSlider = createSlider(10, 480, 180, 20, "Total Flux", 0.001, 0.1, 0.001, 0.03, cb_flux);
+
 		// Path tracing
-		m_pathTracingButton = new Fl_Light_Button(10, 450, 150, 25, "Enable Path Tracing");
+		m_pathTracingButton = new Fl_Light_Button(10, 510, 150, 25, "Enable Path Tracing");
 		m_pathTracingButton->user_data(this);
 		m_pathTracingButton->value(0);
 		m_pathTracingButton->callback(cb_pathTracingButton);
 	
-		m_renderButton = new Fl_Button(220, 450, 100, 25, "Render PT");
+		m_renderButton = new Fl_Button(220, 510, 100, 25, "Render PT");
 		m_renderButton->user_data((void*)(this));
 		m_renderButton->callback(cb_renderPt);
 

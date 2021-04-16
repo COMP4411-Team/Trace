@@ -8,6 +8,10 @@ Trimesh::~Trimesh()
     {
         delete *i;
     }
+    for (Faces::iterator i = faces.begin(); i != faces.end(); ++i)
+    {
+        delete* i;
+    }
 }
 
 // must add vertices, normals, and materials IN ORDER

@@ -31,7 +31,8 @@ BW antialiasing by adaptive supersampling
 										NOTE: it may take some time for the program to response since the whole
 										image is rendered in one pass
 
-BW Warn model							yes
+BW Warn model							yes - see bonus/warnlight.ray, youcan change xmin and xmax to control flat map,
+								        and p is the power number of warn model.
 2B bump mapping							yes - see bonus/bump_map.ray
 2B solid/procedural texture				yes - see bonus/perlin_noise.ray
 2B new geometry (quadrics)				yes - see bonus/torus_knot.ray (definitely cooler than quadrics or 
@@ -48,7 +49,7 @@ For the following four, enabling multi-thread is recommended.
 1.5B glossy reflection					yes - enable Distributed RT and load bonus/glossy.ray
 
 3B high lever geometry (e.g. metaballs)		
-										yes - see bonus/metaball.ray
+										yes, please load metaball.ray and render.
 
 3B ray-intersection optimization		yes - we implemented bounding volumes hierarchy, although we did provide
 											a switch to enable/disable it, you can verify it yourself by checking

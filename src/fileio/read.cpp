@@ -782,7 +782,7 @@ static bool processHField(Scene* scene, TransformNode*transform) {
 		for (double j = 0; j < thf->height; j++) {
 			double y = thf->getH(i, j) * thf->width / 255.0 / 100.0 - thf->width / 200.0 - 2;
 			y *= 0.2;
-			tmesh->addVertex(vec3f((i- thf->width / 2) / 100.0, y, (j - thf->height / 2) / 100.0 - 2));
+			tmesh->addVertex(vec3f((i- thf->width / 2) / 100.0-2, y, (j - thf->height / 2) / 100.0 - 2));
 			auto diffuse = thf->getC(i, j)/255.0;
 			Material* tempmat = new Material();
 			tempmat->kd = diffuse;
@@ -1089,6 +1089,20 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 		vec3f v = tupleToVec(getField(child, "v"));
 		auto* areaLight = new AreaLight(scene, color, pos, u, v);
 		scene->add(areaLight);
+	}
+	else if (name == "warn_light") {
+		if (child == nullptr)
+			throw ParseError("No info for warn_light");
+		vec3f color = tupleToVec(getField(child, "color"));
+		vec3f pos = tupleToVec(getField(child, "position"));
+		vec3f n = tupleToVec(getField(child, "normal"));
+		double cutoffDist = 50.0, minx = -10, maxx = 10, conP = 0;
+		maybeExtractField(child, "cutoff_distance", cutoffDist);
+		maybeExtractField(child, "p", conP);
+		maybeExtractField(child, "xmin", minx);
+		maybeExtractField(child, "xmax", maxx);
+		auto* warnLight = new WarnLight( scene, color, n, pos, minx, maxx, conP, cutoffDist);
+		scene->add(warnLight);
 	}
 	else if (name == "fluid")
 	{

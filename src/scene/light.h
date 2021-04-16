@@ -131,6 +131,23 @@ protected:
 	double area;
 };
 
+class WarnLight : public Light
+{
+public:
+	WarnLight(Scene* scene, const vec3f& color, const vec3f& n, const vec3f& pos, double xmin, double xmax, double p, double cutoffDist) :
+		Light(scene, color), position(pos), normal(n), minx(xmin), maxx(xmax), concentrateP(p), cutoffDist(cutoffDist) { }
+	virtual vec3f shadowAttenuation(const vec3f& P, double t) const;
+	virtual double distanceAttenuation(const vec3f& P) const;
+	virtual vec3f getColor(const vec3f& P) const { return color; }
+	virtual vec3f getDirection(const vec3f& P) const;
+
+protected:
+	vec3f position;
+	vec3f normal;
+	double minx, maxx, cutoffDist;
+	double concentrateP;
+};
+
 double smoothstep(double edge0, double edge1, double x);
 
 #endif // __LIGHT_H__

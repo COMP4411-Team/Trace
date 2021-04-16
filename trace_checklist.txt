@@ -1,0 +1,70 @@
+Trace Bells and Whistles Checklist for Grading
+(submit ONLY if you have implemented any B&Ws in the following)
+
+HKUST login(s): bhuai hqinac
+
+################################################################
+NOTE: Ray files and textures for b&w are under simpleSamples/bonus. Each bonus ray file contains comments about extension of .ray format.
+
+NOTE: We provide multi-thread acceleration and you can enable it at main UI. It uses OpenMP shipped with VS so as long as you run the project with VS 2019 it should work. If not, make sure you enable support for OpenMP under Project Property->C/C++->Language->Open MP Support (it should already be enabled if you load our project).
+################################################################
+
+All the bells and whistles are finished
+
+W adaptive termination					yes - adjust threshold at main UI
+W antialiasing by supersampling			yes - at main UI
++W jittering							yes
+B spot lights							yes - see bonus/spotlight.ray
+B background image						yes - see bonus/skybox.ray
+B accelerate shadow atteuation			yes - enable at main UI
+B overlapping tranparent objects		yes - see bonus/sphere_refract_overlapping.ray
+
+BW texture mapping (diffuse and transparent)	
+										yes - diffuse mapping: see bonus/diffuse_map.ray
++BW								  			  normal mapping: see bonus/normal_map.ray
+
+BW antialiasing by adaptive supersampling	
+										yes - enable at main UI (first enable Adaptive SS and render,
+											then disable Adaptive SS and enable Visualize Adaptive SS to
+											see the number of samples at each pixel, white indicates more
+											samples)
+
+BW Warn model							yes
+2B bump mapping							yes - see bonus/bump_map.ray
+2B solid/procedural texture				yes - see bonus/perlin_noise.ray
+2B new geometry (quadrics)				yes - see bonus/torus_knot.ray (definitely cooler than quadrics or 
+											normal torus)
+2B height fields						yes - first load height field map under File->load HFMap, then load
+											bonus/blank.ray and render
+
+
+For the following four, enabling multi-thread is recommended.
+
+2B Depth of field 						yes - enable and adjust parameters at main UI
+1.5B soft shadows 						yes - enable Distributed RT and load bonus/soft_shadow.ray
+1.5B motion blur						yes - enable Motion Blur and load bonus/motion_blur.ray
+1.5B glossy reflection					yes - enable Distributed RT and load bonus/glossy.ray
+
+3B high lever geometry (e.g. metaballs)		
+										yes
+
+3B ray-intersection optimization		yes - we implemented bounding volumes hierarchy, although we did provide
+											a switch to enable/disable it, you can verify it yourself by checking
+											scene.h line 97-123 and scene.cpp line 308-EOF. Thank you :)
+
+4B (varying) realistic shading model	yes - Fresnel term: see bonus/fresnel.ray
+											  Beer's law: see bonus/beers_law.ray
+											  GGX Microfacet BRDF: see bonus/microfacet.ray
+											  Anisotropic specular: see bonus/anisotropic_specular.ray
+
+4B CSG									yes - see bonus/CSG.ray
+4B Particle system						yes - see bonue/particle_system.ray
+
+4B caustics								yes - first load bonus/caustics.ray, then click Build Photon Map and 
+											enable Enable Photon Mapping, then click render
+										NOTE: Please do NOT enable multi-thread for photon mapping
+
+Extra (4-8B?): Path tracing				load bonus/cornell_box.ray or bonus/cornell_box2.ray, enable Enable Path
+										tracing and then click Render PT. Recommend to use multi-thread.
+
+										The path tracer is iterative, 64 iteration will usually give a satisfying result within reasonable amount of time. 5000+ iteration will usually be enough for rendering a noise-free image.

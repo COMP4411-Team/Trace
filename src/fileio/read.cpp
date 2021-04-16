@@ -669,11 +669,13 @@ static Geometry* processGeometry(string name, Obj* child, Scene* scene,
 			obj = new TorusKnot(scene, mat, radius, tube, p, q);
 		}
 		else if (name == "metaball") {
-			double radius = getField(child, "size")->getScalar();
-			obj = new Metaball(scene, mat, radius, transform);
-			const mytuple& points = getField(child, "points")->getTuple();
+			double radius = getField(child, "size")->getScalar()/2;
+			Metaball* meta = new Metaball(scene, mat, radius);
+			const mytuple& points = getField(child, "ball")->getTuple();
 			for (mytuple::const_iterator pi = points.begin(); pi != points.end(); ++pi)
-				obj->addBalls(tupleToVec(*pi));
+				meta->addBalls(tupleToVec(*pi));
+			obj = meta;
+
 		}
 
     		if (hasField(child, "has_tex_coords"))
@@ -1112,6 +1114,7 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
                 name == "trimesh" ||
                 name == "polymesh" ||
 				name == "torus_knot" ||
+				name == "metaball"  ||
 				name == "moving_sphere" ||
 				name == "sphere_light" ||
 				name == "csg" ||

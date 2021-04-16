@@ -147,10 +147,10 @@
     <ClCompile Include="src\particle\Emitter.cpp">
       <Filter>Source Files\particle</Filter>
     </ClCompile>
-    <ClCompile Include="metaball.cpp">
+    <ClCompile Include="src\SceneObjects\TorusKnot.cpp">
       <Filter>Source Files\SceneObjects</Filter>
     </ClCompile>
-    <ClCompile Include="src\SceneObjects\TorusKnot.cpp">
+    <ClCompile Include="src\SceneObjects\metaball.cpp">
       <Filter>Source Files\SceneObjects</Filter>
     </ClCompile>
   </ItemGroup>
@@ -233,10 +233,10 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="metaball.h">
+    <ClInclude Include="src\SceneObjects\TorusKnot.h">
       <Filter>Header Files\SceneObjects.</Filter>
     </ClInclude>
-    <ClInclude Include="src\SceneObjects\TorusKnot.h">
+    <ClInclude Include="src\SceneObjects\metaball.h">
       <Filter>Header Files\SceneObjects.</Filter>
     </ClInclude>
   </ItemGroup>

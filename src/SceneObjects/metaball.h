@@ -13,19 +13,17 @@ class Metaball
 	:public MaterialSceneObject
 {
 public:
-	Metaball(Scene* scene, Material* mat, float r, TransformNode* transform)
+	Metaball(Scene* scene, Material* mat, float r)
 		: MaterialSceneObject(scene, mat)
 	{
 		radius = r;
-		this->transform = transform;
 	}
 
-	~Metaball();
 	void addBalls(vec3f b);
-	float sphereSDF(vec3f p, vec3f b);
-	float sceneSDF(vec3f p);
+	float sphereSDF(vec3f p, vec3f b) const;
+	float sceneSDF(vec3f p) const;
 	virtual bool intersectLocal(const Ray& r, Isect& i) const;
-	vec3f getNormal(vec3f p);
+	vec3f getNormal(vec3f p) const;
 
 private:
 	typedef vector<vec3f>Balls;

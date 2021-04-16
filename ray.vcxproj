@@ -157,7 +157,6 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="metaball.cpp" />
     <ClCompile Include="src\getopt.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -182,6 +181,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="src\SceneObjects\CSG.cpp" />
+    <ClCompile Include="src\SceneObjects\metaball.cpp" />
     <ClCompile Include="src\SceneObjects\TorusKnot.cpp" />
     <ClCompile Include="src\scene\SolidTexture.cpp" />
     <ClCompile Include="src\ui\TraceGLWindow.cpp">
@@ -288,7 +288,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="metaball.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\particle\Emitter.h" />
     <ClInclude Include="src\particle\FluidSystem.h" />
@@ -297,6 +296,7 @@
     <ClInclude Include="src\photon_map\Photon.h" />
     <ClInclude Include="src\RayTracer.h" />
     <ClInclude Include="src\SceneObjects\CSG.h" />
+    <ClInclude Include="src\SceneObjects\metaball.h" />
     <ClInclude Include="src\SceneObjects\TorusKnot.h" />
     <ClInclude Include="src\scene\SolidTexture.h" />
     <ClInclude Include="src\ui\TraceGLWindow.h" />

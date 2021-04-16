@@ -1090,6 +1090,20 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 		auto* areaLight = new AreaLight(scene, color, pos, u, v);
 		scene->add(areaLight);
 	}
+	else if (name == "warn_light") {
+		if (child == nullptr)
+			throw ParseError("No info for warn_light");
+		vec3f color = tupleToVec(getField(child, "color"));
+		vec3f pos = tupleToVec(getField(child, "position"));
+		vec3f n = tupleToVec(getField(child, "normal"));
+		double cutoffDist = 50.0, minx = -10, maxx = 10, conP = 0;
+		maybeExtractField(child, "cutoff_distance", cutoffDist);
+		maybeExtractField(child, "p", conP);
+		maybeExtractField(child, "xmin", minx);
+		maybeExtractField(child, "xmax", maxx);
+		auto* warnLight = new WarnLight( scene, color, n, pos, minx, maxx, conP, cutoffDist);
+		scene->add(warnLight);
+	}
 	else if (name == "fluid")
 	{
 		if (child == nullptr)

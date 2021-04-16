@@ -237,3 +237,27 @@ vec3f AreaLight::sample() const
 {
 	return pos + getRandomReal() * u + getRandomReal() * v;
 }
+
+vec3f WarnLight::shadowAttenuation(const vec3f& P, double t) const {
+	vec3f dir = -getDirection(P);
+	double con = normal.normalize().dot(dir);
+	if (P[0]<minx || P[0]>maxx) return vec3f();
+	double attenuation = max(pow(con, concentrateP),0.0);
+
+	Ray r(P, getDirection(P), t);
+	Isect isect;
+	if (scene->bvhIntersect(r, isect))
+		return attenuation * isect.getMaterial().kt;
+
+	return attenuation * vec3f(1, 1, 1);
+
+}
+
+double WarnLight::distanceAttenuation(const vec3f& P) const {
+	double dist = (position - P).length();
+	return pow(_max(1.0 - dist / cutoffDist, 0.0), 2);
+}
+
+vec3f WarnLight::getDirection(const vec3f& P) const {
+	return (position - P).normalize();
+}

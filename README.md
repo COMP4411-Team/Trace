@@ -18,7 +18,7 @@
 
 * [x] 1B1W Implement antialiasing by adaptive supersampling.
 
-* [ ] 1B1W Implement more versatile lighting controls.
+* [x] 1B1W Implement more versatile lighting controls.
 
 * [x] 2B Implement bump mapping.
 
@@ -26,7 +26,7 @@
 
 * [x] 2B Add some new types of geometry to the ray tracer.
 
-* [ ] 2B Add support for height-fields.
+* [x] 2B Add support for height-fields.
 
 * [x] 2B Depth of field.
 
@@ -36,11 +36,11 @@
   
 * [x] 1B1W Glossy reflection.
 
-* [ ] 3B Add some higher-level geometry to the ray tracer, such as surfaces of revolution, extrusions, metaballs or blend surfaces.
+* [x] 3B Add some higher-level geometry to the ray tracer, such as surfaces of revolution, extrusions, metaballs or blend surfaces.
 
 * [x] 3B Implement ray-intersection optimization.
 
-* [ ] 4B Implement a more realistic shading model (Fresnel term, microfacet distribution, anisotropic reflections, non photorealistic rendering).
+* [x] 4B Implement a more realistic shading model (Fresnel term, microfacet distribution, anisotropic reflections, non photorealistic rendering).
   * [x] Fresnel
   * [x] Beer's law (extra)
   * [x] GGX microfacet BRDF  
